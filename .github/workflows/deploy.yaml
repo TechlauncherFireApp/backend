@@ -52,7 +52,7 @@ jobs:
 
       # Zip the backend
       - name: Create Backend ZIP deployment package
-        run: zip -r fireapp-${{ steps.gitversion.outputs.semVer }}.zip . ;
+        run: zip -r fireapp-${{ steps.gitversion.outputs.semVer }}.zip . -x@exclude.lst;
 
       # Configure AWS Credentials
       - name: Configure AWS Credentials
