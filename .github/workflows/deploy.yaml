@@ -52,7 +52,7 @@ jobs:
 
       # Zip the backend
       - name: Create Backend ZIP deployment package
-        run: zip -r backend.zip . ;
+        run: zip -r fireapp-${{ steps.gitversion.outputs.semVer }}.zip . ;
 
       # Configure AWS Credentials
       - name: Configure AWS Credentials
@@ -60,18 +60,21 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-          aws-region: "ap-southeast-2"
+          aws-region: ${{ secrets.REGION }}
 
       - name: Upload backend package to S3 bucket
-        run: aws s3 cp backend.zip s3://elasticbeanstalk-ap-southeast-2-517938983427/
+        run: aws s3 cp fireapp-${{ steps.gitversion.outputs.semVer }}.zip \
+          s3://elasticbeanstalk-ap-southeast-2-517938983427
 
       - name: Create new ElasticBeanstalk Application Version
         run: |
           aws elasticbeanstalk create-application-version \
-          --application-name develop \
-          --source-bundle S3Bucket="elasticbeanstalk-ap-southeast-2-517938983427",S3Key="backend.zip" \
+          --application-name FireApp3-dev \
+          --source-bundle S3Bucket=elasticbeanstalk-ap-southeast-2-517938983427,S3Key=fireapp-${{ steps.gitversion.outputs.semVer }}.zip \
           --version-label "${{ steps.gitversion.outputs.semVer }}" \
           --description "commit-sha-${{ github.sha }}"
 
       - name: Deploy new ElasticBeanstalk Application Version
-        run: aws elasticbeanstalk update-environment --environment-name Develop-env --version-label "${{ steps.gitversion.outputs.semVer }}"
+        run: aws elasticbeanstalk update-environment \
+          --environment-name Fireapp3dev-env-1 \
+          --version-label "${{ steps.gitversion.outputs.semVer }}"
