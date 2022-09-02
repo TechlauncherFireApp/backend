@@ -7,7 +7,7 @@ RUN pip3 install pipenv
 RUN pip3 install gunicorn
 
 # Copy source files
-COPY backend /app
+COPY . /app
 WORKDIR /app
 RUN pipenv install --system --deploy
 
