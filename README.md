@@ -1,10 +1,10 @@
 # FireApp3.0
 
-Bushfire Volunteer Management Application (TL 20-S1-2-C Fire App), a web app to assist with firefighting scheduling 
+Bushfire Volunteer Management Application (FireApp), a web app to assist with firefighting scheduling 
 activities.
 
 [Redmine](https://redmine.cecs.anu.edu.au/redmine/projects/bushfire-volunteer-management-application)\
-[Project landing page] https://fireapp-sem2-2021.atlassian.net/wiki/spaces/FIREAPP/overview
+[Project landing page] https://teamfireapp.atlassian.net/wiki/spaces/F2/overview?homepageId=163927
 
 ### Backend Setup
 
