@@ -9,7 +9,7 @@ RUN pip3 install gunicorn
 # Copy source files
 COPY . /app
 WORKDIR /app
-RUN pipenv lock -r > requirements.txt
+RUN pipenv run pip freeze > requirements.txt
 RUN pip3 install -r requirements.txt
 
 # Expose web server port & execute
