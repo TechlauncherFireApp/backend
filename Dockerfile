@@ -9,8 +9,7 @@ RUN pip3 install gunicorn
 # Copy source files
 COPY . /app
 WORKDIR /app
-RUN pipenv run pip freeze > requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pipenv install --system
 
 # Expose web server port & execute
 EXPOSE 5000
