@@ -9,7 +9,7 @@ RUN pip3 install gunicorn
 # Copy source files
 COPY . /app
 WORKDIR /app
-RUN pipenv install --system
+RUN pipenv install --system --deploy --ignore-pipfile
 
 # Expose web server port & execute
 EXPOSE 5000
