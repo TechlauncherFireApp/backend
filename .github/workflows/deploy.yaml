@@ -75,5 +75,5 @@ jobs:
 
       - name: Deploy new ElasticBeanstalk Application Version
         run: aws elasticbeanstalk update-environment
-          --environment-name Fireapp3dev-env-1
+          --environment-name Fireapp3test-env
           --version-label "${{ steps.gitversion.outputs.semVer }}"
