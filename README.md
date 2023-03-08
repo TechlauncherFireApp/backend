@@ -4,7 +4,7 @@ Bushfire Volunteer Management Application (FireApp), a web app to assist with fi
 activities.
 
 [Redmine](https://redmine.cecs.anu.edu.au/redmine/projects/bushfire-volunteer-management-application)\
-[Project landing page] https://fire-app-2022.atlassian.net/l/cp/xT7VnRJP
+[Project landing page](https://fire-app-2022.atlassian.net/l/cp/xT7VnRJP)
 
 ### Backend Setup
 
