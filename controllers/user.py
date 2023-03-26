@@ -42,12 +42,14 @@ class GetAvailabilitiesRequest(Resource):
             user = get_user_by_email(session, args['email'])
             return user.availabilities
 
+@api.route
 
 class GetAllVolunteer(Resource):
     def get(self):
         with session_scope() as session:
             v_dict = get_volunteer_id_name(session)
         return v_dict
+
 
 
 user_bp = Blueprint('user', __name__)
