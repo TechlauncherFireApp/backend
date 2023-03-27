@@ -17,7 +17,7 @@ result_fields = {
 }
 
 
-class GetDietaryRequirement(Resource):
+class StoreDietaryRequirement(Resource):
     """
     This is a class to store the data of dietary requirement to the database
     """
@@ -41,4 +41,4 @@ class GetDietaryRequirement(Resource):
 
 diet_requirement_bp = Blueprint('diet_requirement', __name__)
 api = Api(diet_requirement_bp, '/dietary')
-api.add_resource(GetDietaryRequirement, '/getDietaryRequirement')
+api.add_resource(StoreDietaryRequirement, '/storeDietaryRequirement')
