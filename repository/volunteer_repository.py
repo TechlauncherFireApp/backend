@@ -9,6 +9,32 @@ def get_volunteer(session, volunteer_id):
         .first()
 
 
+def get_roles_for_user(user, session):
+    roles = session.query(Role.name) \
+        .join(UserRole, Role.id == UserRole.role_id) \
+        .filter(UserRole.user_id == user['ID']) \
+        .all()
+
+    user['possibleRoles'] = [x[0] for x in roles]
+    if int(user['role'].value) == 0:
+        user['role'] = 0
+    elif int(user['role'].value) == 1:
+        user['role'] = 1
+    elif int(user['role'].value) == 2:
+        user['role'] = 2
+    else:
+        user['role'] = -1
+
+
+def get_qualifications_for_user(user, session):
+    quals = session.query(Qualification.name) \
+        .filter(Qualification.id.in_(user['qualifications'])) \
+        .all()
+
+    print(quals)
+    user['qualification'] = [x[0] for x in quals]
+
+
 def list_volunteers(session, volunteer_id=None):
     users = session.query(User.id.label("ID"),
                          User.role.label('role'),
@@ -27,22 +53,10 @@ def list_volunteers(session, volunteer_id=None):
     # Set their roles
     for user in users:
         user = user._asdict()
-        roles = session.query(Role.name) \
-            .join(UserRole, Role.id == UserRole.role_id)\
-            .filter(UserRole.user_id == user['ID'])\
-            .all()
-        user['possibleRoles'] = [x[0] for x in roles]
-        if int(user['role'].value) == 0:
-            user['role'] = 0
-        elif int(user['role'].value) == 1:
-            user['role'] = 1
-        elif int(user['role'].value) == 2:
-            user['role'] = 2
-        else:
-            user['role'] = -1
+        get_roles_for_user(user, session)
+        get_qualifications_for_user(user, session)
         rtn.append(user)
 
-    # TODO: Do the same thing here for qualifications
     return rtn
 
 
