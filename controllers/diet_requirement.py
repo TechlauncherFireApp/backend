@@ -18,14 +18,18 @@ result_fields = {
 class GetDietaryRequirement(Resource):
     @marshal_with(result_fields)
     def post(self):
-        request.get_json(force=True)
-        args = new_parser.parse_args()
-        user_id = args['user_id']
+        try:
+            request.get_json(force=True)
+            args = new_parser.parse_args()
+            
+            user_id = args['user_id']
 
-        diet_args = new_parser.parse_args()
+            diet_args = new_parser.parse_args()
 
-        with session_scope() as session:
-            return {'result': save_dietary_requirements(session, user_id, diet_args)}
+            with session_scope() as session:
+                return {'result': save_dietary_requirements(session, user_id, diet_args)}
+        except Exception as e:
+            return {'result': False}, 400
 
 
 diet_requirement_bp = Blueprint('diet_requirement', __name__)
