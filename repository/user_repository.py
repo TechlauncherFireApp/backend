@@ -67,3 +67,12 @@ def get_volunteer_id_name(session):
         name = v.first_name + " " + v.last_name
         dic_volunteer[id] = name
     return dic_volunteer
+
+
+def get_volunteers(session):
+    volunteer_list = session.query(User.id, User.first_name, User.last_name).filter(User.role == "VOLUNTEER").all()
+    for v in volunteer_list:
+        id = v.id
+        name = v.first_name + " " + v.last_name
+        dic_volunteer[id] = name
+    return dic_volunteer

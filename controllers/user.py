@@ -50,6 +50,7 @@ class GetAllVolunteer(Resource):
         return v_dict
 
 
+
 user_bp = Blueprint('user', __name__)
 api = Api(user_bp, "/user")
 api.add_resource(GetUserInfoRequest, "/getUserInfoByEmail")
