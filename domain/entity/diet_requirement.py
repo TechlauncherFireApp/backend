@@ -18,7 +18,7 @@ class DietRequirement(Base):
     lactose_intolerance = Column(Boolean, nullable=False, default=0)
     diabetic = Column(Boolean, nullable=False, default=0)
     egg_allergy = Column(Boolean, nullable=False, default=0)
-    other = Column(String, nullable=False, default=0)
+    other = Column(String, nullable=False, default="")
 
     UniqueConstraint(diet_id, user_id)
 
