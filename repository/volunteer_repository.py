@@ -16,12 +16,9 @@ def get_roles_for_user(user, session):
         .all()
 
     user['possibleRoles'] = [x[0] for x in roles]
-    if int(user['role'].value) == 0:
-        user['role'] = 0
-    elif int(user['role'].value) == 1:
-        user['role'] = 1
-    elif int(user['role'].value) == 2:
-        user['role'] = 2
+    user_role = user['role'].value
+    if 0 <= user_role <= 2:
+        user['role'] = user_role
     else:
         user['role'] = -1
 
