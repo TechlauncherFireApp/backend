@@ -7,8 +7,8 @@ from domain.entity.diet_requirement import DietRequirement
 from domain.type.dietary import DietaryRequirements, DietaryRestriction
 from repository.diet_repository import save_dietary_requirements
 
-id_parser = reqparse.RequestParser()
-id_parser.add_argument('user_id', type=int, required=True)
+# id_parser = reqparse.RequestParser()
+# id_parser.add_argument('user_id', type=int, required=True)
 
 # diet_parser = reqparse.RequestParser()
 # diet_parser.add_argument('halal', type=bool, required=False)
@@ -25,7 +25,8 @@ id_parser.add_argument('user_id', type=int, required=True)
 
 new_parser = reqparse.RequestParser()
 # new_parser.add_argument('dietary_requirements', type=DietaryRequirements)
-new_parser.add_argument('restrictions', type=list(DietaryRestriction))
+new_parser.add_argument('user_id', type=int, required=True)
+new_parser.add_argument('restrictions', type=DietaryRestriction, action='append')
 new_parser.add_argument('custom_restrictions', type=str)
 
 result_fields = {
@@ -37,7 +38,7 @@ class GetDietaryRequirement(Resource):
     @marshal_with(result_fields)
     def post(self):
         request.get_json(force=True)
-        args = id_parser.parse_args()
+        args = new_parser.parse_args()
         user_id = args['user_id']
 
         diet_args = new_parser.parse_args()
