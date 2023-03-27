@@ -21,3 +21,5 @@ from .volunteer_unavailability import volunteer_unavailability_bp
 from .user import user_bp
 from .chatbot import chatbot_bp
 from .profile import profile_bp
+
+from .diet_requirement import diet_requirement_bp
