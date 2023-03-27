@@ -42,6 +42,7 @@ class GetAvailabilitiesRequest(Resource):
             user = get_user_by_email(session, args['email'])
             return user.availabilities
 
+
 class GetAllVolunteer(Resource):
     def get(self):
         with session_scope() as session:
