@@ -3,7 +3,7 @@ from flask_restful import Resource, marshal_with
 from controllers.v2.v2_blueprint import v2_bp, v2_api
 from controllers.v2.volunteer.response_models import volunteer_listing_model
 from domain import session_scope
-from repository.volunteer_repository import list_volunteers, short_list_volunteers
+from repository.volunteer_repository import list_volunteers
 from services.jwk import requires_auth
 
 
