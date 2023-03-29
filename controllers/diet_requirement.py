@@ -27,7 +27,6 @@ class StoreDietaryRequirement(Resource):
         Returns:
             True if the data is updated; False if the data is unable to upload
         """
-        # using try and except to replace the error message to return false
         try:
             request.get_json(force=True)
             args = new_parser.parse_args()
