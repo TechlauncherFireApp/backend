@@ -3,22 +3,32 @@ from domain.entity.diet_requirement import DietRequirement
 
 def save_dietary_requirements(session, user_id, dietary_requirements):
     """
-    A helper function for upload the data to the database.
-    This function will map the argument from the frontend with the statement in the database
-    Then using the session to update the database
-    This function is allowed to change the dietary requirement for the user by providing the user_id
+    Stores dietary requirements for the given user to the database.
+    Any existing requirements for that user will be overwritten.
 
     Parameters:
         session: A SQLAlchemy Session for the query.
-        user_id: The user_id to identify create a new dietary requirement or
-                change the current dietary requirement in the database
-        dietary_requirements: The parser contains the data required for update
+        user_id: An id for the user who are requesting to edit
+        dietary_requirements: Requirements that will be stored in the database
 
     Returns:
         True if the data is updated; False if the data is not upload
     """
     # Change the diet requirement in the database
     diet = session.query(DietRequirement).filter(DietRequirement.user_id == user_id).first()
+
+    # initialize the dietary requirement
+    diet.halal = False
+    diet.vegetarian = False
+    diet.vegan = False
+    diet.nut_allergy = False
+    diet.shellfish_allergy = False
+    diet.gluten_intolerance = False
+    diet.kosher = False
+    diet.lactose_intolerance = False
+    diet.diabetic = False
+    diet.egg_allergy = False
+    diet.other = ""
 
     if not diet:
         # Create a new diet requirement object if none exists
