@@ -17,22 +17,12 @@ def save_dietary_requirements(session, user_id, dietary_requirements):
     # Change the diet requirement in the database
     diet = session.query(DietRequirement).filter(DietRequirement.user_id == user_id).first()
 
-    # initialize the dietary requirement
-    diet.halal = False
-    diet.vegetarian = False
-    diet.vegan = False
-    diet.nut_allergy = False
-    diet.shellfish_allergy = False
-    diet.gluten_intolerance = False
-    diet.kosher = False
-    diet.lactose_intolerance = False
-    diet.diabetic = False
-    diet.egg_allergy = False
-    diet.other = ""
+    if diet:
+        session.delete(diet)
+        session.commit()
 
-    if not diet:
-        # Create a new diet requirement object if none exists
-        diet = DietRequirement(user_id=user_id)
+    # Create a new diet requirement object if none exists
+    diet = DietRequirement(user_id=user_id)
 
     # Set the values for the relevant attributes based on the dietary requirements
     if dietary_requirements.restrictions is not None:
