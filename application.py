@@ -37,8 +37,13 @@ app.register_blueprint(v2_bp)
 app.register_blueprint(volunteer_unavailability_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
+app.register_blueprint(diet_requirement_retrieval_bp)
+
 
 app.register_blueprint(diet_requirement_bp)
+
+
+
 
 @app.route('/')
 def main():
@@ -52,3 +57,5 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename='error.log', level=logging.DEBUG)
     app.run(host='0.0.0.0')
+
+
