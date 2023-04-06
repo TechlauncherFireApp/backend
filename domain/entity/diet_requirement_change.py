@@ -1,10 +1,8 @@
+
 from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint, String
 from sqlalchemy.orm import relationship
 
 from domain import Base
-
-
-
 
 class DietRequirement(Base):
     __tablename__ = 'diet_requirement'
