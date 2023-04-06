@@ -5,7 +5,6 @@ from domain import session_scope
 
 from repository.diet_requirement_repository import get_dietary_requirements
 
-## try the test
 # Request parser
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('user_id', type=int, required=True)
