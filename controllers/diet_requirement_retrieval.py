@@ -56,8 +56,6 @@ class RetrieveDietaryRequirement(Resource):
             return {"success": False}, 400
 
 
-
-
 diet_requirement_retrieval_bp = Blueprint('diet_requirement_retrieval', __name__)
 api = Api(diet_requirement_retrieval_bp, '/dietary')
 api.add_resource(RetrieveDietaryRequirement, '/getDietaryRequirement')
