@@ -40,7 +40,6 @@ class RetrieveDietaryRequirement(Resource):
     @marshal_with(result_fields)
     def get(self):
         try:
-            print("RetrieveDietaryRequirement.get() called")
             user_id = request.args.get('user_id', None, type=int)
             if user_id is None:
                 raise ValueError("user_id is required")
@@ -50,7 +49,6 @@ class RetrieveDietaryRequirement(Resource):
 
             return {"diet_requirement": diet_requirement, "success": True}
         except Exception as e:
-            print(f"Error: {e}")
             return {"success": False}, 400
 
 
