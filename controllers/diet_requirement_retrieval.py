@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_restful import reqparse, fields, Resource, marshal_with, Api
-
+from flask import request
 from domain import session_scope
 
 from repository.diet_requirement_repository import get_dietary_requirements
@@ -39,13 +39,11 @@ class RetrieveDietaryRequirement(Resource):
 
     @marshal_with(result_fields)
     def get(self):
-        """
-        Returns:
-            The dietary requirement data for the specified user
-        """
         try:
-            args = get_parser.parse_args()
-            user_id = args['user_id']
+            print("RetrieveDietaryRequirement.get() called")
+            user_id = request.args.get('user_id', None, type=int)
+            if user_id is None:
+                raise ValueError("user_id is required")
 
             with session_scope() as session:
                 diet_requirement = get_dietary_requirements(session, user_id)
