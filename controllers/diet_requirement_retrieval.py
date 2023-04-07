@@ -5,11 +5,11 @@ from domain import session_scope
 
 from repository.diet_requirement_repository import get_dietary_requirements
 
-# Request parser
+
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('user_id', type=int, required=True)
 
-# DietRequirement fields
+
 diet_requirement_fields = {
     'diet_id': fields.Integer,
     'user_id': fields.Integer,
@@ -26,7 +26,7 @@ diet_requirement_fields = {
     'other': fields.String
 }
 
-# Result fields
+
 result_fields = {
     "diet_requirement": fields.Nested(diet_requirement_fields),
     "success": fields.Boolean

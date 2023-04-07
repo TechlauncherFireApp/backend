@@ -16,13 +16,11 @@ from .asset_type_role import asset_type_role_bp
 from .user_type import user_type_bp
 from .tenancy_config import tenancy_config_bp
 from .tutorial_quiz import tutorial_quiz_bp
-from .email_controllers import email_bp
+from .email import email_bp
 from .volunteer_unavailability import volunteer_unavailability_bp
 from .user import user_bp
 from .chatbot import chatbot_bp
 from .profile import profile_bp
 from .diet_requirement_retrieval import diet_requirement_retrieval_bp
-
-
 from .v2.v2_blueprint import v2_bp
 from .diet_requirement import diet_requirement_bp

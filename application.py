@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from controllers import *
-from controllers.change_diet_requirement import diet_requirement_change_bp
+
 
 # Register the application
 
@@ -34,17 +34,12 @@ app.register_blueprint(tutorial_quiz_bp)
 app.register_blueprint(email_bp)
 app.register_blueprint(profile_bp)
 app.register_blueprint(v2_bp)
-
 app.register_blueprint(volunteer_unavailability_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(diet_requirement_retrieval_bp)
-
-
 app.register_blueprint(diet_requirement_bp)
 
-
-app.register_blueprint(diet_requirement_change_bp)
 
 
 @app.route('/')
