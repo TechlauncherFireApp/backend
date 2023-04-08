@@ -6,6 +6,12 @@ __secret__ = 'ExcellentSecret'
 __issuer__ = "FIREAPP2.0"
 
 
+class Roles:
+    ADMIN = "admin"
+    SUPERVISOR = "supervisor"
+    VOLUNTEER = "volunteer"
+
+
 class JWKService:
 
     @staticmethod
@@ -38,6 +44,17 @@ class JWKService:
         except Exception as e:
             return False
         return True
+
+    @staticmethod
+    def validate_role(token, valid_roles) -> bool:
+        try:
+            decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
+            role = decoded.get("role")
+            if role in valid_roles:
+                return True
+        except Exception as e:
+            pass
+        return False
 
 
 def requires_auth(func):
@@ -73,3 +90,23 @@ def requires_admin(func):
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
     return wrapper
+
+
+def has_role(*roles):
+    def decorator(func):
+        jwkservice = JWKService()
+
+        def wrapper(*args, **kwargs):
+            authorization_header = request.headers.get("Authorization")
+            if authorization_header is None:
+                pass
+            token = authorization_header[len('Bearer '):]
+            if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
+                return func(*args, **kwargs)
+            return flask_restful.abort(401)
+
+        wrapper.__doc__ = func.__doc__
+        wrapper.__name__ = func.__name__
+        return wrapper
+
+    return decorator
