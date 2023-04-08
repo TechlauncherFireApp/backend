@@ -2,11 +2,11 @@ from flask_restful import fields
 
 volunteer_personal_info = {
     'ID': fields.String,
-    'first_name': fields.String,
-    'last_name': fields.String,
-    'mobile_number': fields.String,
+    'role': fields.String,
+    'firstName': fields.String,
+    'lastName': fields.String,
     'email': fields.String,
-    'possible_roles': fields.String,
+    'mobileNo': fields.String,
     'qualification': fields.List(fields.String),
     'restrictions': {
         'halal': fields.Boolean,
