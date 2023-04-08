@@ -67,3 +67,25 @@ def set_preferred_hours(session, volunteer_id, preferred_hours):
         .filter(User.id == volunteer_id) \
         .first()
     volunteer.preferred_hours = preferred_hours
+
+
+def get_volunteer_info(session, volunteer_id):
+    users = session.query(User.id.label("ID"),
+                         User.role.label('role'),
+                         User.first_name.label('firstName'),
+                         User.last_name.label('lastName'),
+                         User.email.label('email'),
+                         User.mobile_number.label('mobileNo'),
+                         User.preferred_hours.label('prefHours'),
+                         User.experience_years.label('expYears'),
+                         User.qualifications.label('qualifications'),
+                         User.availabilities.label('availabilities'))\
+        .filter(or_(User.id == volunteer_id, volunteer_id == None))
+
+    rtn = []
+    for user in users:
+        user = user._asdict()
+        get_roles_for_user(user, session)
+        get_qualifications_for_user(user, session)
+        rtn.append(user)
+    return rtn
