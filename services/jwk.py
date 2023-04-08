@@ -5,9 +5,6 @@ import jwt
 __secret__ = 'ExcellentSecret'
 __issuer__ = "FIREAPP2.0"
 
-from domain import session_scope, User
-from repository.volunteer_repository import get_roles_for_user
-
 
 class JWKService:
 
