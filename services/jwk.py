@@ -5,6 +5,9 @@ import jwt
 __secret__ = 'ExcellentSecret'
 __issuer__ = "FIREAPP2.0"
 
+from domain import session_scope, User
+from repository.volunteer_repository import get_roles_for_user
+
 
 class JWKService:
 
@@ -25,7 +28,6 @@ class JWKService:
     def validate(token) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
-            print(decoded)
         except Exception as e:
             return False
         return True
@@ -44,11 +46,12 @@ class JWKService:
     def validate_role(token, valid_roles) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
-            print(decoded)
-            role = decoded.get("role")
-            print(role)
-            if role in valid_roles:
-                return True
+            user_id = decoded.get("sub")
+            with session_scope() as session:
+                users = session.query(User.id.label("ID"), User.role.label('role')).filter(User.id == user_id)
+                for user in users:
+                    if user.role in valid_roles:
+                        return True
         except Exception as e:
             pass
         return False
