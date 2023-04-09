@@ -24,7 +24,8 @@ class JWKService:
     @staticmethod
     def validate(token) -> bool:
         try:
-            jwt.decode(token, __secret__, algorithms=["HS256"])
+            decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
+            print(decoded)
         except Exception as e:
             return False
         return True
@@ -43,7 +44,9 @@ class JWKService:
     def validate_role(token, valid_roles) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
+            print(decoded)
             role = decoded.get("role")
+            print(role)
             if role in valid_roles:
                 return True
         except Exception as e:
