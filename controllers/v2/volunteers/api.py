@@ -1,25 +1,23 @@
-from flask_restful import Resource, marshal_with, reqparse
+from flask_restful import Resource, marshal_with
 
-from controllers.v2 import volunteer_personal_info
-from controllers.v2.v2_blueprint import v2_info_api
+from controllers.v2.v2_blueprint import v2_bp, v2_api
+from controllers.v2.volunteers.response_models import volunteer_listing_model
 from domain import session_scope
-from repository.volunteer_repository import get_volunteer_info
-from services.jwk import has_role
-
-parser = reqparse.RequestParser()
-parser.add_argument('ID', action='store', type=str)
+from repository.volunteer_repository import list_volunteers
+from services.jwk import requires_auth
 
 
-class VolunteerInfo(Resource):
+class VolunteerV2(Resource):
 
-    @has_role()
-    @marshal_with(volunteer_personal_info)
-    def get(self):
-        args = parser.parse_args()
-        if args["ID"] is None:
-            return
-        with session_scope() as session:
-            return get_volunteer_info(session, args["ID"])
+    @requires_auth
+    @marshal_with(volunteer_listing_model)
+    def get(self, user_id=None):
+        if user_id:
+            print("Getting information for individual user with id", user_id)
+            # implement functionality for retrieving one user's details here
+        else:
+            with session_scope() as session:
+                return list_volunteers(session)
 
 
-v2_info_api.add_resource(VolunteerInfo, '/info/volunteer/info')
+v2_api.add_resource(VolunteerV2, '/v2/volunteers/', '/v2/volunteers/<user_id>')

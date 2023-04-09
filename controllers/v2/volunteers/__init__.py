@@ -1,2 +1,2 @@
-from .api import VolunteerInfo
-from .response_models import volunteer_personal_info
+from .api import VolunteerV2
+from .response_models import volunteer_listing_model
