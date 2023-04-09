@@ -80,7 +80,7 @@ def get_volunteer_info(session, volunteer_id):
                          User.experience_years.label('expYears'),
                          User.qualifications.label('qualifications'),
                          User.availabilities.label('availabilities'))\
-        .filter(or_(User.id == volunteer_id, volunteer_id == None))
+        .filter(User.id == volunteer_id)
 
     rtn = []
     for user in users:
