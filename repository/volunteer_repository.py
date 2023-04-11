@@ -27,8 +27,6 @@ def get_qualifications_for_user(user, session):
     quals = session.query(Qualification.name) \
         .filter(Qualification.id.in_(user['qualifications'])) \
         .all()
-
-    print(quals)
     user['qualification'] = [x[0] for x in quals]
 
 
