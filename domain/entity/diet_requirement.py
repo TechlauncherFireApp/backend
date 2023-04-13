@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint, String
 from sqlalchemy.orm import relationship
-
 from domain import Base
+
+
 
 
 class DietRequirement(Base):

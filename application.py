@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from controllers import *
 
+
 # Register the application
 
 application = app = Flask(__name__)
@@ -33,12 +34,13 @@ app.register_blueprint(tutorial_quiz_bp)
 app.register_blueprint(email_bp)
 app.register_blueprint(profile_bp)
 app.register_blueprint(v2_bp)
-
 app.register_blueprint(volunteer_unavailability_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
-
+app.register_blueprint(diet_requirement_retrieval_bp)
 app.register_blueprint(diet_requirement_bp)
+
+
 
 @app.route('/')
 def main():
@@ -52,3 +54,5 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename='error.log', level=logging.DEBUG)
     app.run(host='0.0.0.0')
+
+
