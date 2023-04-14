@@ -71,6 +71,7 @@ def set_preferred_hours(session, volunteer_id, preferred_hours):
 from operator import or_
 
 from domain import User, Qualification, UserRole, Role
+from repository.diet_requirement_repository import get_dietary_requirements
 
 
 def get_volunteer(session, volunteer_id):
