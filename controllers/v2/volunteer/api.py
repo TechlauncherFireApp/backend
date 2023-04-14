@@ -11,6 +11,10 @@ parser.add_argument('user_id', action='store', type=str)
 
 
 class VolunteerInfo(Resource):
+    """
+    Get the personal detail for a specific volunteer
+    This information should only be visible for the supervisor and volunteer themselves
+    """
 
     @marshal_with(volunteer_personal_info)
     @has_role(UserType.ROOT_ADMIN)

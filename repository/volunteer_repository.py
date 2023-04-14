@@ -70,6 +70,11 @@ def set_preferred_hours(session, volunteer_id, preferred_hours):
 
 
 def get_volunteer_info(session, volunteer_id):
+    """
+    Load the information required.
+    The information included the user id, role, first namd, last name, email, mobile number, qualification
+    and dietary requirement
+    """
     users = session.query(User.id.label("ID"),
                          User.role.label('role'),
                          User.first_name.label('firstName'),
