@@ -47,6 +47,7 @@ virtualenv-clone = "==0.5.4"
 virtualenv = "==20.4.4"
 werkzeug = "==1.0.1"
 numpy = "==1.23.3"
+pytest = "*"
 
 [dev-packages]
 
