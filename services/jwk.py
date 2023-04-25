@@ -17,6 +17,7 @@ class JWKService:
         Generate a JWT token for communication between client and application server.
         :param subject: The subject (ID) of the client for the token.
         :param name: The name of the client for the token.
+        :param role: The role of the client for the token.
         :return: The token as a string.
         """
         # TODO: Authentication
@@ -46,14 +47,10 @@ class JWKService:
     def validate_role(token, valid_roles) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
-            user_id = decoded.get("sub")
-            print(decoded.get("sub"))
-            print(decoded.get("role"))
-            with session_scope() as session:
-                users = session.query(User.id.label("ID"), User.role.label('role')).filter(User.id == user_id)
-                for user in users:
-                    if user.role in valid_roles:
-                        return True
+            role = decoded.get("role")
+            for roles in valid_roles:
+                if role == roles.name:
+                    return True
         except Exception as e:
             pass
         return False
@@ -99,6 +96,10 @@ def has_role(*roles):
         jwkservice = JWKService()
 
         def wrapper(*args, **kwargs):
+            print(**kwargs)
+            print(kwargs)
+            print(*args)
+            print(args[0].__dict__)
             authorization_header = request.headers.get("Authorization")
             if authorization_header is None:
                 pass

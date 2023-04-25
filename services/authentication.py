@@ -82,9 +82,7 @@ class AuthenticationService():
         if not passwordService.compare(password, user.password):
             return LoginResult.FAIL, None, None
 
-        print("role:" +user.role)
-
-        return LoginResult.SUCCESS, jwk_service.generate(user.id, user.email, user.role), user
+        return LoginResult.SUCCESS, jwk_service.generate(user.id, user.email, user.role.name), user
 
     @staticmethod
     def generate_code(code_len: int):
