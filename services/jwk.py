@@ -12,7 +12,7 @@ from repository.volunteer_repository import get_roles_for_user
 class JWKService:
 
     @staticmethod
-    def generate(subject: int, name: str) -> str:
+    def generate(subject: int, name: str, role: str) -> str:
         """
         Generate a JWT token for communication between client and application server.
         :param subject: The subject (ID) of the client for the token.
@@ -21,7 +21,7 @@ class JWKService:
         """
         # TODO: Authentication
         #   - Add token expiry & refreshing, low priority in MVP
-        token = jwt.encode({"sub": f"{subject}", "name": name, "iss": __issuer__}, __secret__, algorithm="HS256")
+        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "iss": __issuer__}, __secret__, algorithm="HS256")
         return token
 
     @staticmethod
@@ -47,6 +47,8 @@ class JWKService:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
             user_id = decoded.get("sub")
+            print(decoded.get("sub"))
+            print(decoded.get("role"))
             with session_scope() as session:
                 users = session.query(User.id.label("ID"), User.role.label('role')).filter(User.id == user_id)
                 for user in users:
