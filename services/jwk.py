@@ -93,10 +93,6 @@ def has_role(*roles):
         jwkservice = JWKService()
 
         def wrapper(*args, **kwargs):
-            print(**kwargs)
-            print(kwargs)
-            print(*args)
-            print(args[0].__dict__)
             authorization_header = request.headers.get("Authorization")
             if authorization_header is None:
                 # TODO: Throw an error
