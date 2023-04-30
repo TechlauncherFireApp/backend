@@ -207,6 +207,7 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
     if vehicle_time_end < user_unavailability_start:
         return True
 
+    # repeat once
     if periodicity == 3:
         if user_unavailability_start <= vehicle_time_start <= user_unavailability_end:
             return False
@@ -219,6 +220,7 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
         else:
             return True
 
+    # repeat weekly
     elif periodicity == 2:
         while vehicle_time_start > user_unavailability_end:
             user_unavailability_start = user_unavailability_start + datetime.timedelta(weeks=1)
@@ -234,6 +236,7 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
         else:
             return True
 
+    # repeat daily
     elif periodicity == 1:
         while vehicle_time_start > user_unavailability_end:
             vehicle_time_start = vehicle_time_start + datetime.timedelta(days=1)
