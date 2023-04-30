@@ -373,4 +373,5 @@ def test_vehicle_list(session, request_id):
     # print(get_input_availability(session,360))
     # print(get_input_clashes(session,323))
 
+
    return 1
