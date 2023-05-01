@@ -344,7 +344,6 @@ def get_position_qualification(session, position_id):
     return qualification_id
 
 
-
 # This can be called by api from postman, to test easily
 def test_vehicle_list(session, request_id):
    v_l = get_vehicle_list(session, request_id)
