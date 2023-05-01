@@ -3,17 +3,6 @@ from sqlalchemy import orm, func, alias
 import numpy as np
 import datetime
 
-import pytest
-from domain.base import Session, Engine
-@pytest.fixture
-def session():
-    # 创建一个新的 session
-    new_session = Session(bind=Engine)
-    yield new_session
-
-    # 关闭 session
-    new_session.close()
-
 
 def get_input_A(session, request_id):
     asset_list_count = session.query(AssetRequestVehicle).filter(AssetRequestVehicle.request_id == request_id).count()
@@ -386,36 +375,3 @@ def test_vehicle_list(session, request_id):
     # print(get_input_availability(session,360))
     #print(get_input_clashes(session,request_id))
 
-@pytest.fixture
-def request_id():
-    return '322'
-
-@pytest.fixture
-def vehicle_id():
-    return  '369'
-@pytest.fixture
-def position_id():
-    return
-
-
-def test_get_input_clashes(session,request_id):
-    print(get_input_clashes(session,request_id))
-def test_get_vehicle_time(session,vehicle_id):
-    print(get_vehicle_time(session,vehicle_id))
-def test_get_vehicle_list(session,request_id):
-    print(get_vehicle_list(session,request_id))
-
-def test_get_position_list(session,vehicle_id):
-    print(get_position_list(session,vehicle_id))
-
-def test_get_position_list_all(session,request_id):
-    print(get_position_list_all(session,request_id))
-
-def test_get_position_vehicle(session,position_id):
-    print(get_position_vehicle(session,position_id))
-
-def test_get_position_role(session,position_id):
-    print(get_position_role(session,position_id))
-
-def test_get_position_qualification(session,position_id):
-    print(get_position_qualification(session,position_id))
