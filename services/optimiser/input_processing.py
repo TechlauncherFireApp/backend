@@ -348,7 +348,7 @@ def get_position_qualification(session, position_id):
 def test_vehicle_list(session, request_id):
    v_l = get_vehicle_list(session, request_id)
    for v in v_l:
-     get_position_list(session, v)
+      get_position_list(session, v)
 
     # print("get_postion_role", get_position_role(session,720))
     # print("get_APR_matrix", get_input_rolerequirements(session,361))
