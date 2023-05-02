@@ -1,13 +1,10 @@
-from flask_restful import Resource, marshal_with, reqparse
+from flask_restful import Resource, marshal_with
 
 from controllers.v2.v2_blueprint import v2_bp, v2_api
 from controllers.v2.volunteers.response_models import volunteer_listing_model, volunteer_personal_info
 from domain import session_scope, UserType
 from repository.volunteer_repository import list_volunteers, get_volunteer_info
 from services.jwk import requires_auth, has_role
-
-parser = reqparse.RequestParser()
-parser.add_argument('user_id', action='store', type=str)
 
 
 class VolunteerV2(Resource):
