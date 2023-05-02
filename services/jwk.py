@@ -98,6 +98,7 @@ def has_role(*roles):
         def wrapper(*args, **kwargs):
             authorization_header = request.headers.get("Authorization")
             if authorization_header is None:
+                # TODO: Throw an error
                 pass
             token = authorization_header[len('Bearer '):]
             if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
