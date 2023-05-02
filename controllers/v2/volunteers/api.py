@@ -22,7 +22,6 @@ class VolunteerV2(Resource):
                 with session_scope() as session:
                     return get_volunteer_info(session, user_id)
             return get_personal_info()
-            # implement functionality for retrieving one user's details here
         else:
             @marshal_with(volunteer_listing_model)
             def list_all_volunteers():
