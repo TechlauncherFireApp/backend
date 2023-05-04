@@ -1,11 +1,11 @@
 from flask_restful import Resource, marshal_with, reqparse
 
 from controllers.v2.v2_blueprint import v2_api
-from domain import session_scope
+from domain import session_scope, UserType
 from controllers.v2.reference.response_models import role_model, id_model
 from repository.reference_repository import get_roles, add_role, toggle_role, \
     delete_role
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 role_parser = reqparse.RequestParser()
 role_parser.add_argument('id', action='store', type=str)
@@ -19,19 +19,19 @@ class RoleReference(Resource):
         with session_scope() as session:
             return get_roles(session)
 
-    # TODO: replace with requires supervisor auth
-    @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(id_model)
     def post(self):
         args = role_parser.parse_args()
+        print("name:", args['name'], "code:", args['code'])
         if args['name'] is None or args['name'] == '' or args['code'] is None or args['code'] == '':
+            print('empty return')
             return
         with session_scope() as session:
             role_id = add_role(session, args['name'], args['code'])
             return {'id': role_id}
 
-    # TODO: replace with requires supervisor auth
-    @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     def patch(self):
         args = role_parser.parse_args()
         if args['id'] is None or args['id'] == '':
@@ -40,8 +40,7 @@ class RoleReference(Resource):
             toggle_role(session, args['id'])
         return
 
-    # TODO: replace with requires supervisor auth
-    @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     def delete(self):
         args = role_parser.parse_args()
         if args['id'] is None or args['id'] == '':
