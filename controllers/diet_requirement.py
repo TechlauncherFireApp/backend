@@ -6,6 +6,7 @@ from domain.type.dietary import DietaryRestriction
 from repository.diet_repository import save_dietary_requirements
 
 from repository.diet_requirement_repository import get_dietary_requirements
+from repository.diet_requirement_repository import diet_requirement_to_dict
 
 # getting the data from the frontend
 new_parser = reqparse.RequestParser()
@@ -75,7 +76,6 @@ class RetrieveDietaryRequirement(Resource):
     This is a class to retrieve the dietary requirement data from the database
     """
 
-    @marshal_with(result_fields)
     def get(self):
         try:
             user_id = request.args.get('user_id', None, type=int)
@@ -84,11 +84,20 @@ class RetrieveDietaryRequirement(Resource):
 
             with session_scope() as session:
                 diet_requirement = get_dietary_requirements(session, user_id)
+                diet_requirement_dict = diet_requirement_to_dict(diet_requirement)
 
-            return {"diet_requirement": diet_requirement, "success": True}
+            restrictions = []
+            for key, value in diet_requirement_dict.items():
+                if key not in ['diet_id', 'user_id', 'other'] and value:
+                    display_name = key.replace('_', ' ').title()
+                    restrictions.append({"key": key, "display_name": display_name})
+
+            return {
+                "custom_restrictions": diet_requirement_dict.get('other', ''),
+                "restrictions": restrictions
+            }, 200
         except Exception as e:
-            return {"success": False}, 400
-
+            return {"custom_restrictions": "", "restrictions": []}, 400
 
 diet_requirement_retrieval_bp = Blueprint('diet_requirement_retrieval', __name__)
 api = Api(diet_requirement_retrieval_bp, '/dietary')
