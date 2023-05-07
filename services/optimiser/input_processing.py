@@ -192,8 +192,8 @@ def get_input_availability(session, request_id):
 
 def time_unavailability_list(session, user_id):
     unavailability_list = session.query(UnavailabilityTime.start, UnavailabilityTime.end,
-                                        UnavailabilityTime.periodicity).filter(
-        UnavailabilityTime.userId == user_id and UnavailabilityTime.status == 1).all()
+                                        UnavailabilityTime.periodicity, UnavailabilityTime.status).filter(
+        (UnavailabilityTime.userId == user_id) & UnavailabilityTime.status).all()
     # a list, each one is a tuple[(start,end),(start,end),peroid]
     return unavailability_list
 
@@ -208,7 +208,8 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
         return True
 
     # repeat once
-    if periodicity == 3:
+    # Todo: Fix the database
+    if periodicity == 3 or periodicity == 0:
         if user_unavailability_start <= vehicle_time_start <= user_unavailability_end:
             return False
         elif user_unavailability_start <= vehicle_time_end <= user_unavailability_end:
@@ -239,8 +240,8 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
     # repeat daily
     elif periodicity == 1:
         while vehicle_time_start > user_unavailability_end:
-            vehicle_time_start = vehicle_time_start + datetime.timedelta(days=1)
-            vehicle_time_end = vehicle_time_end + datetime.timedelta(days=1)
+            user_unavailability_start = user_unavailability_start + datetime.timedelta(days=1)
+            user_unavailability_start = user_unavailability_start + datetime.timedelta(days=1)
             if user_unavailability_start <= vehicle_time_start <= user_unavailability_end:
                 return False
             elif user_unavailability_start <= vehicle_time_end <= user_unavailability_end:
