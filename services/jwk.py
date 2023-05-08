@@ -31,6 +31,14 @@ class JWKService:
         return True
 
     @staticmethod
+    def decode_user_id() -> int:
+        try:
+            decoded = jwt.decode(request.headers.get("Authorization"), __secret__, algorithms=["HS256"])
+            return int(decoded.get("sub"))
+        except Exception as e:
+            return -1
+
+    @staticmethod
     def validate_admin(token) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])

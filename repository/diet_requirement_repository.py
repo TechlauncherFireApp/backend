@@ -6,6 +6,8 @@ def get_dietary_requirements(session, user_id):
     if diet_requirement:
         session.expunge(diet_requirement)
     return diet_requirement
+
+
 def diet_requirement_to_dict(diet_requirement):
     if not diet_requirement:
         return {}
