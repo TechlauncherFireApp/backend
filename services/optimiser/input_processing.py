@@ -208,7 +208,8 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
         return True
 
     # repeat once
-    # Todo: Fix the database
+    # Todo: Fix the database, as both 3 and 0 are representing the non-repeat action,
+    #  we need to modify that only 0 or only 3 shows up the non-repeat action
     if periodicity == 3 or periodicity == 0:
         if user_unavailability_start <= vehicle_time_start <= user_unavailability_end:
             return False
