@@ -15,11 +15,6 @@ new_parser.add_argument('user_id', type=int, required=True)
 new_parser.add_argument('restrictions', type=DietaryRestriction, action='append')
 new_parser.add_argument('custom_restrictions', type=str)
 
-# the result for whether updating the data success
-result_fields = {
-    "result": fields.Boolean
-}
-
 options = [
     'halal',
     'vegetarian',
@@ -34,7 +29,6 @@ options = [
 ]
 
 
-##get the diet requirement from database
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('user_id', type=int, required=True)
 
@@ -54,11 +48,6 @@ diet_requirement_fields = {
     'other': fields.String
 }
 
-result_fields = {
-    "diet_requirement": fields.Nested(diet_requirement_fields),
-    "success": fields.Boolean
-}
-
 
 class DietaryOptions(Resource):
 
@@ -75,7 +64,6 @@ class DietaryRequirement(Resource):
         """
 
     @requires_auth
-    @marshal_with(result_fields)
     def post(self):
         """
         Returns:
@@ -87,7 +75,8 @@ class DietaryRequirement(Resource):
             user_id = JWKService.decode_user_id()
 
             with session_scope() as session:
-                return {'result': save_dietary_requirements(session, user_id, args)}
+                save_dietary_requirements(session, user_id, args)
+                return {'result': True}, 200
         except Exception as e:
             return {'result': False}, 400
 
@@ -100,6 +89,8 @@ class DietaryRequirement(Resource):
             user_id = JWKService.decode_user_id()
             if user_id is None:
                 raise ValueError("user_id is required")
+            elif user_id == -1:
+                raise Exception("An error occurred while decoding the auth token.")
 
             with session_scope() as session:
                 diet_requirement = get_dietary_requirements(session, user_id)
