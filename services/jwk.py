@@ -33,7 +33,9 @@ class JWKService:
     @staticmethod
     def decode_user_id() -> int:
         try:
-            decoded = jwt.decode(request.headers.get("Authorization"), __secret__, algorithms=["HS256"])
+            data = request.headers.get("Authorization")
+            token = str.replace(str(data), 'Bearer ', '')
+            decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
             return int(decoded.get("sub"))
         except Exception as e:
             return -1
