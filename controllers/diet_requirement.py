@@ -11,7 +11,7 @@ from services.jwk import requires_auth, JWKService
 
 # getting the data from the frontend
 new_parser = reqparse.RequestParser()
-new_parser.add_argument('user_id', type=int, required=True)
+new_parser.add_argument('user_id', type=int)
 new_parser.add_argument('restrictions', type=DietaryRestriction, action='append')
 new_parser.add_argument('custom_restrictions', type=str)
 
