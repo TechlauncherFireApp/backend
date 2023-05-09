@@ -192,8 +192,8 @@ def get_input_availability(session, request_id):
 
 def time_unavailability_list(session, user_id):
     unavailability_list = session.query(UnavailabilityTime.start, UnavailabilityTime.end,
-                                        UnavailabilityTime.periodicity).filter(
-        UnavailabilityTime.userId == user_id and UnavailabilityTime.status == 1).all()
+                                        UnavailabilityTime.periodicity, UnavailabilityTime.status).filter(
+        (UnavailabilityTime.userId == user_id) & UnavailabilityTime.status).all()
     # a list, each one is a tuple[(start,end),(start,end),peroid]
     return unavailability_list
 
@@ -207,7 +207,10 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
     if vehicle_time_end < user_unavailability_start:
         return True
 
-    if periodicity == 3:
+    # repeat once
+    # Todo: Fix the database, as both 3 and 0 are representing the non-repeat action,
+    #  we need to modify that only 0 or only 3 shows up the non-repeat action
+    if periodicity == 3 or periodicity == 0:
         if user_unavailability_start <= vehicle_time_start <= user_unavailability_end:
             return False
         elif user_unavailability_start <= vehicle_time_end <= user_unavailability_end:
@@ -219,6 +222,7 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
         else:
             return True
 
+    # repeat weekly
     elif periodicity == 2:
         while vehicle_time_start > user_unavailability_end:
             user_unavailability_start = user_unavailability_start + datetime.timedelta(weeks=1)
@@ -234,10 +238,11 @@ def if_time_availability(user_unavailability, vehicle_time, periodicity):
         else:
             return True
 
+    # repeat daily
     elif periodicity == 1:
         while vehicle_time_start > user_unavailability_end:
-            vehicle_time_start = vehicle_time_start + datetime.timedelta(days=1)
-            vehicle_time_end = vehicle_time_end + datetime.timedelta(days=1)
+            user_unavailability_start = user_unavailability_start + datetime.timedelta(days=1)
+            user_unavailability_start = user_unavailability_start + datetime.timedelta(days=1)
             if user_unavailability_start <= vehicle_time_start <= user_unavailability_end:
                 return False
             elif user_unavailability_start <= vehicle_time_end <= user_unavailability_end:
@@ -367,5 +372,6 @@ def test_vehicle_list(session, request_id):
     # print(time_unavailability_list(session,31))
     # print(get_input_availability(session,360))
     # print(get_input_clashes(session,323))
+
 
    return 1
