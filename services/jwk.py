@@ -110,7 +110,32 @@ def has_role(*roles):
             token = authorization_header[len('Bearer '):]
             if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
                 return func(*args, **kwargs)
-            return flask_restful.abort(401)
+            return flask_restful.abort(403)
+
+        wrapper.__doc__ = func.__doc__
+        wrapper.__name__ = func.__name__
+        return wrapper
+
+    return decorator
+
+
+def is_user_or_has_role(user_id, *roles):
+    def decorator(func):
+        jwkservice = JWKService()
+
+        def wrapper(*args, **kwargs):
+            authorization_header = request.headers.get("Authorization")
+            if authorization_header is None:
+                flask_restful.abort(401)
+
+            token = authorization_header[len('Bearer '):]
+            if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
+                return func(*args, **kwargs)
+
+            authenticated_user = jwkservice.decode_user_id()
+            if int(user_id) == int(authenticated_user):
+                return func(*args, **kwargs)
+            return flask_restful.abort(403)
 
         wrapper.__doc__ = func.__doc__
         wrapper.__name__ = func.__name__
