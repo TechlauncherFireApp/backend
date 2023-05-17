@@ -9,25 +9,36 @@ __issuer__ = "FIREAPP2.0"
 class JWKService:
 
     @staticmethod
-    def generate(subject: int, name: str) -> str:
+    def generate(subject: int, name: str, role: str) -> str:
         """
         Generate a JWT token for communication between client and application server.
         :param subject: The subject (ID) of the client for the token.
         :param name: The name of the client for the token.
+        :param role: The role of the client for the token.
         :return: The token as a string.
         """
         # TODO: Authentication
         #   - Add token expiry & refreshing, low priority in MVP
-        token = jwt.encode({"sub": f"{subject}", "name": name, "iss": __issuer__}, __secret__, algorithm="HS256")
+        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "iss": __issuer__}, __secret__, algorithm="HS256")
         return token
 
     @staticmethod
     def validate(token) -> bool:
         try:
-            jwt.decode(token, __secret__, algorithms=["HS256"])
+            decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
         except Exception as e:
             return False
         return True
+
+    @staticmethod
+    def decode_user_id() -> int:
+        try:
+            data = request.headers.get("Authorization")
+            token = str.replace(str(data), 'Bearer ', '')
+            decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
+            return int(decoded.get("sub"))
+        except Exception as e:
+            return -1
 
     @staticmethod
     def validate_admin(token) -> bool:
@@ -39,6 +50,18 @@ class JWKService:
             return False
         return True
 
+    @staticmethod
+    def validate_role(token, valid_roles) -> bool:
+        try:
+            decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
+            role = decoded.get("role")
+            for roles in valid_roles:
+                if role == roles.name:
+                    return True
+        except Exception as e:
+            pass
+        return False
+
 
 def requires_auth(func):
     jwkservice = JWKService()
@@ -46,8 +69,7 @@ def requires_auth(func):
     def wrapper(*args, **kwargs):
         authorization_header = request.headers.get("Authorization")
         if authorization_header is None:
-            # TODO: Throw an error
-            pass
+            return flask_restful.abort(401)
         token = authorization_header[len('Bearer '):]
         if jwkservice.validate(token):
             return func(*args, **kwargs)
@@ -73,3 +95,48 @@ def requires_admin(func):
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
     return wrapper
+
+
+def has_role(*roles):
+    def decorator(func):
+        jwkservice = JWKService()
+
+        def wrapper(*args, **kwargs):
+            authorization_header = request.headers.get("Authorization")
+            if authorization_header is None:
+                return flask_restful.abort(401)
+            token = authorization_header[len('Bearer '):]
+            if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
+                return func(*args, **kwargs)
+            return flask_restful.abort(403)
+
+        wrapper.__doc__ = func.__doc__
+        wrapper.__name__ = func.__name__
+        return wrapper
+
+    return decorator
+
+
+def is_user_or_has_role(user_id, *roles):
+    def decorator(func):
+        jwkservice = JWKService()
+
+        def wrapper(*args, **kwargs):
+            authorization_header = request.headers.get("Authorization")
+            if authorization_header is None:
+                flask_restful.abort(401)
+
+            token = authorization_header[len('Bearer '):]
+            if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
+                return func(*args, **kwargs)
+
+            authenticated_user = jwkservice.decode_user_id()
+            if int(user_id) == int(authenticated_user):
+                return func(*args, **kwargs)
+            return flask_restful.abort(403)
+
+        wrapper.__doc__ = func.__doc__
+        wrapper.__name__ = func.__name__
+        return wrapper
+
+    return decorator

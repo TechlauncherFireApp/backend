@@ -1,6 +1,7 @@
 from operator import or_
 
 from domain import User, Qualification, UserRole, Role
+from repository.diet_requirement_repository import get_dietary_requirements
 
 
 def get_volunteer(session, volunteer_id):
@@ -67,3 +68,43 @@ def set_preferred_hours(session, volunteer_id, preferred_hours):
         .filter(User.id == volunteer_id) \
         .first()
     volunteer.preferred_hours = preferred_hours
+
+
+def get_volunteer_info(session, volunteer_id):
+    """
+    Load the information required.
+    The information included the user id, role, first namd, last name, email, mobile number, qualification
+    and dietary requirement
+    """
+    users = session.query(User.id.label("ID"),
+                         User.role.label('role'),
+                         User.first_name.label('firstName'),
+                         User.last_name.label('lastName'),
+                         User.email.label('email'),
+                         User.mobile_number.label('mobileNo'),
+                         User.preferred_hours.label('prefHours'),
+                         User.experience_years.label('expYears'),
+                         User.qualifications.label('qualifications'),
+                         User.availabilities.label('availabilities'))\
+        .filter(User.id == volunteer_id)
+
+    rtn = []
+    for user in users:
+        user = user._asdict()
+        get_roles_for_user(user, session)
+        get_qualifications_for_user(user, session)
+        diet = get_dietary_requirements(session, user['ID'])
+        if diet is not None:
+            user['halal'] = diet.halal
+            user['vegetarian'] = diet.vegetarian
+            user['vegan'] = diet.vegan
+            user['nut_allergy'] = diet.nut_allergy
+            user['shellfish_allergy'] = diet.shellfish_allergy
+            user['gluten_intolerance'] = diet.gluten_intolerance
+            user['kosher'] = diet.kosher
+            user['lactose_intolerance'] = diet.lactose_intolerance
+            user['diabetic'] = diet.diabetic
+            user['egg_allergy'] = diet.egg_allergy
+            user['custom_restrictions'] = diet.other
+        rtn.append(user)
+    return rtn
