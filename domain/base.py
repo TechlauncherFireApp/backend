@@ -8,15 +8,15 @@ from sqlalchemy.orm import sessionmaker
 
 from services.secrets import SecretService
 
-secret = SecretService(f"database/{os.environ.get('env', 'dev')}/fireapp")
+# secret = SecretService(f"database/{os.environ.get('env', 'dev')}/fireapp")
 
 # Configure Session
 Session = sessionmaker()
-Engine = create_engine('mysql+mysqldb://{0}:{1}@{2}:{3}/{4}'.format(secret.get()['username'],
-                                                                    secret.get()['password'],
-                                                                    secret.get()['host'],
-                                                                    secret.get()['port'],
-                                                                    secret.get()['dbname']), echo=False)
+Engine = create_engine('mysql+mysqldb://{0}:{1}@{2}:{3}/{4}'.format(os.environ.get('username'),
+                                                                    os.environ.get('password'),
+                                                                    os.environ.get('host'),
+                                                                    os.environ.get('port'),
+                                                                    os.environ.get('dbname')), echo=False)
 Session.configure(bind=Engine)
 
 # Configure Declarative Base for ORM
