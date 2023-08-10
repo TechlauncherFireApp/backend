@@ -69,8 +69,7 @@ def requires_auth(func):
     def wrapper(*args, **kwargs):
         authorization_header = request.headers.get("Authorization")
         if authorization_header is None:
-            # TODO: Throw an error
-            pass
+            return flask_restful.abort(401)
         token = authorization_header[len('Bearer '):]
         if jwkservice.validate(token):
             return func(*args, **kwargs)
@@ -105,8 +104,7 @@ def has_role(*roles):
         def wrapper(*args, **kwargs):
             authorization_header = request.headers.get("Authorization")
             if authorization_header is None:
-                # TODO: Throw an error
-                pass
+                return flask_restful.abort(401)
             token = authorization_header[len('Bearer '):]
             if jwkservice.validate(token) and jwkservice.validate_role(token, roles):
                 return func(*args, **kwargs)
