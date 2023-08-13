@@ -45,7 +45,7 @@ tatsu = "==5.6.1"
 urllib3 = "==1.26.5"
 virtualenv-clone = "==0.5.4"
 virtualenv = "==20.4.4"
-werkzeug = "==1.0.1"
+werkzeug = "==2.2.3"
 numpy = "==1.23.3"
 pytest = "*"
 
