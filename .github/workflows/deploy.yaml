@@ -54,26 +54,14 @@ jobs:
       - name: Create Backend ZIP deployment package
         run: zip -r fireapp-${{ steps.gitversion.outputs.semVer }}.zip . -x@exclude.lst;
 
-      # Configure AWS Credentials
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+    # Upload the Backend ZIP deployment package as a release 
+      - name: Upload ZIP as Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.REGION }}
-
-      - name: Upload backend package to S3 bucket
-        run: aws s3 cp fireapp-${{ steps.gitversion.outputs.semVer }}.zip
-          s3://elasticbeanstalk-ap-southeast-2-517938983427
-
-      - name: Create new ElasticBeanstalk Application Version
-        run: aws elasticbeanstalk create-application-version
-          --application-name FireApp3-dev
-          --source-bundle S3Bucket=elasticbeanstalk-ap-southeast-2-517938983427,S3Key=fireapp-${{ steps.gitversion.outputs.semVer }}.zip
-          --version-label "${{ steps.gitversion.outputs.semVer }}"
-          --description "commit-sha-${{ github.sha }}"
-
-      - name: Deploy new ElasticBeanstalk Application Version
-        run: aws elasticbeanstalk update-environment
-          --environment-name Fireapp3test-env
-          --version-label "${{ steps.gitversion.outputs.semVer }}"
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./fireapp-${{ steps.gitversion.outputs.semVer }}.zip
+          asset_name: fireapp-${{ steps.gitversion.outputs.semVer }}.zip
+          asset_content_type: application/zip
