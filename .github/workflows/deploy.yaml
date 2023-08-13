@@ -54,4 +54,16 @@ jobs:
       - name: Create Backend ZIP deployment package
         run: zip -r fireapp-${{ steps.gitversion.outputs.semVer }}.zip . -x@exclude.lst;
 
+     # Upload the Backend ZIP deployment package as release 
+      - name: Upload ZIP as Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This comes from the create-release step
+          asset_path: ./fireapp-${{ steps.gitversion.outputs.semVer }}.zip
+          asset_name: fireapp-${{ steps.gitversion.outputs.semVer }}.zip
+          asset_content_type: application/zip
+
 
