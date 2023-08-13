@@ -41,4 +41,4 @@ jobs:
         context: .
         push: true
         tags: |
-          ghcr.io/techlauncherfireapp/backend:${{ steps.meta.outputs.tags }}
+          ${{ steps.meta.outputs.tags }}
