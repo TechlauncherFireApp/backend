@@ -20,8 +20,7 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: |
-          ${{ github.repository_owner }}/FireApp3.0-backend
-          ghcr.io/${{ github.repository_owner }}/backend
+          ghcr.io/techlauncherfireapp/backend
         tags: |
           type=schedule
           type=ref,event=branch
@@ -43,4 +42,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/backend/${{ steps.vars.outputs.tag }}
+        tags: ghcr.io/techlauncherfireapp/backend/${{ steps.vars.outputs.tag }}
