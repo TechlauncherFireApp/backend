@@ -29,9 +29,6 @@ jobs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
           type=sha
-    - name: Echo tags
-      run: |
-        echo "${{ DOCKER_METADATA_OUTPUT_TAGS }}"
     - name: Log in to the Container registry
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
       with:
@@ -44,5 +41,4 @@ jobs:
         context: .
         push: true
         tags: |
-          ghcr.io/techlauncherfireapp/backend:latest
-          ghcr.io/techlauncherfireapp/backend:${{ DOCKER_METADATA_OUTPUT_TAGS }}
+          ghcr.io/techlauncherfireapp/backend:${{ steps.meta.outputs.tags }}
