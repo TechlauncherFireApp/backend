@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "029e8df5fbce6a4c3dd9c7ad826e8fec1be2c062af4ed4144e858d7ed70b10ba"
+            "sha256": "7e5dda52c05ef282fd962199f907c76b80481b30b29f0ebbb2b07b844a660725"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -552,11 +552,11 @@
         },
         "sendgrid": {
             "hashes": [
-                "sha256:273bdc0abec649bf6319df7b6267980f79e53ab64e92906d65eea6d4330d00b4",
-                "sha256:74b0dcf9a79188948f61f456bd1bf67ffa676a5d388aba1c76bff516566d7084"
+                "sha256:522b30fc98306496208c5d8bdd5642cd6a2fd65cad487475f57f9098ce880604",
+                "sha256:9b15050c6f8826ee576f76a786efb15d956639f485478cbddd79ed69e8350ab8"
             ],
             "index": "pypi",
-            "version": "==6.7.0"
+            "version": "==6.10.0"
         },
         "setuptools": {
             "hashes": [
