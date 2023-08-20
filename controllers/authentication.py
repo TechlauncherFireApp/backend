@@ -4,6 +4,8 @@ from flask_restful import Api, Resource, reqparse
 from domain import session_scope
 from services.authentication import AuthenticationService
 
+from services.jwk import requires_auth
+
 registration_parser = reqparse.RequestParser()
 registration_parser.add_argument('email', type=str)
 registration_parser.add_argument('password', type=str)
@@ -33,6 +35,7 @@ reset_password_parser.add_argument('repeat_password', type=str)
 
 class Register(Resource):
 
+    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = registration_parser.parse_args()
@@ -44,6 +47,8 @@ class Register(Resource):
 
 
 class Login(Resource):
+
+    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = login_parser.parse_args()
@@ -56,6 +61,7 @@ class Login(Resource):
 
 
 class send_code(Resource):
+    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = password_parser.parse_args()
@@ -76,6 +82,7 @@ class verify_code(Resource):
 
 
 class reset_password(Resource):
+    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = reset_password_parser.parse_args()

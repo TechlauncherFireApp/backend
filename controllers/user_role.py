@@ -4,6 +4,8 @@ from flask_restful import fields, Resource, marshal_with, Api, reqparse
 from domain import session_scope
 from repository.user_role_repository import get_user_roles, add_user_role, delete_user_role
 
+from services.jwk import requires_auth
+
 get_fields = {
     'userId': fields.Integer,
     'roleId': fields.Integer,
@@ -23,11 +25,13 @@ parser.add_argument('roleId', action='store', type=str)
 
 
 class UserRole(Resource):
+    @requires_auth
     @marshal_with(get_fields)
     def get(self):
         with session_scope() as session:
             return get_user_roles(session)
 
+    @requires_auth
     @marshal_with(post_fields)
     def post(self):
         args = parser.parse_args()

@@ -5,6 +5,8 @@ from domain import session_scope
 from repository.question_repository import *
 from domain.type.question_type import QuestionType
 
+from services.jwk import requires_auth
+
 question_fields = {
     "id": fields.Integer,
     "description": fields.String,
@@ -27,6 +29,7 @@ create_question_fields = {
 
 
 class GetQuestionRequest(Resource):
+    @requires_auth
     @marshal_with(question_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -37,6 +40,7 @@ class GetQuestionRequest(Resource):
 
 
 class GetRandomQuestionRequest(Resource):
+    @requires_auth
     @marshal_with(question_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -52,6 +56,7 @@ class GetRandomQuestionRequest(Resource):
 
 
 class DeleteQuestion(Resource):
+    @requires_auth
     @marshal_with(result_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -62,6 +67,7 @@ class DeleteQuestion(Resource):
 
 
 class CreateQuestion(Resource):
+    @requires_auth
     @marshal_with(create_question_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -83,6 +89,7 @@ class CreateQuestion(Resource):
 
 
 class UpdateQuestion(Resource):
+    @requires_auth
     @marshal_with(result_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -104,6 +111,7 @@ class UpdateQuestion(Resource):
 
 
 class CheckAnswer(Resource):
+    @requires_auth
     @marshal_with(result_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -116,6 +124,7 @@ class CheckAnswer(Resource):
 
 
 class CheckSingleAnswer(Resource):
+    @requires_auth
     @marshal_with(answers_fields)
     def get(self):
         with session_scope() as session:
@@ -123,6 +132,7 @@ class CheckSingleAnswer(Resource):
 
 
 class CheckMultipleAns(Resource):
+    @requires_auth
     @marshal_with(answers_fields)
     def get(self):
         parser = reqparse.RequestParser()

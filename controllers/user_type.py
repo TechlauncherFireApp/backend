@@ -4,6 +4,8 @@ from flask_restful import fields, Resource, marshal_with, Api, reqparse
 from domain import session_scope
 from repository.user_repository import demote_user, promote_user, self_demote, get_user_role
 
+from services.jwk import requires_auth
+
 patch_fields = {
     'success': fields.Boolean
 }
@@ -19,6 +21,7 @@ parser.add_argument('typeChange', action='store', type=str)
 
 
 class UserType(Resource):
+    @requires_auth
     @marshal_with(get_fields)
     def get(self):
         args = parser.parse_args()

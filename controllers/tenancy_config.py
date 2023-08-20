@@ -9,6 +9,8 @@ from flask_restful import fields, Resource, marshal_with, Api, reqparse
 from domain import session_scope
 from repository.tenancy_config_repository import *
 
+from services.jwk import requires_auth
+
 
 parser = reqparse.RequestParser()
 parser.add_argument('id', action='store', type=str)
@@ -56,6 +58,7 @@ def allowed_image(filename):
 
 
 class TenancyConfig(Resource):
+    @requires_auth
     @marshal_with(get_config_fields)
     def get(self):
         args = parser.parse_args()
@@ -66,6 +69,7 @@ class TenancyConfig(Resource):
             res = get_active_config(session)
             return {'success': True, 'results': res}
 
+    @requires_auth
     @marshal_with(config_fields)
     def post(self):
         args = parser.parse_args()
@@ -111,6 +115,7 @@ class TenancyConfig(Resource):
 
 
 class ImageRequest(Resource):
+    @requires_auth
     def get(self):
         with session_scope() as session:
             img = get_img(session)
