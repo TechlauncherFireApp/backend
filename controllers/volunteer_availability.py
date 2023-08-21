@@ -7,6 +7,8 @@ from .utility import *
 from domain import session_scope
 from repository.volunteer_repository import *
 
+from services.jwk import requires_auth
+
 '''
 Define Data Input
 
@@ -95,7 +97,7 @@ patch_resource_fields = {
 
 # Handle the Recommendation endpoint
 class VolunteerAvailability(Resource):
-
+    @requires_auth
     @marshal_with(get_resource_fields)
     def get(self):
         args = parser.parse_args()

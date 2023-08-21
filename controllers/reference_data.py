@@ -6,6 +6,8 @@ from repository.reference_repository import get_roles, get_qualifications, add_q
     toggle_qualification, toggle_role, get_asset_type, add_asset_type, toggle_asset_type, delete_role, \
     delete_qualification, delete_asset_type
 
+from services.jwk import requires_auth
+
 get_role_fields = {
     'id': fields.Integer,
     'code': fields.String,
@@ -26,11 +28,13 @@ role_parser.add_argument('code', action='store', type=str)
 
 
 class RoleRequest(Resource):
+    @requires_auth
     @marshal_with(get_role_fields)
     def get(self):
         with session_scope() as session:
             return get_roles(session)
 
+    @requires_auth
     @marshal_with(post_role_fields)
     def post(self):
         args = role_parser.parse_args()
@@ -75,11 +79,13 @@ qualification_parser.add_argument('id', action="store", type=str)
 
 
 class QualificationsRequest(Resource):
+    @requires_auth
     @marshal_with(get_qualifications_fields)
     def get(self):
         with session_scope() as session:
             return get_qualifications(session)
 
+    @requires_auth
     @marshal_with(post_qualification_fields)
     def post(self):
         args = qualification_parser.parse_args()
@@ -125,11 +131,13 @@ asset_type_parser.add_argument('code', action='store', type=str)
 
 
 class AssetTypeRequest(Resource):
+    @requires_auth
     @marshal_with(get_asset_type_fields)
     def get(self):
         with session_scope() as session:
             return get_asset_type(session)
 
+    @requires_auth
     @marshal_with(post_asset_type_fields)
     def post(self):
         args = asset_type_parser.parse_args()

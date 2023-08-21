@@ -3,6 +3,8 @@ from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs
 from domain import session_scope
 from repository.unavailability_repository import *
 
+from services.jwk import requires_auth
+
 select_parser = reqparse.RequestParser()
 select_parser.add_argument('userId', type=int, required=True)
 
@@ -28,6 +30,7 @@ userEvent_fields = {
 }
 
 class ShowUnavailabilityEvent(Resource):
+    @requires_auth
     @marshal_with(userEvent_fields)
     def get(self):
         args = select_parser.parse_args()
@@ -38,6 +41,7 @@ class ShowUnavailabilityEvent(Resource):
             return user_events
 
 class CreateNewUnavailabilityEvent(Resource):
+    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = create_parser.parse_args()
@@ -51,6 +55,7 @@ class CreateNewUnavailabilityEvent(Resource):
                             "success": True})
 
 class RemoveUnavailabilityEvent(Resource):
+    @requires_auth
     def get(self):
         args = remove_parser.parse_args()
         with session_scope() as session:
