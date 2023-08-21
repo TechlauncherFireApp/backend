@@ -35,7 +35,7 @@ reset_password_parser.add_argument('repeat_password', type=str)
 
 class Register(Resource):
 
-    @requires_auth
+
     def post(self):
         request.get_json(force=True)
         args = registration_parser.parse_args()
@@ -47,8 +47,6 @@ class Register(Resource):
 
 
 class Login(Resource):
-
-    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = login_parser.parse_args()
@@ -61,7 +59,6 @@ class Login(Resource):
 
 
 class send_code(Resource):
-    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = password_parser.parse_args()
@@ -82,7 +79,6 @@ class verify_code(Resource):
 
 
 class reset_password(Resource):
-    @requires_auth
     def post(self):
         request.get_json(force=True)
         args = reset_password_parser.parse_args()
