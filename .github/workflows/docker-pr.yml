@@ -15,6 +15,8 @@ jobs:
         find: ":latest"
         replace: ":pr-${{ github.event.pull_request.number }}"
         regex: false
+    - name: Docker Compose version
+      run: docker compose version
     - name: Start containers
       run: docker-compose -f "docker-compose.yaml" up -d --wait
     - name: Test container
