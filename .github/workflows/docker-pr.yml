@@ -12,12 +12,12 @@ jobs:
     - name: Find and Replace
       uses: jacobtomlinson/gha-find-replace@v3
       with:
-        find: ":latest"
-        replace: ":pr-${{ github.event.pull_request.number }}"
+        find: "ghcr.io/techlauncherfireapp/backend:latest"
+        replace: "ghcr.io/techlauncherfireapp/backend:pr-${{ github.event.pull_request.number }}"
         regex: false
     - name: Docker Compose version
       run: docker compose version
     - name: Start containers
       run: docker compose -f "docker-compose.yaml" up -d --wait
     - name: Test container
-      run: docker run --network container:fireapp_1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
+      run: docker run --network container:backend-fireapp-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
