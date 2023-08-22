@@ -48,12 +48,7 @@ jobs:
         replace: ":pr-${{ github.event.pull_request.number }}"
         regex: false
     - name: Start containers
-      run: docker-compose -f "docker-compose.yaml" up -d
-    - name: Sleep for 90 seconds
-      run: sleep 90s
-      shell: bash
-    - name: Check output correct
-      run: curl localhost:5000 -o output.json
+      run: docker-compose -f "docker-compose.yaml" up -d && sleep 90s && curl localhost:5000 -o output.json
     - name: "Read file contents"
       id: read_file
       uses: andstor/file-reader-action@v1
