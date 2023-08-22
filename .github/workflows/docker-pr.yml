@@ -35,3 +35,26 @@ jobs:
         push: true
         tags: |
           ghcr.io/techlauncherfireapp/backend:pr-${{ github.event.pull_request.number }}
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Find and Replace
+      uses: jacobtomlinson/gha-find-replace@v3
+      with:
+        find: ":latest"
+        replace: ":pr-${{ github.event.pull_request.number }}"
+        regex: false
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yaml" up -d
+    - name: Check output correct
+      run: curl localhost:5000 -o output.json
+    - name: "Read file contents"
+      id: read_file
+      uses: andstor/file-reader-action@v1
+      with:
+        path: "output.json"
+    - name: Compare
+      if: ${{ steps.read_file.outputs.contents != '{"status":"OK"}' }}
+      run: exit 1
