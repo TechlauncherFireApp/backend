@@ -16,6 +16,6 @@ jobs:
         replace: ":pr-${{ github.event.pull_request.number }}"
         regex: false
     - name: Start containers
-      run: docker-compose -f "docker-compose.yaml" up -d
+      run: docker-compose -f "docker-compose.yaml" up
     - name: Test container
       run: docker run --network container:fireapp30-backend-fireapp-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
