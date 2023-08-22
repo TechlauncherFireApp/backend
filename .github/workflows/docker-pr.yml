@@ -49,6 +49,9 @@ jobs:
         regex: false
     - name: Start containers
       run: docker-compose -f "docker-compose.yaml" up -d
+    - name: Sleep for 30 seconds
+      run: sleep 30s
+      shell: bash
     - name: Check output correct
       run: curl localhost:5000 -o output.json
     - name: "Read file contents"
