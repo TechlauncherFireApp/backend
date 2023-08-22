@@ -37,8 +37,7 @@ class GetUserInfoRequest(Resource):
 
 class GetAvailabilitiesRequest(Resource):
     @requires_auth
-    @staticmethod
-    def get():
+    def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('email', type=str, required=True)
         args = parser.parse_args()
