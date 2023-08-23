@@ -1,10 +1,18 @@
-# FireApp3.0
+<p align="center">
+    <a href="https://github.com/TechlauncherFireApp/mobile" rel="noopener">
+        <img width=300px src="https://raw.githubusercontent.com/TechlauncherFireApp/mobile/main/assets/logo_gradient.png" ></img>
+    </a>
+    <p align="center">
+        A web API designed to efficiently manage and schedule volunteer firefighters.
+    </p>
+</p>
 
-Bushfire Volunteer Management Application (FireApp), a web app to assist with firefighting scheduling 
-activities.
+<div align="center">
 
-[Redmine](https://redmine.cecs.anu.edu.au/redmine/projects/bushfire-volunteer-management-application)\
-[Project landing page](https://fire-app-2022.atlassian.net/l/cp/xT7VnRJP)
+[![Build](https://github.com/TechlauncherFireApp/backend/actions/workflows/deploy.yaml/badge.svg)](https://github.com/TechlauncherFireApp/backend/actions/workflows/deploy.yaml)
+[![Deploy](https://github.com/TechlauncherFireApp/backend/actions/workflows/docker-image.yml/badge.svg)](https://github.com/TechlauncherFireApp/backend/actions/workflows/docker-image.yml)
+
+</div>
 
 ### Backend Setup
 
