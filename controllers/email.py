@@ -3,12 +3,15 @@ from flask_restful import fields, Resource, marshal_with, reqparse, Api
 
 from services.mail_sms import MailSender
 
+from services.jwk import requires_auth
+
 send_email_result = {
     "result": fields.String
 }
 
 
 class SendEmail(Resource):
+    @requires_auth
     @marshal_with(send_email_result)
     def post(self):
         parser = reqparse.RequestParser()

@@ -4,6 +4,8 @@ from flask_restful import reqparse, Resource, fields, marshal_with, Api
 from domain import session_scope
 from repository.volunteer_repository import *
 
+from services.jwk import requires_auth
+
 '''
 Define Data Input
  {
@@ -41,7 +43,7 @@ resource_fields = {
 
 # Handle the Recommendation endpoint
 class Volunteer(Resource):
-
+    @requires_auth
     @marshal_with(resource_fields)
     def get(self):
         args = parser.parse_args()

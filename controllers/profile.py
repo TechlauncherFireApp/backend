@@ -5,6 +5,8 @@ from domain import session_scope
 from repository.profile import modify_profile, get_profile
 from repository.user_role_repository import get_user_roles_by_id
 
+from services.jwk import requires_auth
+
 result_fields = {
     "result": fields.Boolean
 }
@@ -33,6 +35,7 @@ getId.add_argument("id", type=str)
 
 
 class EditProfile(Resource):
+    @requires_auth
     @marshal_with(result_fields)
     def post(self):
         request.get_json(force=True)
@@ -45,6 +48,7 @@ class EditProfile(Resource):
 
 
 class getProfile(Resource):
+    @requires_auth
     @marshal_with(user_info_fields)
     def post(self):
         request.get_json(force=True)

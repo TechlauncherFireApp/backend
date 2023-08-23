@@ -5,6 +5,8 @@ from .utility import *
 from domain import session_scope
 from repository.asset_request_volunteer_repository import *
 
+from services.jwk import requires_auth
+
 
 # Validate a volunteer's position and role
 def input_volunteer_position(value):
@@ -67,6 +69,7 @@ modify_parser.add_argument('volunteer_id', action='store', type=int)
 
 # Handle the ShiftRequest endpoint
 class ShiftRequest(Resource):
+    @requires_auth
     @marshal_with(get_resource_fields)
     def get(self):
         args = parser.parse_args()

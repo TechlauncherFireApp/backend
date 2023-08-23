@@ -7,6 +7,8 @@ from repository.asset_request_vehicle_repository import *
 
 from services.optimiser.input_processing import *
 
+from services.jwk import requires_auth
+
 
 # Validate a shift input
 def input_vehicles(value, name):
@@ -47,6 +49,7 @@ delete_parser.add_argument('vehicleId', action='store', type=str)
 
 # Make a New Request inside the DataBase
 class VehicleRequest(Resource):
+    @requires_auth
     @marshal_with(resource_fields)
     def get(self):
         args = parser.parse_args()
@@ -58,6 +61,7 @@ class VehicleRequest(Resource):
                 rtn.append(row)
             return {"success": (count_vehicles(session, args["requestId"]) > 0), "results": rtn}
 
+    @requires_auth
     @marshal_with(resource_fields)
     def post(self):
         args = parser.parse_args()
@@ -83,6 +87,7 @@ a_fields = {
 
 
 class GetInputA(Resource):
+    @requires_auth
     @marshal_with(a_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -97,6 +102,7 @@ r_fields = {"number": fields.Integer}
 
 
 class GetInputR(Resource):
+    @requires_auth
     @marshal_with(r_fields)
     def get(self):
         with session_scope() as session:
@@ -108,6 +114,7 @@ p_fields = {"number": fields.Integer}
 
 
 class GetInputP(Resource):
+    @requires_auth
     @marshal_with(p_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -123,6 +130,7 @@ v_fields = {"number": fields.Integer}
 
 
 class GetInputV(Resource):
+    @requires_auth
     @marshal_with(v_fields)
     def get(self):
         with session_scope() as session:
@@ -134,6 +142,7 @@ q_fields = {"number": fields.Integer}
 
 
 class GetInputQ(Resource):
+    @requires_auth
     @marshal_with(q_fields)
     def get(self):
         with session_scope() as session:
@@ -147,6 +156,7 @@ vehicle_fields = {
 
 
 class GetVehicleRequest(Resource):
+    @requires_auth
     @marshal_with(vehicle_fields)
     def get(self):
         parser = reqparse.RequestParser()

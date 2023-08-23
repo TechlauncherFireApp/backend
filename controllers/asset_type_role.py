@@ -4,6 +4,8 @@ from flask_restful import fields, Resource, marshal_with, Api, reqparse
 from domain import session_scope
 from repository.asset_type_role_repository import get_seats, delete_seat, add_seat
 
+from services.jwk import requires_auth
+
 get_fields = {
     'assetTypeRoleId': fields.Integer,
     'seatNumber': fields.Integer,
@@ -26,6 +28,7 @@ parser.add_argument('roleId', action='store', type=str)
 
 
 class AssetTypeRole(Resource):
+    @requires_auth
     @marshal_with(get_fields)
     def get(self):
         args = parser.parse_args()
@@ -41,6 +44,7 @@ class AssetTypeRole(Resource):
         with session_scope() as session:
             return delete_seat(session, args['assetTypeRoleId'])
 
+    @requires_auth
     def post(self):
         args = parser.parse_args()
         if args['assetTypeId'] is None or args['roleId'] is None:
