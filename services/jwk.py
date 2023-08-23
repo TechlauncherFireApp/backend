@@ -1,3 +1,5 @@
+import datetime
+
 import flask_restful
 from flask import request
 import jwt
@@ -9,7 +11,7 @@ __issuer__ = "FIREAPP2.0"
 class JWKService:
 
     @staticmethod
-    def generate(subject: int, name: str, role: str) -> str:
+    def generate(subject: int, name: str, role: str, date: datetime.datetime) -> str:
         """
         Generate a JWT token for communication between client and application server.
         :param subject: The subject (ID) of the client for the token.
@@ -17,9 +19,12 @@ class JWKService:
         :param role: The role of the client for the token.
         :return: The token as a string.
         """
+        expiration = date + datetime.timedelta(days=365*3)  # Assume 3 years expiry
+
         # TODO: Authentication
         #   - Add token expiry & refreshing, low priority in MVP
-        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "iss": __issuer__}, __secret__, algorithm="HS256")
+        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "iss": __issuer__, "exp": expiration},
+                           __secret__, algorithm="HS256")
         return token
 
     @staticmethod
