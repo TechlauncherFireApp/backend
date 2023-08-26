@@ -98,7 +98,7 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.tags }}
             ghcr.io/techlauncherfireapp/backend:latest
-            ghcr.io/techlauncherfireapp/backend:v${{ needs.version.outputs.version }}
+            ghcr.io/techlauncherfireapp/backend:${{ needs.version.outputs.version }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -108,4 +108,4 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.tags }}
             ghcr.io/techlauncherfireapp/backend:latest
-            ghcr.io/techlauncherfireapp/backend:v${{ needs.version.outputs.version }}
+            ghcr.io/techlauncherfireapp/backend:${{ needs.version.outputs.version }}

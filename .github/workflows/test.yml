@@ -46,7 +46,7 @@ jobs:
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: "ghcr.io/techlauncherfireapp/backend:latest"
-          replace: "ghcr.io/techlauncherfireapp/backend:v${{ needs.version.outputs.version }}"
+          replace: "ghcr.io/techlauncherfireapp/backend:${{ needs.version.outputs.version }}"
           regex: false
       - name: Docker Compose version
         run: docker compose version
