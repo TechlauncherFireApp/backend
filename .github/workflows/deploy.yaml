@@ -1,30 +1,25 @@
-name: deploy-to-eb
+name: Build & Test
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
 
     steps:
-      - uses: actions/checkout@v2
-      
-      # Checkout the commit, must be depth 0
-      - uses: actions/checkout@v2
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
         with:
           fetch-depth: '0'
-
-      # Use GitVersion V5.latest
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.6
         with:
           versionSpec: '5.x'
-
-      # Run the GitVersion executable
       - name: Use GitVersion
         id: gitversion # step id used as reference for output values
         uses: gittools/actions/gitversion/execute@v0.9.6
@@ -32,29 +27,28 @@ jobs:
           useConfigFile: true
           showConfig: true
           configFilePath: ./GitVersion.yml
-
-      # Debug print the semver.
       - name: Display SemVer
         run: |
           echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
-          
-      # Create a release in Github & tag it with the run number
+
+  release:
+    runs-on: ubuntu-latest
+    needs: version
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.gitversion.outputs.semVer }}
-          release_name: fireapp-${{ steps.gitversion.outputs.semVer }}
+          tag_name: v${{ needs.version.outputs.version }}
+          release_name: fireapp-${{ needs.version.outputs.version }}
           draft: false
           prerelease: false
-
-      # Zip the backend
       - name: Create Backend ZIP deployment package
-        run: zip -r fireapp-${{ steps.gitversion.outputs.semVer }}.zip . -x@exclude.lst;
-
-    # Upload the Backend ZIP deployment package as a release 
+        run: zip -r fireapp-${{ needs.version.outputs.version }}.zip . -x@exclude.lst;
       - name: Upload ZIP as Release Asset
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
@@ -62,6 +56,75 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./fireapp-${{ steps.gitversion.outputs.semVer }}.zip
-          asset_name: fireapp-${{ steps.gitversion.outputs.semVer }}.zip
+          asset_path: ./fireapp-${{ needs.version.outputs.version }}.zip
+          asset_name: fireapp-${{ needs.version.outputs.version }}.zip
           asset_content_type: application/zip
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: version
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ghcr.io/techlauncherfireapp/backend
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: https://ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ghcr.io/techlauncherfireapp/backend:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ghcr.io/techlauncherfireapp/backend:latest
+            ghcr.io/techlauncherfireapp/backend:v${{ needs.version.outputs.version }}
+  smoke:
+    runs-on: ubuntu-latest
+    needs:
+      - docker
+      - version
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Find and Replace
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: "ghcr.io/techlauncherfireapp/backend:latest"
+          replace: "ghcr.io/techlauncherfireapp/backend:v${{ needs.version.outputs.version }}"
+          regex: false
+      - name: Docker Compose version
+        run: docker compose version
+      - name: Start containers
+        run: docker compose -f "docker-compose.yaml" up -d --wait
+      - name: Test container
+        run: docker run --network container:backend-fireapp-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
