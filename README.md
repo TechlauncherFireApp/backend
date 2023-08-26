@@ -10,7 +10,7 @@
 <div align="center">
 
 [![Build](https://github.com/TechlauncherFireApp/backend/actions/workflows/deploy.yaml/badge.svg)](https://github.com/TechlauncherFireApp/backend/actions/workflows/deploy.yaml)
-[![Deploy](https://github.com/TechlauncherFireApp/backend/actions/workflows/docker-image.yml/badge.svg)](https://github.com/TechlauncherFireApp/backend/actions/workflows/docker-image.yml)
+[![Test](https://github.com/TechlauncherFireApp/backend/actions/workflows/test.yml/badge.svg)](https://github.com/TechlauncherFireApp/backend/actions/workflows/test.yml)
 
 </div>
 
