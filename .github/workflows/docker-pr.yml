@@ -27,7 +27,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        platforms: linux/amd64, linux/arm64, linux/riscv64, linux/arm/v7, linux/arm/v6
+        platforms: linux/amd64, linux/arm64, linux/riscv64, linux/arm/v7, linux/arm/v6, aarch64
         push: true
         tags: |
           ghcr.io/techlauncherfireapp/backend:pr-${{ github.event.pull_request.number }}
