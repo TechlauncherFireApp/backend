@@ -46,7 +46,7 @@ urllib3 = "==1.26.16"
 virtualenv-clone = "==0.5.7"
 virtualenv = "==20.4.4"
 werkzeug = "==1.0.1"
-numpy = "==1.23.3"
+numpy = "==1.24.4"
 pytest = "*"
 
 [dev-packages]
