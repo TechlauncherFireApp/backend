@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3c6379f4b441629fd8144508b3ab7d3afa52ef4a3928e972b4511a59664e10aa"
+            "sha256": "b88f2350dfaf86d5d3697dcd426e536df6512d0447f4a2edc9ba0e5625d447e4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -673,11 +673,11 @@
         },
         "tatsu": {
             "hashes": [
-                "sha256:6a4f07aa7bfe9dfbee8015824feaf13f0b1a89577e2ee5a4a62c18630c309d4e",
-                "sha256:7cf03e15ab170fd91489b855cd8a4942b6cd1ac5e0eabcb852793a716600dbf0"
+                "sha256:0a836692e67247cad9f251e083b045b13345cc715e69a7fbc16522beaa0f2163",
+                "sha256:571ecbcdf33b7828c05e5cd95a8e8ad06af111c2c83a6a245be4d8f7c43de7bb"
             ],
             "index": "pypi",
-            "version": "==5.6.1"
+            "version": "==5.8.3"
         },
         "tomli": {
             "hashes": [
