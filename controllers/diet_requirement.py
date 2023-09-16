@@ -5,7 +5,7 @@ from domain import session_scope
 from domain.type.dietary import DietaryRestriction
 from repository.diet_repository import save_dietary_requirements
 
-from repository.diet_requirement_repository import get_dietary_requirements
+from repository.diet_requirement_repository import get_dietary_requirements, get_formatted_dietary_requirements
 from repository.diet_requirement_repository import diet_requirement_to_dict
 from services.jwk import requires_auth, JWKService
 
@@ -93,19 +93,9 @@ class DietaryRequirement(Resource):
                 raise Exception("An error occurred while decoding the auth token.")
 
             with session_scope() as session:
-                diet_requirement = get_dietary_requirements(session, user_id)
-                diet_requirement_dict = diet_requirement_to_dict(diet_requirement)
+                return get_formatted_dietary_requirements(session, user_id), 200
 
-            restrictions = []
-            for key, value in diet_requirement_dict.items():
-                if key not in ['diet_id', 'user_id', 'other'] and value:
-                    display_name = key.replace('_', ' ').title()
-                    restrictions.append({"key": key, "display_name": display_name})
 
-            return {
-                "custom_restrictions": diet_requirement_dict.get('other', ''),
-                "restrictions": restrictions
-            }, 200
         except Exception as e:
             return {"custom_restrictions": "", "restrictions": []}, 400
 
