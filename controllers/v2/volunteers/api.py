@@ -17,7 +17,12 @@ class VolunteerV2(Resource):
             def get_personal_info():
                 with session_scope() as session:
                     return get_volunteer_info(session, user_id)
-            return get_personal_info()
+
+            p = get_personal_info()
+            if len(p) != 1:
+                return f"Invalid user {user_id}", 400
+
+            return p[0]
         else:
             @marshal_with(volunteer_listing_model)
             @has_role(UserType.ROOT_ADMIN)
