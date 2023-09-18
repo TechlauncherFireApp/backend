@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "aef6997042f4132418d7f4b9691800bdb28afdf141d75d2561242b5c06020472"
+            "sha256": "d25b1c3cba4a5b4f9a4b32f3ab60116255f20cfb90e678ffc572f143636cfaf0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -333,7 +333,7 @@
                 "sha256:3ebb78df84a805d7698245025b975d9d67053cd94c79245ba4b3eb694abe68bb",
                 "sha256:dbace7892d8c0c4ac1ad096662232f831d4e64f4c4545bd53016a3e9d4654743"
             ],
-            "markers": "python_version < '3.10'",
+            "markers": "python_version < '3.9'",
             "version": "==6.8.0"
         },
         "importlib-resources": {
@@ -683,10 +683,10 @@
         },
         "starkbank-ecdsa": {
             "hashes": [
-                "sha256:fe7e36b580da097cc8c0a120e3b7ba335e3901b970a484fd5ce856c026ef7714"
+                "sha256:9399c3371b899d4a235b68a1ed7919d202fbf024bd2c863ae8ebdad343c2a63a"
             ],
             "index": "pypi",
-            "version": "==2.0.1"
+            "version": "==2.2.0"
         },
         "tatsu": {
             "hashes": [
