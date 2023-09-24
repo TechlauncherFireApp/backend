@@ -19,19 +19,15 @@ jobs:
         registry: https://ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
-        platforms: linux/amd64
-        push: true
-        tags: |
-          ghcr.io/techlauncherfireapp/backend:pr-${{ github.event.pull_request.number }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        platforms: linux/arm64
+        platforms: linux/amd64, linux/arm64, linux/riscv64, linux/arm/v7, linux/arm/v6, aarch64
         push: true
         tags: |
           ghcr.io/techlauncherfireapp/backend:pr-${{ github.event.pull_request.number }}
@@ -41,6 +37,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+    - name: Download docker compose config
+      run: wget https://raw.githubusercontent.com/TechlauncherFireApp/docker/main/docker-compose.frontend.yml
     - name: Find and Replace
       uses: jacobtomlinson/gha-find-replace@v3
       with:
@@ -50,6 +48,6 @@ jobs:
     - name: Docker Compose version
       run: docker compose version
     - name: Start containers
-      run: docker compose -f "docker-compose.yaml" up -d --wait
+      run: docker compose -f "docker-compose.frontend.yml" up -d --wait
     - name: Test container
       run: docker run --network container:backend-fireapp-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/

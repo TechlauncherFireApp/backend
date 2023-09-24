@@ -1,6 +1,21 @@
 from domain.entity.diet_requirement import DietRequirement
 
 
+def get_formatted_dietary_requirements(session, user_id):
+    diet_requirement_dict = diet_requirement_to_dict(get_dietary_requirements(session, user_id))
+
+    restrictions = []
+    for key, value in diet_requirement_dict.items():
+        if key not in ['diet_id', 'user_id', 'other'] and value:
+            display_name = key.replace('_', ' ').title()
+            restrictions.append({"key": key, "display_name": display_name})
+
+    return {
+        "custom_restrictions": diet_requirement_dict.get('other', ''),
+        "restrictions": restrictions
+    }
+
+
 def get_dietary_requirements(session, user_id):
     diet_requirement = session.query(DietRequirement).filter(DietRequirement.user_id == user_id).first()
     if diet_requirement:
