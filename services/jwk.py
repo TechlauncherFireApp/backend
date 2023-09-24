@@ -31,7 +31,10 @@ class JWKService:
     def validate(token) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
-            if datetime.datetime.utcnow() > datetime.datetime.fromtimestamp(decoded['exp']):
+            exp = decoded['exp']
+            if exp is None:
+                return False
+            if datetime.datetime.utcnow() > datetime.datetime.fromtimestamp(exp):
                 return False
 
         except jwt.ExpiredSignatureError:
