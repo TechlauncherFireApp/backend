@@ -19,11 +19,11 @@ class JWKService:
         :param role: The role of the client for the token.
         :return: The token as a string.
         """
-        expiration = date + datetime.timedelta(days=365*3)  # Assume 3 years expiry
+        expiration = date + datetime.timedelta(days=5)  # Assume 5 days expiry
 
         # TODO: Authentication
         #   - Add token expiry & refreshing, low priority in MVP
-        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "iss": __issuer__, "exp": expiration},
+        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "exp": expiration, "iss": __issuer__},
                            __secret__, algorithm="HS256")
         return token
 
@@ -31,12 +31,8 @@ class JWKService:
     def validate(token) -> bool:
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
-            if datetime.datetime.utcnow() > datetime.datetime.fromtimestamp(decoded['exp']):
-                return False
-
         except jwt.ExpiredSignatureError:
             return False
-
         except Exception as e:
             return False
         return True
