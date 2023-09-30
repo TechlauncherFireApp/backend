@@ -1,10 +1,10 @@
 from flask import Blueprint
 from flask_restful import fields, Resource, marshal_with, Api, reqparse
 
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.asset_type_role_repository import get_seats, delete_seat, add_seat
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role, is_user_or_has_role
 
 get_fields = {
     'assetTypeRoleId': fields.Integer,
@@ -30,13 +30,18 @@ parser.add_argument('roleId', action='store', type=str)
 class AssetTypeRole(Resource):
     @requires_auth
     @marshal_with(get_fields)
-    def get(self):
-        args = parser.parse_args()
-        if args['assetTypeId'] is None:
-            return
-        with session_scope() as session:
-            return get_seats(session, args['assetTypeId'])
-
+        def get(self, user_id=None):
+        if user_id:
+            @is_user_or_has_role(user_id, UserType.ROOT_ADMIN)
+            def fetch_seats():
+                args = parser.parse_args()
+                if args['assetTypeId'] is None:
+                    return
+                with session_scope() as session:
+                    return get_seats(session, args['assetTypeId'])
+            return fetch_seats()
+            
+    @has_role(UserType.ROOT_ADMIN)
     def delete(self):
         args = parser.parse_args()
         if args['assetTypeRoleId'] is None:
@@ -45,6 +50,7 @@ class AssetTypeRole(Resource):
             return delete_seat(session, args['assetTypeRoleId'])
 
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     def post(self):
         args = parser.parse_args()
         if args['assetTypeId'] is None or args['roleId'] is None:
