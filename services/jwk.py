@@ -11,29 +11,33 @@ __issuer__ = "FIREAPP2.0"
 class JWKService:
 
     @staticmethod
-    def generate(subject: int, name: str, role: str, date: datetime.datetime) -> str:
+    def generate(subject: int, name: str, role: str, date: str) -> str:
         """
         Generate a JWT token for communication between client and application server.
         :param subject: The subject (ID) of the client for the token.
         :param name: The name of the client for the token.
         :param role: The role of the client for the token.
+        :param date: The date update the account.
         :return: The token as a string.
         """
-        expiration = date + datetime.timedelta(days=5)  # Assume 5 days expiry
 
         # TODO: Authentication
         #   - Add token expiry & refreshing, low priority in MVP
-        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "exp": expiration, "iss": __issuer__},
+        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "date": date, "iss": __issuer__},
                            __secret__, algorithm="HS256")
         return token
 
     @staticmethod
     def validate(token) -> bool:
+        print(token)
         try:
             decoded = jwt.decode(token, __secret__, algorithms=["HS256"])
+            print(decoded)
         except jwt.ExpiredSignatureError:
+            print("Token has expired!")
             return False
         except Exception as e:
+            print(f"Error decoding token: {str(e)}")
             return False
         return True
 
