@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restful import reqparse, Resource, fields, marshal_with, Api
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.asset_request_volunteer_repository import *
-from services.jwk import requires_auth
+from services.jwk import requires_auth, is_user_or_has_role
 
 '''
 Define Data Input
@@ -51,6 +51,7 @@ resource_fields = {
 # Handle the volunteer/shifts endpoint
 class VolunteerShifts(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(resource_fields)
     def get(self):
         args = parser.parse_args()
