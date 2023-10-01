@@ -1,13 +1,13 @@
 from flask import Blueprint, request
 from flask_restful import reqparse, fields, Resource, marshal_with, Api
 
-from domain import session_scope
+from domain import session_scope, UserType
 from domain.type.dietary import DietaryRestriction
 from repository.diet_repository import save_dietary_requirements
 
 from repository.diet_requirement_repository import get_dietary_requirements, get_formatted_dietary_requirements
 from repository.diet_requirement_repository import diet_requirement_to_dict
-from services.jwk import requires_auth, JWKService
+from services.jwk import requires_auth, JWKService, has_role, is_user_or_has_role
 
 # getting the data from the frontend
 new_parser = reqparse.RequestParser()
@@ -64,6 +64,7 @@ class DietaryRequirement(Resource):
         """
 
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     def post(self):
         """
         Returns:
@@ -84,6 +85,7 @@ class DietaryRequirement(Resource):
     This is a class to retrieve the dietary requirement data from the database
     """
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     def get(self):
         try:
             user_id = JWKService.decode_user_id()
