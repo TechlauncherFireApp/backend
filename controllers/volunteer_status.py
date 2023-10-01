@@ -1,9 +1,9 @@
 from flask import Blueprint
 from flask_restful import reqparse, Resource, fields, marshal_with, Api
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.asset_request_volunteer_repository import *
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, is_user_or_has_role
 
 '''
 Define Data Input
@@ -55,6 +55,7 @@ patch_resource_fields = {
 
 class VolunteerStatus(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(get_resource_fields)
     def get(self):
         args = parser.parse_args()
@@ -65,6 +66,7 @@ class VolunteerStatus(Resource):
             res = get_asset_request_volunteer(session, args["idVolunteer"], args["idVehicle"])
             return {"success": True, "status": res.status}
 
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(patch_resource_fields)
     def patch(self):
 
