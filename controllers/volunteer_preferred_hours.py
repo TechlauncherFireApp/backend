@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restful import reqparse, Resource, fields, marshal_with, Api
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.volunteer_repository import *
-from services.jwk import requires_auth
+from services.jwk import requires_auth, is_user_or_has_role
 
 '''
 Define Data Input
@@ -51,6 +51,7 @@ patch_resource_fields = {
 # Handle the Recommendation endpoint
 class VolunteerPreferredHours(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(get_resource_fields)
     def get(self):
         args = parser.parse_args()
@@ -61,6 +62,7 @@ class VolunteerPreferredHours(Resource):
             res = get_volunteer(session, args['volunteerID'])
             return {"success": True, "prefHours": res.preferred_hours}
 
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(patch_resource_fields)
     def patch(self):
         args = parser.parse_args()
