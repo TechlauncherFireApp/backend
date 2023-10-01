@@ -1,10 +1,10 @@
 from flask import Blueprint
 from flask_restful import fields, Resource, marshal_with, Api, reqparse
 
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.user_repository import demote_user, promote_user, self_demote, get_user_role
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role, is_user_or_has_role
 
 patch_fields = {
     'success': fields.Boolean
@@ -22,6 +22,7 @@ parser.add_argument('typeChange', action='store', type=str)
 
 class UserType(Resource):
     @requires_auth
+    @is_user_or_has_role('userId', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(get_fields)
     def get(self):
         args = parser.parse_args()
@@ -34,6 +35,7 @@ class UserType(Resource):
         return {'userId': args['userId'],
                 'role_type': role_type}
 
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(patch_fields)
     def patch(self):
         args = parser.parse_args()
