@@ -36,92 +36,58 @@ reset_password_parser.add_argument('repeat_password', type=str)
 class Register(Resource):
 
     def post(self):
-        data = request.get_json(force=True)
-        user_id = data.get('user_id')
-
-        @is_user_or_has_role(user_id, UserType.VOLUNTEER)
-        def internal_post():
-            args = registration_parser.parse_args()
-            auth = AuthenticationService()
-            with session_scope() as session:
-                result = auth.register(session, args['email'], args['password'], args['given_name'], args['last_name'],
-                                       args['phone'], args['gender'], args['diet'], args['allergy'])
-            return jsonify({"result": result.name})
-
-        return internal_post()
+        request.get_json(force=True)
+        args = registration_parser.parse_args()
+        auth = AuthenticationService()
+        with session_scope() as session:
+            result = auth.register(session, args['email'], args['password'], args['given_name'], args['last_name'],
+                                   args['phone'], args['gender'], args['diet'], args['allergy'])
+        return jsonify({"result": result.name})
 
 
 class Login(Resource):
-    
     def post(self):
-        data = request.get_json(force=True)
-        user_id = data.get('user_id')
-
-        @is_user_or_has_role(user_id, UserType.VOLUNTEER)
-        def internal_post():
-            args = login_parser.parse_args()
-            auth = AuthenticationService()
-            with session_scope() as session:
-                result, token, user = auth.login(session, args['email'], args['password'])
-                if token is None:
-                    return jsonify({"result": result.name})
-                return jsonify({"result": result.name, "access_token": token, "role": user.role.name, 'id': user.id})
-
-        return internal_post()
+        request.get_json(force=True)
+        args = login_parser.parse_args()
+        auth = AuthenticationService()
+        with session_scope() as session:
+            result, token, user = auth.login(session, args['email'], args['password'])
+            if token is None:
+                return jsonify({"result": result.name})
+            return jsonify({"result": result.name, "access_token": token, "role": user.role.name, 'id': user.id})
 
 
 class send_code(Resource):
-    
     def post(self):
-        data = request.get_json(force=True)
-        user_id = data.get('user_id')
-
-        @is_user_or_has_role(user_id, UserType.VOLUNTEER)
-        def internal_post():
-            args = password_parser.parse_args()
-            auth = AuthenticationService()
-            with session_scope() as session:
-                result = auth.send_code(session, args['email'])
-            return jsonify({"result": result.name})
-
-        return internal_post()
+        request.get_json(force=True)
+        args = password_parser.parse_args()
+        auth = AuthenticationService()
+        with session_scope() as session:
+            result = auth.send_code(session, args['email'])
+        return jsonify({"result": result.name})
 
 
 class verify_code(Resource):
-
     def post(self):
-        data = request.get_json(force=True)
-        user_id = data.get('user_id')
-
-        @is_user_or_has_role(user_id, UserType.VOLUNTEER)
-        def internal_post():
-            args = verify_password_parser.parse_args()
-            auth = AuthenticationService()
-            with session_scope() as session:
-                result = auth.verify_code(session, args['email'], args['code'])
-            return jsonify({"result": result.name})
-
-        return internal_post()
+        request.get_json(force=True)
+        args = verify_password_parser.parse_args()
+        auth = AuthenticationService()
+        with session_scope() as session:
+            result = auth.verify_code(session, args['email'], args['code'])
+        return jsonify({"result": result.name})
 
 
 class reset_password(Resource):
 
-     def post(self):
-        data = request.get_json(force=True)
-        user_id = data.get('user_id')
-
-        @is_user_or_has_role(user_id, UserType.ROOT_ADMIN)
-        def internal_post():
-            args = reset_password_parser.parse_args()
-            auth = AuthenticationService()
-            with session_scope() as session:
-                result = auth.reset_password(session, args['email'], args['new_password'], args['repeat_password'])
-            return jsonify({"result": result.name})
-
-        return internal_post()
-
-
-
+    @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
+    def post(self):
+        request.get_json(force=True)
+        args = reset_password_parser.parse_args()
+        auth = AuthenticationService()
+        with session_scope() as session:
+            result = auth.reset_password(session, args['email'], args['new_password'], args['repeat_password'])
+        return jsonify({"result": result.name})
 
 
 authentication_bp = Blueprint('authentication', __name__)
