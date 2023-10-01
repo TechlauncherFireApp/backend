@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.unavailability_repository import *
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, is_user_or_has_role
 
 select_parser = reqparse.RequestParser()
 select_parser.add_argument('userId', type=int, required=True)
@@ -31,6 +31,7 @@ userEvent_fields = {
 
 class ShowUnavailabilityEvent(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(userEvent_fields)
     def get(self):
         args = select_parser.parse_args()
@@ -42,6 +43,7 @@ class ShowUnavailabilityEvent(Resource):
 
 class CreateNewUnavailabilityEvent(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     def post(self):
         request.get_json(force=True)
         args = create_parser.parse_args()
@@ -56,6 +58,7 @@ class CreateNewUnavailabilityEvent(Resource):
 
 class RemoveUnavailabilityEvent(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     def get(self):
         args = remove_parser.parse_args()
         with session_scope() as session:
