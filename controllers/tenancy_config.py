@@ -6,10 +6,10 @@ import werkzeug.datastructures
 from flask import Blueprint, request, Response
 from flask_restful import fields, Resource, marshal_with, Api, reqparse
 
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.tenancy_config_repository import *
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role, is_user_or_has_role
 
 
 parser = reqparse.RequestParser()
@@ -58,7 +58,7 @@ def allowed_image(filename):
 
 
 class TenancyConfig(Resource):
-    @requires_auth
+    
     @marshal_with(get_config_fields)
     def get(self):
         args = parser.parse_args()
@@ -70,6 +70,7 @@ class TenancyConfig(Resource):
             return {'success': True, 'results': res}
 
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(config_fields)
     def post(self):
         args = parser.parse_args()
@@ -95,6 +96,7 @@ class TenancyConfig(Resource):
                                       '', args['navColour'], args['backColour'])
             return {'success': True, 'id': config_id}
 
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(config_fields)
     def patch(self):
         args = parser.parse_args()
@@ -104,6 +106,7 @@ class TenancyConfig(Resource):
             toggle_config(session, args['id'])
         return {'success': True}
 
+    @is_user_or_has_role('id', UserType.VOLUNTEER)
     @marshal_with(config_fields)
     def delete(self):
         args = parser.parse_args()
@@ -115,7 +118,7 @@ class TenancyConfig(Resource):
 
 
 class ImageRequest(Resource):
-    @requires_auth
+    
     def get(self):
         with session_scope() as session:
             img = get_img(session)
