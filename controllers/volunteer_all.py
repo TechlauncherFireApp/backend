@@ -2,9 +2,9 @@ from flask import Blueprint
 from flask_restful import Resource, fields, marshal_with, Api
 
 from controllers.v2 import volunteer_availability_field
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.volunteer_repository import *
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 '''
 No Data Input
@@ -50,6 +50,7 @@ resource_fields = {
 class VolunteerAll(Resource):
 
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(resource_fields)
     def get(self):
         with session_scope() as session:
