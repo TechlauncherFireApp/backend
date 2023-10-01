@@ -106,7 +106,7 @@ class TenancyConfig(Resource):
             toggle_config(session, args['id'])
         return {'success': True}
 
-    @is_user_or_has_role('id', UserType.VOLUNTEER)
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(config_fields)
     def delete(self):
         args = parser.parse_args()
