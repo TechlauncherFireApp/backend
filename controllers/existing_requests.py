@@ -4,7 +4,7 @@ from flask_restful import reqparse, Resource, fields, marshal_with, Api
 from domain import session_scope
 from repository.request_repository import *
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 '''
 Define Data Input
@@ -63,12 +63,14 @@ get_resource_list = {
 # Handle the Recommendation endpoint
 class ExistingRequests(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_resource_list)
     def get(self):
         with session_scope() as session:
             res = get_existing_requests(session)
             return {"success": True, "results": res}
 
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_resource_list)
     def patch(self):
         args = parser.parse_args()
@@ -76,6 +78,7 @@ class ExistingRequests(Resource):
             result = update_request_status(session, args["requestId"], args["status"])
             return {"success": result}
 
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_resource_list)
     def delete(self):
         args = delete_parser.parse_args()
