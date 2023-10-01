@@ -2,9 +2,9 @@ from flask import Blueprint
 from flask_restful import reqparse, Resource, fields, marshal_with, Api
 
 from services.optimiser import Optimiser
-from domain import session_scope
+from domain import session_scope, UserType
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 parser = reqparse.RequestParser()
 parser.add_argument('requestId', action='append', type=int)
@@ -17,6 +17,7 @@ resource_fields = {
 # Handle the Recommendation endpoint
 class Recommendation(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(resource_fields)
     def get(self):
         args = parser.parse_args()
