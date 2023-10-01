@@ -29,17 +29,14 @@ parser.add_argument('roleId', action='store', type=str)
 
 class AssetTypeRole(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(get_fields)
-        def get(self, user_id=None):
-        if user_id:
-            @is_user_or_has_role(user_id, UserType.ROOT_ADMIN)
-            def fetch_seats():
-                args = parser.parse_args()
-                if args['assetTypeId'] is None:
-                    return
-                with session_scope() as session:
-                    return get_seats(session, args['assetTypeId'])
-            return fetch_seats()
+    def get(self):
+        args = parser.parse_args()
+        if args['assetTypeId'] is None:
+            return
+        with session_scope() as session:
+            return get_seats(session, args['assetTypeId'])
             
     @has_role(UserType.ROOT_ADMIN)
     def delete(self):
