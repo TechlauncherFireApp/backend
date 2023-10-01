@@ -2,10 +2,10 @@ from flask import Blueprint
 from flask_restful import reqparse, Resource, fields, marshal_with, Api
 
 from .utility import *
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.asset_request_volunteer_repository import *
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 
 # Validate a volunteer's position and role
@@ -70,6 +70,7 @@ modify_parser.add_argument('volunteer_id', action='store', type=int)
 # Handle the ShiftRequest endpoint
 class ShiftRequest(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_resource_fields)
     def get(self):
         args = parser.parse_args()
@@ -91,6 +92,7 @@ class ShiftRequest(Resource):
                 rtn.append(d)
         return {"results": rtn}
 
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(post_patch_resource_fields)
     def delete(self):
         args = modify_parser.parse_args()
@@ -98,6 +100,7 @@ class ShiftRequest(Resource):
             remove_assignment(session, args['shift_id'], args['position_id'])
         return {"success": True}
 
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(post_patch_resource_fields)
     def patch(self):
         args = modify_parser.parse_args()
