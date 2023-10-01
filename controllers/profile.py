@@ -36,7 +36,7 @@ getId.add_argument("id", type=str)
 
 class EditProfile(Resource):
     @requires_auth
-    @is_user_or_has_role('id', UserType.VOLUNTEER)
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(result_fields)
     def post(self):
         request.get_json(force=True)
@@ -50,7 +50,7 @@ class EditProfile(Resource):
 
 class getProfile(Resource):
     @requires_auth
-    @is_user_or_has_role('id', UserType.VOLUNTEER)
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(user_info_fields)
     def post(self):
         request.get_json(force=True)
