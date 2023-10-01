@@ -1,11 +1,11 @@
 from flask import Blueprint
 from flask_restful import fields, Resource, marshal_with, Api, reqparse
 
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.user_repository import get_user_by_email, get_volunteer_id_name
 from repository.user_role_repository import get_user_roles_by_id
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role, is_user_or_has_role
 
 user_info_fields = {
     'id': fields.Integer,
@@ -18,6 +18,7 @@ user_info_fields = {
 
 class GetUserInfoRequest(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     @marshal_with(user_info_fields)
     def get(self):
         parser = reqparse.RequestParser()
@@ -37,6 +38,7 @@ class GetUserInfoRequest(Resource):
 
 class GetAvailabilitiesRequest(Resource):
     @requires_auth
+    @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('email', type=str, required=True)
@@ -48,6 +50,7 @@ class GetAvailabilitiesRequest(Resource):
 
 class GetAllVolunteer(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     def get(self):
         with session_scope() as session:
             v_dict = get_volunteer_id_name(session)
