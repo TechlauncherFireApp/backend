@@ -1,12 +1,12 @@
 from flask import Blueprint
 from flask_restful import fields, Resource, marshal_with, Api, reqparse
 
-from domain import session_scope
+from domain import session_scope, UserType
 from repository.reference_repository import get_roles, get_qualifications, add_qualification, add_role, \
     toggle_qualification, toggle_role, get_asset_type, add_asset_type, toggle_asset_type, delete_role, \
     delete_qualification, delete_asset_type
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 get_role_fields = {
     'id': fields.Integer,
@@ -29,12 +29,14 @@ role_parser.add_argument('code', action='store', type=str)
 
 class RoleRequest(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_role_fields)
     def get(self):
         with session_scope() as session:
             return get_roles(session)
 
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(post_role_fields)
     def post(self):
         args = role_parser.parse_args()
@@ -44,6 +46,7 @@ class RoleRequest(Resource):
             role_id = add_role(session, args['name'], args['code'])
             return {'id': role_id}
 
+    @has_role(UserType.ROOT_ADMIN)
     def patch(self):
         args = role_parser.parse_args()
         if args['id'] is None or args['id'] == '':
@@ -52,6 +55,7 @@ class RoleRequest(Resource):
             toggle_role(session, args['id'])
         return
 
+    @has_role(UserType.ROOT_ADMIN)
     def delete(self):
         args = role_parser.parse_args()
         if args['id'] is None or args['id'] == '':
@@ -80,12 +84,14 @@ qualification_parser.add_argument('id', action="store", type=str)
 
 class QualificationsRequest(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_qualifications_fields)
     def get(self):
         with session_scope() as session:
             return get_qualifications(session)
 
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(post_qualification_fields)
     def post(self):
         args = qualification_parser.parse_args()
@@ -95,6 +101,7 @@ class QualificationsRequest(Resource):
             role_id = add_qualification(session, args['name'])
             return {'id': role_id}
 
+    @has_role(UserType.ROOT_ADMIN)
     def patch(self):
         args = qualification_parser.parse_args()
         if args['name'] is None or args['name'] == '':
@@ -103,6 +110,7 @@ class QualificationsRequest(Resource):
             toggle_qualification(session, args['name'])
         return
 
+    @has_role(UserType.ROOT_ADMIN)
     def delete(self):
         args = qualification_parser.parse_args()
         if args['id'] is None or args['id'] == '':
@@ -132,12 +140,14 @@ asset_type_parser.add_argument('code', action='store', type=str)
 
 class AssetTypeRequest(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(get_asset_type_fields)
     def get(self):
         with session_scope() as session:
             return get_asset_type(session)
 
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(post_asset_type_fields)
     def post(self):
         args = asset_type_parser.parse_args()
@@ -149,6 +159,7 @@ class AssetTypeRequest(Resource):
             asset_type_id = add_asset_type(session, args['code'], args['name'])
             return {'id': asset_type_id}
 
+    @has_role(UserType.ROOT_ADMIN)
     def patch(self):
         args = asset_type_parser.parse_args()
         if args['code'] is None or args['code'] == '':
@@ -157,6 +168,7 @@ class AssetTypeRequest(Resource):
             toggle_asset_type(session, args['code'])
         return
 
+    @has_role(UserType.ROOT_ADMIN)
     def delete(self):
         args = asset_type_parser.parse_args()
         if args['code'] is None or args['code'] == '':
