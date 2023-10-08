@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+from time import strptime
 
 import flask_restful
 from flask import request
@@ -11,19 +12,20 @@ __issuer__ = "FIREAPP2.0"
 class JWKService:
 
     @staticmethod
-    def generate(subject: int, name: str, role: str, date: str) -> str:
+    def generate(subject: int, name: str, role: str, date: datetime, exp: datetime) -> str:
         """
         Generate a JWT token for communication between client and application server.
         :param subject: The subject (ID) of the client for the token.
         :param name: The name of the client for the token.
         :param role: The role of the client for the token.
         :param date: The date update the account.
+        :param exp: The expiry time of the token.
         :return: The token as a string.
         """
 
         # TODO: Authentication
         #   - Add token expiry & refreshing, low priority in MVP
-        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "date": date, "iss": __issuer__},
+        token = jwt.encode({"sub": f"{subject}", "name": name, "role": role, "exp": int(exp.timestamp()), "iss": __issuer__},
                            __secret__, algorithm="HS256")
         return token
 
