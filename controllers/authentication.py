@@ -79,7 +79,6 @@ class verify_code(Resource):
 
 class reset_password(Resource):
 
-    @requires_auth
     @is_user_or_has_role('id', UserType.VOLUNTEER, UserType.ROOT_ADMIN)
     def post(self):
         request.get_json(force=True)
