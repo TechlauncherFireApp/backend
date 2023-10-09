@@ -13,7 +13,7 @@ from services.password import PasswordService
 from services.mail_sms import MailSender
 
 import random
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 passwordService = PasswordService()
 jwk_service = JWKService()
@@ -82,7 +82,7 @@ class AuthenticationService():
         if not passwordService.compare(password, user.password):
             return LoginResult.FAIL, None, None
 
-        return LoginResult.SUCCESS, jwk_service.generate(user.id, user.email, user.role.name), user
+        return LoginResult.SUCCESS, jwk_service.generate(user.id, user.email, user.role.name, user.update_date_time, (datetime.now() + timedelta(days=60))), user
 
     @staticmethod
     def generate_code(code_len: int):
