@@ -523,12 +523,12 @@
         },
         "pipenv": {
             "hashes": [
-                "sha256:18a3eba519e36d59f0d5a7f9c42bd268521e4b9b7b3d1bd6adcf131569323275",
-                "sha256:dd62abe8efa34b3d13e47b226bd151a1110dc5591557c559beca7d52efb55c18"
+                "sha256:0809debd75a4f8432ee10027531286c576760859653e51a103a9a9275fdac455",
+                "sha256:a07ad06655336a5d0f7c065f1dbc43d1b4c274762020c7bef18db1c694fc2637"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2023.2.4"
+            "version": "==2023.10.3"
         },
         "platformdirs": {
             "hashes": [
