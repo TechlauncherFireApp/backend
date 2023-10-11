@@ -8,7 +8,7 @@ from domain.type import Gender
 from domain.type import Diet
 from domain import User, PasswordRetrieval
 from domain.type import UserType, RegisterResult, LoginResult, ForgotPassword, VerifyCode, ResetPassword
-from services.jwk import JWKService
+from services.jwk import JWKService, requires_auth, is_user_or_has_role
 from services.password import PasswordService
 from services.mail_sms import MailSender
 
@@ -201,16 +201,17 @@ class AuthenticationService():
         return ResetPassword.SUCCESS
 
     @staticmethod
-    def reset_password(session: Session, email: str, new_password: str, repeat_password: str):
+    @requires_auth
+    def reset_password(session: Session, user_id, new_password: str, repeat_password: str):
         """
         Reset password, check whether two input passwords are same.
         :param session:
-        :param email: user's email, inherit from the last page
+        :param user_id: user's ID
         :param new_password: new password
         :param repeat_password: same as the new password
         :return:
         """
-        user = session.query(User).filter(User.email == email).first()
+        user = session.query(User).filter(User.id == user_id).first()
         if user is None or new_password is None:
             return ResetPassword.FAIL
         if new_password != repeat_password:

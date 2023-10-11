@@ -79,12 +79,16 @@ class verify_code(Resource):
 
 
 class reset_password(Resource):
-    def post(self):
+    def post(self, user_id=None):
         request.get_json(force=True)
         args = reset_password_parser.parse_args()
         auth = AuthenticationService()
-        with session_scope() as session:
-            result = auth.reset_password(session, args['email'], args['new_password'], args['repeat_password'])
+        if user_id:
+            with session_scope() as session:
+                result = auth.reset_password(session, user_id, args['new_password'], args['repeat_password'])
+        else:
+            with session_scope() as session:
+                result = auth.reset_password(session, args['email'], args['new_password'], args['repeat_password'])
         return jsonify({"result": result.name})
 
 
