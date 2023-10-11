@@ -14,7 +14,7 @@ class User(Base):
     role = Column(Enum(UserType), name='user_type', nullable=False)
     password = Column(String(256), nullable=True)
     incorrect_password_count = Column(Integer, default=0, name='incorrect_password_count')
-    last_sign_in = Column(DateTime, default=0, name='last_sign_in_datetime')
+    last_sign_in = Column(DateTime, default=datetime.now(), name='last_sign_in_datetime')
     first_name = Column(String(256), nullable=False)
     last_name = Column(String(256), nullable=False)
     mobile_number = Column(String(256), name='mobile_number', unique=True)
