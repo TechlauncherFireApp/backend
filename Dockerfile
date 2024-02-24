@@ -2,7 +2,7 @@ FROM minizinc/minizinc:2.5.5
 
 # Install Python3.8 and some packages
 RUN apt update \
-    && apt install -yqq pkg-config wget git gnupg curl python3.8 python3-pip libmysqlclient-dev
+    && apt DEBIAN_FRONTEND=noninteractive install -yqq pkg-config wget git gnupg curl python3.8 python3-pip libmysqlclient-dev
 RUN pip3 install pipenv
 RUN pip3 install gunicorn
 
