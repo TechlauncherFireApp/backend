@@ -56,10 +56,14 @@ class CreateNewUnavailabilityEvent(Resource):
 
 class RemoveUnavailabilityEvent(Resource):
     @requires_auth
-    def get(self):
+    def delete(self):
         args = remove_parser.parse_args()
         with session_scope() as session:
-            return {"success": remove_event(session, args['userId'], args['eventId'])}
+            success = remove_event(session, args['userId'], args['eventId'])
+            if success:
+                return {"message": "Event removed successfully", "success": True}, 200
+            else:
+                return {"message": "Failed to remove event", "success": False}, 400
 
 volunteer_unavailability_bp = Blueprint('volunteer_unavailability', __name__)
 api = Api(volunteer_unavailability_bp, '/unavailability')
