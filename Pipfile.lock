@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "677824ad6724f5cb8a0937d49ebe0320c7069ded4cfbadccc3c5c83e6b53d159"
+            "sha256": "b569c5143e8587ebb5194048671f1c24742d2a09f88e900a3f116522125d315f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -610,11 +610,11 @@
         },
         "pytz": {
             "hashes": [
-                "sha256:1d8ce29db189191fb55338ee6d0387d82ab59f3d00eac103412d64e0ebd0c588",
-                "sha256:a151b3abb88eda1d4e34a9814df37de2a80e301e68ba0fd856fb9b46bfbbbffb"
+                "sha256:2a29735ea9c18baf14b448846bde5a48030ed267578472d8955cd0e7443a9812",
+                "sha256:328171f4e3623139da4983451950b28e95ac706e13f3f2630a879749e7a8b319"
             ],
             "index": "pypi",
-            "version": "==2023.3"
+            "version": "==2024.1"
         },
         "s3transfer": {
             "hashes": [
