@@ -15,7 +15,7 @@ create_parser.add_argument('end', type=inputs.datetime_from_iso8601, required=Tr
 
 
 class CreateNewUnavailabilityEvent_v2(Resource):
-    #@requires_auth
+    @requires_auth
     def post(self):
         """
         POST method for creating a new unavailability event.
