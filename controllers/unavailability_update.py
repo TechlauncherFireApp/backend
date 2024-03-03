@@ -17,12 +17,12 @@ create_parser.add_argument('end', type=inputs.datetime_from_iso8601, required=Tr
 
 class CreateNewUnavailabilityEvent_v2(Resource):
     @requires_auth
-    def post(self):
+    def post(self, user_id):
         """
         POST method for creating a new unavailability event.
 
         Expects JSON payload with keys:
-        - userId (int): User ID associated with the event.
+        - user_id (int): User ID associated with the event.
         - title (str): Title of the event.
         - periodicity (int): Periodicity of the event.
         - start (str): Start date and time in ISO8601 format.
@@ -35,7 +35,7 @@ class CreateNewUnavailabilityEvent_v2(Resource):
             with session_scope() as session:
                 eventId = create_event(
                     session,
-                    args['userId'],
+                    user_id,
                     args['title'],
                     args['start'],
                     args['end'],
@@ -45,10 +45,11 @@ class CreateNewUnavailabilityEvent_v2(Resource):
                     return {"eventId": eventId}, 200  # HTTP 200 OK
                 else:
                     return abort(400, description="Failed to create event")  # HTTP 400 Bad Request
-        except Exception:
+        except Exception as e:
+            print(f"Exception: {e}")
             return abort(500, description="Internal server error")  # HTTP 500 Internal Server Error
 
 
 unavailability_v2_bp = Blueprint('unavailability_create', __name__)
 api = Api(unavailability_v2_bp)
-api.add_resource(CreateNewUnavailabilityEvent_v2, '/user/<userId>/unavailability')
+api.add_resource(CreateNewUnavailabilityEvent_v2, '/user/<user_id>/unavailability')
