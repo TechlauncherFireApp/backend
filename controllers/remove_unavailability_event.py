@@ -25,4 +25,4 @@ class RemoveUnavailabilityEventV2(Resource):
 # Blueprint setup for Flask application
 remove_unavailability_event_bp = Blueprint('remove-unavailability-event', __name__)
 api = Api(remove_unavailability_event_bp)
-api.add_resource(RemoveUnavailabilityEventV2, '/user/<user_id>/remove-unavailability-event')
+api.add_resource(RemoveUnavailabilityEventV2, '/user/<user_id>/unavailability')
