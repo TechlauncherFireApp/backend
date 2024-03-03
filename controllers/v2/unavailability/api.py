@@ -26,7 +26,7 @@ class VolunteerUnavailabilityV2(Resource):
             elif success is False:
                 return {"message": "Event not found"}, 404
             else:
-                return {"message": "Unexpected Error Occurred"}, 406
+                return {"message": "Unexpected Error Occurred"}, 400
 
 
 v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
