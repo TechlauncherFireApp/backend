@@ -28,7 +28,7 @@ class CreateNewUnavailabilityEvent_v2(Resource):
         - start (str): Start date and time in ISO8601 format.
         - end (str): End date and time in ISO8601 format.
 
-        Returns a JSON response with eventId and success indicators.
+        Returns a response with HTTP codes corresponding to status of operation.
         """
         try:
             args = create_parser.parse_args()
