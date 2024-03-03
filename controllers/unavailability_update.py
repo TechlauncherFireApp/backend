@@ -1,4 +1,4 @@
-from flask import blueprint, request, jsonify
+from flask import Blueprint, request, jsonify
 
 from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs
 from domain import session_scope
@@ -49,6 +49,7 @@ class CreateNewUnavailabilityEvent_v2(Resource):
             return {"error": str(e), "success": False}, 500  # HTTP 500 Internal Server Error
 
 
-unavailability_v2 = blueprint('v2', __name__)
-unavailability_v2_api = Api(unavailability_v2)
-unavailability_v2_api.add_resource('volunteer/<user_id>/unavailability')
+unavailability_v2_bp = Blueprint('unavailability', __name__)
+api = Api(unavailability_v2_bp, '/v2')
+api.add_resource(CreateNewUnavailabilityEvent_v2, '/volunteer/<user_id>/unavailability')
+
