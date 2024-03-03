@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 
-from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs
+from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs, abort
 from domain import session_scope
 from repository.unavailability_repository import *
 
@@ -44,9 +44,9 @@ class CreateNewUnavailabilityEvent_v2(Resource):
                 if eventId is not None:
                     return {"eventId": eventId}, 200  # HTTP 200 OK
                 else:
-                    return {"error": "Failed to create event", "success": False}, 400  # HTTP 400 Bad Request
-        except Exception as e:
-            return {"error": str(e), "success": False}, 500  # HTTP 500 Internal Server Error
+                    return abort(400)   # HTTP 400 Bad Request
+        except Exception:
+            return abort(500)  # HTTP 500 Internal Server Error
 
 
 unavailability_v2_bp = Blueprint('unavailability', __name__)
