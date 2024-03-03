@@ -49,6 +49,6 @@ class CreateNewUnavailabilityEvent_v2(Resource):
             return jsonify({"error": str(e), "success": False})
 
 
-volunteer_unavailability_update_bp = Blueprint('unavailability_update', __name__)
-api = Api(volunteer_unavailability_update_bp,'/update')
-api.add_resource(CreateNewUnavailabilityEvent_v2, '/createUnavailableEventV2')
+volunteer_unavailabilities_bp = Blueprint('unavailabilities', __name__)
+api = Api(volunteer_unavailabilities_bp, '/unavailabilities')
+api.add_resource(CreateNewUnavailabilityEvent_v2, '/create')
