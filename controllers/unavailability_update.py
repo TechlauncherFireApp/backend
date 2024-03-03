@@ -44,9 +44,9 @@ class CreateNewUnavailabilityEvent_v2(Resource):
                 if eventId is not None:
                     return {"eventId": eventId}, 200  # HTTP 200 OK
                 else:
-                    return abort(400)   # HTTP 400 Bad Request
+                    return abort(400, description="Failed to create event")  # HTTP 400 Bad Request
         except Exception:
-            return abort(500)  # HTTP 500 Internal Server Error
+            return abort(500, description="Internal server error")  # HTTP 500 Internal Server Error
 
 
 unavailability_v2_bp = Blueprint('unavailability_create', __name__)
