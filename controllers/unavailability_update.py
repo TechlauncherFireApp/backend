@@ -41,13 +41,12 @@ class CreateNewUnavailabilityEvent_v2(Resource):
                     args['end'],
                     args['periodicity']
                 )
-                response = {
-                    "eventId": eventId,
-                    "success": eventId is not None
-                }
-                return jsonify(response)
+                if eventId is not None:
+                    return {"eventId": eventId}, 200  # HTTP 200 OK
+                else:
+                    return {"error": "Failed to create event", "success": False}, 400  # HTTP 400 Bad Request
         except Exception as e:
-            return jsonify({"error": str(e), "success": False})
+            return {"error": str(e), "success": False}, 500  # HTTP 500 Internal Server Error
 
 
 unavailability_v2 = blueprint('v2', __name__)
