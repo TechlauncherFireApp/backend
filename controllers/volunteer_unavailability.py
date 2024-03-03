@@ -30,7 +30,7 @@ userEvent_fields = {
 }
 
 class ShowUnavailabilityEvent(Resource):
-    @requires_auth
+
     @marshal_with(userEvent_fields)
     def get(self):
         args = select_parser.parse_args()

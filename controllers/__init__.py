@@ -23,3 +23,4 @@ from .chatbot import chatbot_bp
 from .profile import profile_bp
 from .diet_requirement import diet_requirement_retrieval_bp
 from .v2.v2_blueprint import v2_bp
+from .unavailability_update import volunteer_unavailability_update_bp
