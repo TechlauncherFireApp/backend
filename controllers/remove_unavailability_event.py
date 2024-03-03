@@ -22,8 +22,7 @@ class RemoveUnavailabilityEventV2(Resource):
             else:
                 # If the event does not exist or could not be removed, return HTTP 404 Not Found.
                 return make_response(jsonify({"message": "Unavailability event not found."}), 404)
-
 # Blueprint setup for Flask application
 remove_unavailability_event_bp = Blueprint('remove-unavailability-event', __name__)
 api = Api(remove_unavailability_event_bp)
-api.add_resource(RemoveUnavailabilityEventV2, '/remove-unavailability-event')
+api.add_resource(RemoveUnavailabilityEventV2, '/user/<user_id>/remove-unavailability-event')
