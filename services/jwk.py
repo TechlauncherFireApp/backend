@@ -1,5 +1,6 @@
 from datetime import datetime
 from time import strptime
+from typing import Optional
 
 import flask_restful
 from flask import request
@@ -144,7 +145,15 @@ def is_user_or_has_role(user_id, *roles):
                 return func(*args, **kwargs)
 
             authenticated_user = jwkservice.decode_user_id()
-            if int(user_id) == int(authenticated_user):
+
+            uid = user_id
+            if uid is None:
+                uid = request.view_args["user_id"]
+            if uid is None:
+                print("Cannot find user_id!")
+                return flask_restful.abort(500)
+
+            if int(uid) == int(authenticated_user):
                 return func(*args, **kwargs)
             return flask_restful.abort(403)
 
@@ -153,3 +162,4 @@ def is_user_or_has_role(user_id, *roles):
         return wrapper
 
     return decorator
+
