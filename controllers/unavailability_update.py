@@ -51,5 +51,5 @@ class CreateNewUnavailabilityEvent_v2(Resource):
 
 
 unavailability_v2_bp = Blueprint('unavailability_create', __name__)
-api = Api(unavailability_v2_bp)
-api.add_resource(CreateNewUnavailabilityEvent_v2, '/user/<user_id>/unavailability')
+api = Api(unavailability_v2_bp,'/v2')
+api.add_resource(CreateNewUnavailabilityEvent_v2, '/volunteer/<user_id>/unavailability')
