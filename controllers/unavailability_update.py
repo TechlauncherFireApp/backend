@@ -49,6 +49,6 @@ class CreateNewUnavailabilityEvent_v2(Resource):
             return abort(500)  # HTTP 500 Internal Server Error
 
 
-unavailability_v2_bp = Blueprint('unavailability', __name__)
-api = Api(unavailability_v2_bp, '/v2')
-api.add_resource(CreateNewUnavailabilityEvent_v2, '/volunteer/unavailability')
+unavailability_v2_bp = Blueprint('unavailability_create', __name__)
+api = Api(unavailability_v2_bp)
+api.add_resource(CreateNewUnavailabilityEvent_v2, '/user/<userId>/unavailability')
