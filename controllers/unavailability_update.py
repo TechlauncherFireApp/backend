@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask import blueprint, request, jsonify
+
 from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs
 from domain import session_scope
 from repository.unavailability_repository import *
@@ -49,6 +50,6 @@ class CreateNewUnavailabilityEvent_v2(Resource):
             return jsonify({"error": str(e), "success": False})
 
 
-volunteer_unavailabilities_bp = Blueprint('unavailabilities', __name__)
-api = Api(volunteer_unavailabilities_bp, '/unavailabilities')
-api.add_resource(CreateNewUnavailabilityEvent_v2, '/create')
+unavailability_v2 = blueprint('v2', __name__)
+unavailability_v2_api = Api(unavailability_v2)
+unavailability_v2_api.add_resource('volunteer/<user_id>/unavailability')
