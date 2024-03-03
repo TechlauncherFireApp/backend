@@ -13,8 +13,8 @@ create_parser = reqparse.RequestParser()
 create_parser.add_argument('userId', type=int, required=True)
 create_parser.add_argument('title', type=str, required=True)
 create_parser.add_argument('periodicity', type=int, required=True)
-create_parser.add_argument('start',type=inputs.datetime_from_iso8601, required=True)
-create_parser.add_argument('end',type=inputs.datetime_from_iso8601, required=True)
+create_parser.add_argument('start', type=inputs.datetime_from_iso8601, required=True)
+create_parser.add_argument('end', type=inputs.datetime_from_iso8601, required=True)
 
 remove_parser = reqparse.RequestParser()
 remove_parser.add_argument('userId', type=int, required=True)
@@ -29,8 +29,9 @@ userEvent_fields = {
     "periodicity": fields.Integer
 }
 
+
 class ShowUnavailabilityEvent(Resource):
-    # @requires_auth
+    @requires_auth
     @marshal_with(userEvent_fields)
     def get(self):
         args = select_parser.parse_args()
@@ -40,6 +41,7 @@ class ShowUnavailabilityEvent(Resource):
                 return jsonify({"userId": args['userId'], "success": False})
             return user_events
 
+
 class CreateNewUnavailabilityEvent(Resource):
     @requires_auth
     def post(self):
@@ -47,12 +49,13 @@ class CreateNewUnavailabilityEvent(Resource):
         args = create_parser.parse_args()
         with session_scope() as session:
             eventId = create_event(session, args['userId'], args['title'],
-                                args['start'], args['end'], args['periodicity'])
+                                   args['start'], args['end'], args['periodicity'])
             if eventId is None:
                 return jsonify({"eventId": -1,
-                        "success": False})
+                                "success": False})
             return jsonify({"eventId": eventId,
                             "success": True})
+
 
 class RemoveUnavailabilityEvent(Resource):
     @requires_auth
@@ -60,6 +63,7 @@ class RemoveUnavailabilityEvent(Resource):
         args = remove_parser.parse_args()
         with session_scope() as session:
             return {"success": remove_event(session, args['userId'], args['eventId'])}
+
 
 volunteer_unavailability_bp = Blueprint('volunteer_unavailability', __name__)
 api = Api(volunteer_unavailability_bp, '/unavailability')
