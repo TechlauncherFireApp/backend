@@ -42,9 +42,9 @@ class CreateNewUnavailabilityEvent_v2(Resource):
                     args['periodicity']
                 )
                 if eventId is not None:
-                    return jsonify({"eventId": eventId}, 200)  # HTTP 200 OK
+                    return {"eventId": eventId}, 200  # HTTP 200 OK
                 else:
-                    return jsonify({"error": "Failed to create event", "success": False}, 400)  # HTTP 400 Bad Request
+                    return {"error": "Failed to create event", "success": False}, 400  # HTTP 400 Bad Request
         except Exception as e:
             return {"error": str(e), "success": False}, 500  # HTTP 500 Internal Server Error
 
