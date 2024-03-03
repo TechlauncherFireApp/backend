@@ -39,8 +39,6 @@ app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(diet_requirement_retrieval_bp)
 
-app.register_blueprint(volunteer_unavailability_v2.volunteer_unavailability_v2_bp)
-
 @app.route('/')
 def main():
     return {
