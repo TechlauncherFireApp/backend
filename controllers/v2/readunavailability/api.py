@@ -1,7 +1,7 @@
 from flask import jsonify
 from flask_restful import reqparse, Resource, marshal_with
 
-from controllers.v2 import v2_api
+from controllers.v2.v2_blueprint import v2_api
 from controllers.v2.readunavailability.response_models import volunteer_unavailability_time
 from services.jwk import requires_auth
 from domain import session_scope
