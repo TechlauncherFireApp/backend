@@ -29,6 +29,22 @@ class SpecificVolunteerUnavailabilityV2(Resource):
             else:
                 return {"message": "Unexpected Error Occurred"}, 400
 
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    def delete(self, user_id, event_id):
+        with session_scope() as session:
+            try:
+                success = remove_event(session, user_id, event_id)
+                if success:
+                    # If the event is successfully removed, return HTTP 200 OK.
+                    return {"message": "Unavailability event removed successfully."}, 200
+                else:
+                    # If the event does not exist or could not be removed, return HTTP 404 Not Found.
+                    return {"message": "Unavailability event not found."}, 404
+            except Exception as e:
+                # HTTP 500 Internal Server Error
+                return {"description": "Internal server error", "error": str(e)}, 500
+
 
 class VolunteerUnavailabilityV2(Resource):
 
@@ -61,8 +77,8 @@ class VolunteerUnavailabilityV2(Resource):
                     return {"eventId": eventId}, 200  # HTTP 200 OK
                 else:
                     return {"description": "Failed to create event"}, 400  # HTTP 400 Bad Request
-        except Exception:
-            return {"description": "Internal server error"}, 500  # HTTP 500 Internal Server Error
+        except Exception as e:
+            return {"description": "Internal server error", "error": str(e)}, 500  # HTTP 500 Internal Server Error
 
 
 v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
@@ -70,4 +86,3 @@ v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
 
 v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
                     '/v2/volunteers/<user_id>/unavailability')
-
