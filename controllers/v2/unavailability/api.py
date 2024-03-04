@@ -44,8 +44,34 @@ class VolunteerUnavailabilityV2(Resource):
                 return jsonify({'userID': user_id, 'success': False}), 400
 
 
+class CreateNewUnavailabilityEventV2(Resource):
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    def post(self, user_id):
+        try:
+            args = edit_parser.parse_args()
+            with session_scope() as session:
+                eventId = create_event(
+                    session,
+                    user_id,
+                    args['title'],
+                    args['start'],
+                    args['end'],
+                    args['periodicity']
+                )
+                if eventId is not None:
+                    return {"eventId": eventId}, 200  # HTTP 200 OK
+                else:
+                    return {"description": "Failed to create event"}, 400  # HTTP 400 Bad Request
+        except Exception:
+            return {"description": "Internal server error"}, 500  # HTTP 500 Internal Server Error
+
+
 v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
                     '/v2/volunteers/<user_id>/unavailability/<event_id>')
 
 v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
                     '/v2/volunteers/<user_id>/unavailability')
+
+v2_api.add_resource(CreateNewUnavailabilityEventV2, '/v2/volunteer',
+                    '/v2/volunteer/<user_id>/unavailability')
