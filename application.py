@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
-from controllers import *
 
+from controllers import *
 
 # Register the application
 
@@ -39,8 +39,6 @@ app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(diet_requirement_retrieval_bp)
 app.register_blueprint(unavailability_v2_bp)
-
-
 
 @app.route('/')
 def main():
