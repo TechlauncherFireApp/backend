@@ -8,7 +8,7 @@ from domain.type import Gender
 from domain.type import Diet
 from domain import User, PasswordRetrieval
 from domain.type import UserType, RegisterResult, LoginResult, ForgotPassword, VerifyCode, ResetPassword
-from services.jwk import JWKService
+from services.jwk import JWKService, requires_auth, is_user_or_has_role
 from services.password import PasswordService
 from services.mail_sms import MailSender
 
@@ -163,7 +163,7 @@ class AuthenticationService():
     #  We can add captcha to make it safer
 
     @staticmethod
-    def reset_password(session: Session, email: str, new_password: str, repeat_password: str):
+    def reset_password_with_email(session: Session, email: str, new_password: str, repeat_password: str):
         """
         Reset password, check whether two input passwords are same.
         :param session:
@@ -198,6 +198,30 @@ class AuthenticationService():
         MailSender().email(email, subject, content)
         # test = session.query(User).filter(User.email == email).first()
         # print("test", passwordService.compare(old_password, test.password))
+        return ResetPassword.SUCCESS
+
+    @staticmethod
+    @requires_auth
+    def reset_password(session: Session, user_id, new_password: str, repeat_password: str):
+        """
+        Reset password, check whether two input passwords are same.
+        :param session:
+        :param user_id: user's ID
+        :param new_password: new password
+        :param repeat_password: same as the new password
+        :return:
+        """
+        user = session.query(User).filter(User.id == user_id).first()
+        if user is None or new_password is None:
+            return ResetPassword.FAIL
+        if new_password != repeat_password:
+            return ResetPassword.RECHECK_TWO_INPUTS
+        if not passwordService.validate(new_password):
+            return ResetPassword.BAD_PASSWORD
+        password_hash = passwordService.hash(new_password)
+        user.password = password_hash
+        session.commit()
+        session.flush()
         return ResetPassword.SUCCESS
 
 

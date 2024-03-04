@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+
 from controllers import *
 
 # Register the application
@@ -37,8 +38,6 @@ app.register_blueprint(volunteer_unavailability_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(diet_requirement_retrieval_bp)
-app.register_blueprint(remove_unavailability_event_bp)
-
 
 
 @app.route('/')

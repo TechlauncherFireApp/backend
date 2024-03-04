@@ -4,7 +4,7 @@ from flask_restful import Api, Resource, reqparse
 from domain import session_scope
 from services.authentication import AuthenticationService
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, JWKService
 
 registration_parser = reqparse.RequestParser()
 registration_parser.add_argument('email', type=str)
@@ -83,12 +83,15 @@ class reset_password(Resource):
         request.get_json(force=True)
         args = reset_password_parser.parse_args()
         auth = AuthenticationService()
-        with session_scope() as session:
-            result = auth.reset_password(session, args['email'], args['new_password'], args['repeat_password'])
+        user_id = JWKService.decode_user_id()
+        if user_id:
+            with session_scope() as session:
+                result = auth.reset_password(session, user_id, args['new_password'], args['repeat_password'])
+        else:
+            with session_scope() as session:
+                result = auth.reset_password_with_email(session, args['email'], args['new_password'],
+                                                        args['repeat_password'])
         return jsonify({"result": result.name})
-
-
-
 
 
 authentication_bp = Blueprint('authentication', __name__)
