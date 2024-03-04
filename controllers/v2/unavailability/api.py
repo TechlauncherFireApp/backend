@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify
-from flask_restful import reqparse, Resource, fields, marshal_with, Api, inputs
+from flask import jsonify
+from flask_restful import reqparse, Resource, marshal_with, inputs
 
 from .response_models import volunteer_unavailability_time
 from domain import session_scope, UserType
@@ -43,9 +43,31 @@ class VolunteerUnavailabilityV2(Resource):
             else:
                 return jsonify({'userID': user_id, 'success': False}), 400
 
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    def post(self, user_id):
+        try:
+            args = edit_parser.parse_args()
+            with session_scope() as session:
+                eventId = create_event(
+                    session,
+                    user_id,
+                    args['title'],
+                    args['start'],
+                    args['end'],
+                    args['periodicity']
+                )
+                if eventId is not None:
+                    return {"eventId": eventId}, 200  # HTTP 200 OK
+                else:
+                    return {"description": "Failed to create event"}, 400  # HTTP 400 Bad Request
+        except Exception:
+            return {"description": "Internal server error"}, 500  # HTTP 500 Internal Server Error
+
 
 v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
                     '/v2/volunteers/<user_id>/unavailability/<event_id>')
 
 v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
                     '/v2/volunteers/<user_id>/unavailability')
+

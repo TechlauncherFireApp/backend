@@ -39,6 +39,7 @@ app.register_blueprint(user_bp)
 app.register_blueprint(chatbot_bp)
 app.register_blueprint(diet_requirement_retrieval_bp)
 
+
 @app.route('/')
 def main():
     return {
