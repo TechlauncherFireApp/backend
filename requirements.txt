@@ -14,12 +14,12 @@ click==8.1.7; python_version >= '3.7'
 distlib==0.3.8
 exceptiongroup==1.2.0; python_version < '3.11'
 filelock==3.13.1; python_version >= '3.8'
-flask==3.0.0; python_version >= '3.8'
+flask==3.0.2; python_version >= '3.8'
 flask-cors==4.0.0
 flask-restful==0.3.10
 greenlet==3.0.1; python_version >= '3.7'
 ics==0.7.2
-importlib-metadata==7.0.1; python_version < '3.10'
+importlib-metadata==7.0.1; python_version < '3.9'
 importlib-resources==6.1.1; python_version < '3.9'
 iniconfig==2.0.0; python_version >= '3.7'
 itsdangerous==2.1.2; python_version >= '3.7'
