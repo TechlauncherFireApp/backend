@@ -1,6 +1,7 @@
 name: Branch Naming Policy Action
 
 on:
+  merge_group:
   create:
   delete:
   pull_request:
