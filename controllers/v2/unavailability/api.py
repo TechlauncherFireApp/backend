@@ -1,9 +1,13 @@
+import json
+import uuid
+
 from flask import jsonify
 from flask_restful import reqparse, Resource, marshal_with, inputs
 
 from .response_models import volunteer_unavailability_time
 from domain import session_scope, UserType
 from repository.volunteer_unavailability_v2 import *
+from repository.unavailability_repository import *
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
 
@@ -59,12 +63,24 @@ class VolunteerUnavailabilityV2(Resource):
             else:
                 return jsonify({'userID': user_id, 'success': False}), 400
 
+    def find_match(json_body, json_list):
+
+        for json_obj in json_list:
+            json_obj.pop("eventId", None)
+            json_obj.pop("userId", None)
+            if sorted(json_body.items()) == sorted(json_obj.items()):
+                return True
+        return False  # No match found
+
     # @requires_auth
     # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self, user_id):
-        if self.get(user_id) is not None: return {"message": "test successful"}
         try:
             args = edit_parser.parse_args()
+            json_list = self.get(user_id)
+            if VolunteerUnavailabilityV2.find_match(args, json_list):
+                return {"description": "Already in the database"}, 200  # HTTP 200 OK
+
             with session_scope() as session:
                 eventId = create_event(
                     session,
