@@ -2,14 +2,12 @@ from flask import Flask
 from flask_cors import CORS
 from controllers import *
 
+
 def create_app():
-    # Create the Flask application
     app = Flask(__name__)
 
-    # Apply CORS settings to the application
     CORS(app)
 
-    # Register all controllers individually
     app.register_blueprint(existing_requests_bp)
     app.register_blueprint(new_request_bp)
     app.register_blueprint(recommendation_bp)
@@ -36,7 +34,6 @@ def create_app():
     app.register_blueprint(chatbot_bp)
     app.register_blueprint(diet_requirement_retrieval_bp)
 
-    # Define the main route
     @app.route('/')
     def main():
         return {
@@ -45,9 +42,10 @@ def create_app():
 
     return app
 
+
 if __name__ == '__main__':
     import logging
 
     logging.basicConfig(filename='error.log', level=logging.DEBUG)
-    app = create_app()  # Create an app by calling the factory method
+    app = create_app()
     app.run(host='0.0.0.0')
