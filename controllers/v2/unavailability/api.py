@@ -64,11 +64,12 @@ class VolunteerUnavailabilityV2(Resource):
                 return jsonify({'userID': user_id, 'success': False}), 400
 
     def find_match(json_body, json_list):
-
+# for some reaosn the get method is retruning a dictionary and not a json list
         for json_obj in json_list:
             json_obj.pop("eventId", None)
             json_obj.pop("userId", None)
             if sorted(json_body.items()) == sorted(json_obj.items()):
+                #need to convert json_body to a dictionary item so it can be compared
                 return True
         return False  # No match found
 
@@ -78,6 +79,8 @@ class VolunteerUnavailabilityV2(Resource):
         try:
             args = edit_parser.parse_args()
             json_list = self.get(user_id)
+            print(json_list)
+            print(args)
             if VolunteerUnavailabilityV2.find_match(args, json_list):
                 return {"description": "Already in the database"}, 200  # HTTP 200 OK
 
