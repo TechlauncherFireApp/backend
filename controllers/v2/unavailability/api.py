@@ -85,15 +85,6 @@ class VolunteerUnavailabilityV2(Resource):
                 if overlapping_events:
                     return {"description": "Time frames overlap with existing events"}, 400  # HTTP 400 Bad Request
 
-                # duplicate_events = session.query(UnavailabilityTime).filter(UnavailabilityTime.userId == user_id,
-                #                                                             UnavailabilityTime.title == args['title'],
-                #                                                             UnavailabilityTime.start == args['start'],
-                #                                                             UnavailabilityTime.end == args['end'],
-                #                                                             UnavailabilityTime.periodicity == args[
-                #                                                                 'periodicity']).first()
-                # if duplicate_events:
-                #     return {"message": "Duplicate unavailability event"}, 400
-
 
                 eventId = create_event(
                     session,
