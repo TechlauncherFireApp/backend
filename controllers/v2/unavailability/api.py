@@ -69,14 +69,32 @@ class VolunteerUnavailabilityV2(Resource):
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
+            # Check if start time is earlier than end time
+            if args['start'] >= args['end']:
+                return {"description": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
+
             with session_scope() as session:
-                duplicate_events = session.query(UnavailabilityTime).filter(UnavailabilityTime.title == args['title'],
-                                                                            UnavailabilityTime.start == args['start'],
-                                                                            UnavailabilityTime.end == args['end'],
-                                                                            UnavailabilityTime.periodicity == args[
-                                                                                'periodicity']).first()
-                if duplicate_events:
-                    return {"message": "duplicate"}, 400
+
+                overlapping_events = session.query(UnavailabilityTime).filter(
+                    UnavailabilityTime.userId == user_id,
+                    UnavailabilityTime.start < args['end'],
+                    UnavailabilityTime.end > args['start'],
+                    UnavailabilityTime.periodicity == args['periodicity']
+                ).all()
+
+                if overlapping_events:
+                    return {"description": "Time frames overlap with existing events"}, 400  # HTTP 400 Bad Request
+
+                # duplicate_events = session.query(UnavailabilityTime).filter(UnavailabilityTime.userId == user_id,
+                #                                                             UnavailabilityTime.title == args['title'],
+                #                                                             UnavailabilityTime.start == args['start'],
+                #                                                             UnavailabilityTime.end == args['end'],
+                #                                                             UnavailabilityTime.periodicity == args[
+                #                                                                 'periodicity']).first()
+                # if duplicate_events:
+                #     return {"message": "Duplicate unavailability event"}, 400
+
+
                 eventId = create_event(
                     session,
                     user_id,
