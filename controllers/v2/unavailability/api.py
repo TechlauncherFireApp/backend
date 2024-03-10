@@ -69,7 +69,7 @@ class VolunteerUnavailabilityV2(Resource):
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
-            # Check if start time is earlier than end time
+            # Check if start time is earlier than end time.
             if args['start'] >= args['end']:
                 return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
