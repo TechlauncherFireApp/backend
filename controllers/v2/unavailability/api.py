@@ -21,8 +21,8 @@ edit_parser.add_argument("periodicity", type=int)
 
 class SpecificVolunteerUnavailabilityV2(Resource):
 
-    # @requires_auth
-    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
         args = edit_parser.parse_args()
         with session_scope() as session:
@@ -34,8 +34,8 @@ class SpecificVolunteerUnavailabilityV2(Resource):
             else:
                 return {"message": "Unexpected Error Occurred"}, 400
 
-    # @requires_auth
-    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def delete(self, user_id, event_id):
         with session_scope() as session:
             try:
@@ -53,7 +53,7 @@ class SpecificVolunteerUnavailabilityV2(Resource):
 
 class VolunteerUnavailabilityV2(Resource):
 
-    # @requires_auth
+    @requires_auth
     @marshal_with(volunteer_unavailability_time)
     # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
@@ -64,8 +64,8 @@ class VolunteerUnavailabilityV2(Resource):
             else:
                 return jsonify({'userID': user_id, 'success': False}), 400
 
-    # @requires_auth
-    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
@@ -74,14 +74,13 @@ class VolunteerUnavailabilityV2(Resource):
                 return {"description": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
             with session_scope() as session:
-
+                # checks if new time frame overlaps with any existing in the database for specific userId
                 overlapping_events = session.query(UnavailabilityTime).filter(
                     UnavailabilityTime.userId == user_id,
                     UnavailabilityTime.start < args['end'],
                     UnavailabilityTime.end > args['start'],
                     UnavailabilityTime.periodicity == args['periodicity']
                 ).all()
-
                 if overlapping_events:
                     overlapping_details = []
                     for event in overlapping_events:
@@ -89,7 +88,6 @@ class VolunteerUnavailabilityV2(Resource):
                             "eventId": event.eventId})
                     return {"description": "Time frames overlap with existing events",
                             "overlappingEvents": overlapping_details}, 400  # HTTP 400 Bad Request
-
 
                 eventId = create_event(
                     session,
