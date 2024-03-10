@@ -1,4 +1,5 @@
 import os
+
 os.environ.setdefault('username', 'user')
 os.environ.setdefault('password', 'password')
 os.environ.setdefault('host', '127.0.0.1')
@@ -19,3 +20,5 @@ def test_client():
         # Establish an application context
         with flask_app.app_context():
             yield testing_client
+
+
