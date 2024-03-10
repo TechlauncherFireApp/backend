@@ -83,7 +83,12 @@ class VolunteerUnavailabilityV2(Resource):
                 ).all()
 
                 if overlapping_events:
-                    return {"description": "Time frames overlap with existing events"}, 400  # HTTP 400 Bad Request
+                    overlapping_details = []
+                    for event in overlapping_events:
+                        overlapping_details.append({
+                            "eventId": event.eventId})
+                    return {"description": "Time frames overlap with existing events",
+                            "overlappingEvents": overlapping_details}, 400  # HTTP 400 Bad Request
 
 
                 eventId = create_event(
