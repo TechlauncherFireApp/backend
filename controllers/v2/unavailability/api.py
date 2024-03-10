@@ -48,14 +48,14 @@ class SpecificVolunteerUnavailabilityV2(Resource):
                     return {"message": "Unavailability event not found."}, 404
             except Exception as e:
                 # HTTP 500 Internal Server Error
-                return {"description": "Internal server error", "error": str(e)}, 500
+                return {"message": "Internal server error", "error": str(e)}, 500
 
 
 class VolunteerUnavailabilityV2(Resource):
 
     @requires_auth
     @marshal_with(volunteer_unavailability_time)
-    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         with session_scope() as session:
             volunteer_unavailability_record = fetch_event(session, user_id)
@@ -71,7 +71,7 @@ class VolunteerUnavailabilityV2(Resource):
             args = edit_parser.parse_args()
             # Check if start time is earlier than end time
             if args['start'] >= args['end']:
-                return {"description": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
+                return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
             with session_scope() as session:
                 # checks if new time frame overlaps with any existing in the database for specific userId
@@ -86,8 +86,8 @@ class VolunteerUnavailabilityV2(Resource):
                     for event in overlapping_events:
                         overlapping_details.append({
                             "eventId": event.eventId})
-                    return {"description": "Time frames overlap with existing events",
-                            "overlappingEvents": overlapping_details}, 400  # HTTP 400 Bad Request
+                    return {"message": "Time frames overlap with existing events",
+                            "overlapping_events": overlapping_details}, 400  # HTTP 400 Bad Request
 
                 eventId = create_event(
                     session,
