@@ -40,22 +40,23 @@ def get_event(session, userId):
         # only show the unavailability time that is end in the future
         events = session.query(UnavailabilityTime).filter(
             UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1, UnavailabilityTime.end > now).all()
-        session.expunge_all()
-        event_records = []
-        for event in events:
-            # if the start time is earlier than now, then show from now to the end time
-            start_time = max(event.start, now)
-            event_record = {
-                "eventId": event.eventId,
-                "userId": event.userId,
-                "title": event.title,
-                "startTime": start_time.isoformat(),
-                "endTime": event.end.isoformat(),
-                "periodicity": event.periodicity
-            }
-            event_records.append(event_record)
-
-        return jsonify(event_records)
+        if events:
+            event_records = []
+            for event in events:
+                # if the start time is earlier than now, then show from now to the end time
+                start_time = max(event.start, now)
+                event_record = {
+                    "eventId": event.eventId,
+                    "userId": event.userId,
+                    "title": event.title,
+                    "startTime": start_time.isoformat(),
+                    "endTime": event.end.isoformat(),
+                    "periodicity": event.periodicity
+                }
+                event_records.append(event_record)
+            return jsonify(event_records)
+        else:
+            return None
     except Exception as e:
         logging.error(e)
         return None

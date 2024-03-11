@@ -16,8 +16,8 @@ edit_parser.add_argument("periodicity", type=int)
 
 class SpecificVolunteerUnavailabilityV2(Resource):
 
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
         args = edit_parser.parse_args()
         with session_scope() as session:
@@ -29,8 +29,8 @@ class SpecificVolunteerUnavailabilityV2(Resource):
             else:
                 return {"message": "Unexpected Error Occurred"}, 400
 
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def delete(self, user_id, event_id):
         with session_scope() as session:
             try:
@@ -48,19 +48,19 @@ class SpecificVolunteerUnavailabilityV2(Resource):
 
 class VolunteerUnavailabilityV2(Resource):
 
-    #@requires_auth
-    #@marshal_with(volunteer_unavailability_time)
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @marshal_with(volunteer_unavailability_time)
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         with session_scope() as session:
             volunteer_unavailability_record = get_event(session, user_id)
             if volunteer_unavailability_record is not None:
                 return volunteer_unavailability_record
             else:
-                return jsonify({'userID': user_id, 'success': False}), 400
+                return {"message": "No unavailability record found."}, 400
 
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
