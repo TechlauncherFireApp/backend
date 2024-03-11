@@ -1,5 +1,3 @@
-import logging
-
 from flask import jsonify
 from flask_restful import reqparse, Resource, marshal_with, inputs
 
@@ -61,8 +59,8 @@ class VolunteerUnavailabilityV2(Resource):
             else:
                 return jsonify({'userID': user_id, 'success': False}), 400
 
-
-
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
