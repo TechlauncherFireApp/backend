@@ -11,8 +11,6 @@ import pytest
 
 @pytest.fixture(scope='module')
 def test_client():
-    print("hello")
-
     # Set the Testing configuration prior to creating the Flask application
     flask_app = create_app()
 
@@ -22,3 +20,20 @@ def test_client():
             yield testing_client
 
 
+@pytest.fixture(scope='module')
+def auth_token(test_client):
+    # Login with predefined admin credentials
+    login_payload = {  # admin account details
+        'email': 'admin',
+        'password': 'admin'
+    }
+    response = test_client.post('/authentication/login', json=login_payload)
+    assert response.status_code == 200, "Failed to log in with the given credential"
+    print(response.json)
+    token = response.json['access_token']
+    return token
+
+# append jwt token to header of all the testing requests
+@pytest.fixture(autouse=True)
+def set_auth_header(test_client, auth_token):
+    test_client.environ_base['HTTP_AUTHORIZATION'] = f'Bearer {auth_token}'
