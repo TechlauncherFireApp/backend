@@ -8,7 +8,6 @@ from domain.entity import unavailability_time
 from .response_models import volunteer_unavailability_time
 from domain import session_scope, UserType
 from repository.volunteer_unavailability_v2 import EventRepository
-from repository.unavailability_repository import *
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
 
@@ -44,7 +43,9 @@ class SpecificVolunteerUnavailabilityV2(Resource):
     def delete(self, user_id, event_id):
         with session_scope() as session:
             try:
-                success = remove_event(session, user_id, event_id)
+                event_repository = EventRepository(session)
+                success = event_repository.remove_event(user_id, event_id)
+                #success = remove_event(session, user_id, event_id)
                 if success:
                     # If the event is successfully removed, return HTTP 200 OK.
                     return {"message": "Unavailability event removed successfully."}, 200
@@ -84,13 +85,8 @@ class VolunteerUnavailabilityV2(Resource):
                 return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
             with session_scope() as session:
-                # checks if new time frame overlaps with any existing in the database for specific userId
-                overlapping_events = session.query(UnavailabilityTime).filter(
-                    UnavailabilityTime.userId == user_id,
-                    UnavailabilityTime.start < args['end'],
-                    UnavailabilityTime.end > args['start'],
-                    UnavailabilityTime.periodicity == args['periodicity']
-                ).all()
+                event_repository = EventRepository(session)
+                overlapping_events = event_repository.check_overlapping_events(user_id, args['start'], args['end'], args['periodicity'])
                 if overlapping_events:
                     overlapping_details = []
                     for event in overlapping_events:
@@ -99,7 +95,7 @@ class VolunteerUnavailabilityV2(Resource):
                     return {"message": "Time frames overlap with existing events",
                             "overlapping_events": overlapping_details}, 400  # HTTP 400 Bad Request
 
-                eventId = create_event(
+                eventId = event_repository.create_event(
                     session,
                     user_id,
                     args['title'],

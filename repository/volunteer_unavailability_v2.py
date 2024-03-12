@@ -63,3 +63,49 @@ class EventRepository:
         except Exception as e:
             logging.error(e)
             return None
+
+    # copy from repository.unavailability_repository.py
+    def create_event(self, userId, title, startTime, endTime, periodicity):
+        """
+        Function to create an event
+        :param session: session
+        :param userId: Integer, user id
+        :param title: String, reason why unavailable
+        :param startTime: DateTime, from what time is unavailable
+        :param endTime: DateTime, to what time is unavailable
+        :param periodicity: Integer, Daily = 1, Weekly = 2, One-Off = 3
+        """
+        event = UnavailabilityTime(userId=userId, title=title, start=startTime, end=endTime,
+                                       periodicity=periodicity)
+        self.session.add(event)
+        # session.expunge(question)
+        self.session.flush()
+        return event.eventId
+
+    # copy from repository.unavailability_repository.py
+    def remove_event(self, userId, eventId):
+        """
+        Function to remove an event
+        :param session: session
+        :param userId: Integer, user id, who want to remove an event
+        :param eventId: Integer, event id want to remove
+        :return: True: remove successful
+                 False: remove failed
+        """
+        existing = self.session.query(UnavailabilityTime).filter(UnavailabilityTime.userId == userId,
+                                                            UnavailabilityTime.eventId == eventId).first()
+        if existing is not None and existing.status is True:
+            existing.status = False
+            return True
+        return False
+
+    # copy from post function in api.py written by Steven
+    def check_overlapping_events(self, userId, startTime, endTime, periodicity):
+        # checks if new time frame overlaps with any existing in the database for specific userId
+        overlapping_events = self.session.query(UnavailabilityTime).filter(
+            UnavailabilityTime.userId == userId,
+            UnavailabilityTime.start < endTime,
+            UnavailabilityTime.end > startTime,
+            UnavailabilityTime.periodicity == periodicity
+        ).all()
+        return overlapping_events
