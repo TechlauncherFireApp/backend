@@ -3,7 +3,8 @@ from flask_restful import reqparse, Resource, marshal_with, inputs
 
 from .response_models import volunteer_unavailability_time
 from domain import session_scope, UserType
-from repository.volunteer_unavailability_v2 import *
+from repository.volunteer_unavailability_v2 import EventRepository
+from repository.unavailability_repository import *
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
 
@@ -16,12 +17,17 @@ edit_parser.add_argument("periodicity", type=int)
 
 class SpecificVolunteerUnavailabilityV2(Resource):
 
+    def __init__(self, event_repository):
+        self.event_repository = event_repository
+
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
         args = edit_parser.parse_args()
         with session_scope() as session:
-            success = edit_event(session, user_id, event_id, **args)
+            event_repository = EventRepository(session)
+            success = event_repository.edit_event(user_id, event_id, **args)
+            # success = edit_event(session, user_id, event_id, **args)
             if success is True:
                 return {"message": "Updated successfully"}, 200
             elif success is False:
@@ -48,12 +54,17 @@ class SpecificVolunteerUnavailabilityV2(Resource):
 
 class VolunteerUnavailabilityV2(Resource):
 
+    def __init__(self, event_repository):
+        self.event_repository = event_repository
+
     @requires_auth
     @marshal_with(volunteer_unavailability_time)
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         with session_scope() as session:
-            volunteer_unavailability_record = get_event(session, user_id)
+            event_repository = EventRepository(session)
+            volunteer_unavailability_record = event_repository.get_event(user_id)
+            # volunteer_unavailability_record = get_event(session, user_id)
             if volunteer_unavailability_record is not None:
                 return volunteer_unavailability_record
             else:
@@ -80,9 +91,10 @@ class VolunteerUnavailabilityV2(Resource):
         except Exception as e:
             return {"description": "Internal server error", "error": str(e)}, 500  # HTTP 500 Internal Server Error
 
+with session_scope() as session:
+    event_repository = EventRepository(session)
+    v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
+                        '/v2/volunteers/<user_id>/unavailability/<event_id>', resource_class_args=[event_repository])
 
-v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
-                    '/v2/volunteers/<user_id>/unavailability/<event_id>')
-
-v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
-                    '/v2/volunteers/<user_id>/unavailability')
+    v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
+                        '/v2/volunteers/<user_id>/unavailability', resource_class_args=[event_repository])
