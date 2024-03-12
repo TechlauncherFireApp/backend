@@ -5,18 +5,17 @@ os.environ.setdefault('password', 'password')
 os.environ.setdefault('host', '127.0.0.1')
 os.environ.setdefault('port', '3306')
 os.environ.setdefault('dbname', 'db')
-from application import create_app
 import pytest
+from application import app
 
 
 @pytest.fixture(scope='module')
 def test_client():
     # Set the Testing configuration prior to creating the Flask application
-    flask_app = create_app()
 
-    with flask_app.test_client() as testing_client:
+    with app.test_client() as testing_client:
         # Establish an application context
-        with flask_app.app_context():
+        with app.app_context():
             yield testing_client
 
 
@@ -32,6 +31,7 @@ def auth_token(test_client):
     print(response.json)
     token = response.json['access_token']
     return token
+
 
 # append jwt token to header of all the testing requests
 @pytest.fixture(autouse=True)
