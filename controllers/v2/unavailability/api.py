@@ -1,6 +1,10 @@
+import json
+import uuid
+
 from flask import jsonify
 from flask_restful import reqparse, Resource, marshal_with, inputs
 
+from domain.entity import unavailability_time
 from .response_models import volunteer_unavailability_time
 from domain import session_scope, UserType
 from repository.volunteer_unavailability_v2 import EventRepository
@@ -49,7 +53,7 @@ class SpecificVolunteerUnavailabilityV2(Resource):
                     return {"message": "Unavailability event not found."}, 404
             except Exception as e:
                 # HTTP 500 Internal Server Error
-                return {"description": "Internal server error", "error": str(e)}, 500
+                return {"message": "Internal server error", "error": str(e)}, 500
 
 
 class VolunteerUnavailabilityV2(Resource):
@@ -75,7 +79,26 @@ class VolunteerUnavailabilityV2(Resource):
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
+            # Check if start time is earlier than end time.
+            if args['start'] >= args['end']:
+                return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
+
             with session_scope() as session:
+                # checks if new time frame overlaps with any existing in the database for specific userId
+                overlapping_events = session.query(UnavailabilityTime).filter(
+                    UnavailabilityTime.userId == user_id,
+                    UnavailabilityTime.start < args['end'],
+                    UnavailabilityTime.end > args['start'],
+                    UnavailabilityTime.periodicity == args['periodicity']
+                ).all()
+                if overlapping_events:
+                    overlapping_details = []
+                    for event in overlapping_events:
+                        overlapping_details.append({
+                            "eventId": event.eventId})
+                    return {"message": "Time frames overlap with existing events",
+                            "overlapping_events": overlapping_details}, 400  # HTTP 400 Bad Request
+
                 eventId = create_event(
                     session,
                     user_id,
