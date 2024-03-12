@@ -17,7 +17,7 @@ filelock==3.13.1; python_version >= '3.8'
 flask==3.0.2; python_version >= '3.8'
 flask-cors==4.0.0
 flask-restful==0.3.10
-greenlet==3.0.1; python_version >= '3.7'
+greenlet==3.0.3; python_version >= '3.7'
 ics==0.7.2
 importlib-metadata==7.0.1; python_version < '3.9'
 importlib-resources==6.1.1; python_version < '3.9'
