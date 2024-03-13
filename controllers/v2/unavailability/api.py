@@ -20,17 +20,16 @@ edit_parser.add_argument("periodicity", type=int)
 
 class SpecificVolunteerUnavailabilityV2(Resource):
 
-    def __init__(self, event_repository):
-        self.event_repository = event_repository
+    def __init__(self):
+        self.event_repository = None
 
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
         args = edit_parser.parse_args()
         with session_scope() as session:
-            event_repository = EventRepository(session)
-            success = event_repository.edit_event(user_id, event_id, **args)
-            # success = edit_event(session, user_id, event_id, **args)
+            self.event_repository = EventRepository(session)
+            success = self.event_repository.edit_event(user_id, event_id, **args)
             if success is True:
                 return {"message": "Updated successfully"}, 200
             elif success is False:
@@ -43,9 +42,8 @@ class SpecificVolunteerUnavailabilityV2(Resource):
     def delete(self, user_id, event_id):
         with session_scope() as session:
             try:
-                event_repository = EventRepository(session)
-                success = event_repository.remove_event(user_id, event_id)
-                #success = remove_event(session, user_id, event_id)
+                self.event_repository = EventRepository(session)
+                success = self.event_repository.remove_event(user_id, event_id)
                 if success:
                     # If the event is successfully removed, return HTTP 200 OK.
                     return {"message": "Unavailability event removed successfully."}, 200
@@ -59,17 +57,16 @@ class SpecificVolunteerUnavailabilityV2(Resource):
 
 class VolunteerUnavailabilityV2(Resource):
 
-    def __init__(self, event_repository):
-        self.event_repository = event_repository
+    def __init__(self):
+        self.event_repository = None
 
     @requires_auth
     @marshal_with(volunteer_unavailability_time)
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         with session_scope() as session:
-            event_repository = EventRepository(session)
-            volunteer_unavailability_record = event_repository.get_event(user_id)
-            # volunteer_unavailability_record = get_event(session, user_id)
+            self.event_repository = EventRepository(session)
+            volunteer_unavailability_record = self.event_repository.get_event(user_id)
             if volunteer_unavailability_record is not None:
                 return volunteer_unavailability_record
             else:
@@ -85,8 +82,8 @@ class VolunteerUnavailabilityV2(Resource):
                 return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
             with session_scope() as session:
-                event_repository = EventRepository(session)
-                overlapping_events = event_repository.check_overlapping_events(user_id, args['start'], args['end'], args['periodicity'])
+                self.event_repository = EventRepository(session)
+                overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'], args['periodicity'])
                 if overlapping_events:
                     overlapping_details = []
                     for event in overlapping_events:
@@ -95,8 +92,7 @@ class VolunteerUnavailabilityV2(Resource):
                     return {"message": "Time frames overlap with existing events",
                             "overlapping_events": overlapping_details}, 400  # HTTP 400 Bad Request
 
-                eventId = event_repository.create_event(
-                    session,
+                eventId = self.event_repository.create_event(
                     user_id,
                     args['title'],
                     args['start'],
@@ -110,10 +106,10 @@ class VolunteerUnavailabilityV2(Resource):
         except Exception as e:
             return {"description": "Internal server error", "error": str(e)}, 500  # HTTP 500 Internal Server Error
 
-with session_scope() as session:
-    event_repository = EventRepository(session)
-    v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
-                        '/v2/volunteers/<user_id>/unavailability/<event_id>', resource_class_args=[event_repository])
 
-    v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
-                        '/v2/volunteers/<user_id>/unavailability', resource_class_args=[event_repository])
+
+v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
+                        '/v2/volunteers/<user_id>/unavailability/<event_id>')
+
+v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
+                        '/v2/volunteers/<user_id>/unavailability')
