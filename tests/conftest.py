@@ -6,16 +6,15 @@ os.environ.setdefault('host', '127.0.0.1')
 os.environ.setdefault('port', '3306')
 os.environ.setdefault('dbname', 'db')
 import pytest
-from application import app
-
+from application import create_app
 
 @pytest.fixture(scope='module')
 def test_client():
     # Set the Testing configuration prior to creating the Flask application
 
-    with app.test_client() as testing_client:
+    with create_app().test_client() as testing_client:
         # Establish an application context
-        with app.app_context():
+        with create_app().app_context():
             yield testing_client
 
 
