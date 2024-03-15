@@ -1,12 +1,13 @@
 import os
+import pytest
+from application import create_app
 
 os.environ.setdefault('username', 'user')
 os.environ.setdefault('password', 'password')
 os.environ.setdefault('host', '127.0.0.1')
 os.environ.setdefault('port', '3306')
 os.environ.setdefault('dbname', 'db')
-import pytest
-from application import create_app
+
 
 @pytest.fixture(scope='module')
 def test_client():
