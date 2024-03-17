@@ -51,9 +51,9 @@ class VolunteerUnavailabilityV2(Resource):
     def __init__(self):
         self.event_repository = EventRepository()
 
-    @requires_auth
+    # @requires_auth
     @marshal_with(volunteer_unavailability_time)
-    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         volunteer_unavailability_record = self.event_repository.get_event(user_id)
         if volunteer_unavailability_record is not None:
@@ -61,8 +61,8 @@ class VolunteerUnavailabilityV2(Resource):
         else:
             return {"message": "No unavailability record found."}, 400
 
-    @requires_auth
-    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    # @requires_auth
+    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
@@ -70,14 +70,12 @@ class VolunteerUnavailabilityV2(Resource):
             if args['start'] >= args['end']:
                 return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
-            overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'], args['periodicity'])
+            overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'],
+                                                                                args['periodicity'])
             if overlapping_events:
-                overlapping_details = []
-                for event in overlapping_events:
-                    overlapping_details.append({
-                        "eventId": event.eventId})
                 return {"message": "Time frames overlap with existing events",
-                        "overlapping_events": overlapping_details}, 400  # HTTP 400 Bad Request
+                        "overlapping events": overlapping_events}, 400
+
 
             eventId = self.event_repository.create_event(
                 user_id,
@@ -94,9 +92,8 @@ class VolunteerUnavailabilityV2(Resource):
             return {"description": "Internal server error", "error": str(e)}, 500  # HTTP 500 Internal Server Error
 
 
-
 v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
-                        '/v2/volunteers/<user_id>/unavailability/<event_id>')
+                    '/v2/volunteers/<user_id>/unavailability/<event_id>')
 
 v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
-                        '/v2/volunteers/<user_id>/unavailability')
+                    '/v2/volunteers/<user_id>/unavailability')
