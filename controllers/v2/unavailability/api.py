@@ -14,9 +14,10 @@ edit_parser.add_argument("periodicity", type=int)
 
 
 class SpecificVolunteerUnavailabilityV2(Resource):
+    event_repository: EventRepository
 
-    def __init__(self):
-        self.event_repository = EventRepository()
+    def __init__(self, event_repository: EventRepository = EventRepository()):
+        self.event_repository = event_repository
 
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
