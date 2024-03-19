@@ -48,19 +48,22 @@ class SpecificVolunteerUnavailabilityV2(Resource):
 
 
 class VolunteerUnavailabilityV2(Resource):
+    event_repository: EventRepository
 
-    def __init__(self):
-        self.event_repository = EventRepository()
+    def __init__(self, event_repository: EventRepository = EventRepository()):
+        self.event_repository = event_repository
 
     @requires_auth
     @marshal_with(volunteer_unavailability_time)
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         volunteer_unavailability_record = self.event_repository.get_event(user_id)
-        if volunteer_unavailability_record is not None:
+        if volunteer_unavailability_record is not None and volunteer_unavailability_record != []:
             return volunteer_unavailability_record
+        elif volunteer_unavailability_record == []:
+            return {"message": "No unavailability record found."}, 404
         else:
-            return {"message": "No unavailability record found."}, 400
+            return {"message": "Internal server error"}, 500
 
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
@@ -73,12 +76,8 @@ class VolunteerUnavailabilityV2(Resource):
 
             overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'], args['periodicity'])
             if overlapping_events:
-                overlapping_details = []
-                for event in overlapping_events:
-                    overlapping_details.append({
-                        "eventId": event.eventId})
                 return {"message": "Time frames overlap with existing events",
-                        "overlapping_events": overlapping_details}, 400  # HTTP 400 Bad Request
+                        "overlapping_events": overlapping_events}, 400  # HTTP 400 Bad Request
 
             eventId = self.event_repository.create_event(
                 user_id,

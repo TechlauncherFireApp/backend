@@ -38,7 +38,7 @@ class EventRepository:
         :param session: session
         :param userId: Integer, user id, who want to query the events
         """
-        now = datetime.now()
+        now = datetime.now().replace(microsecond=0)
         with session_scope() as session:
             try:
                 # only show the unavailability time that is end in the future
@@ -60,7 +60,7 @@ class EventRepository:
                         event_records.append(event_record)
                     return jsonify(event_records)
                 else:
-                    return None
+                    return []
             except Exception as e:
                 logging.error(e)
                 return None
@@ -112,4 +112,11 @@ class EventRepository:
                 UnavailabilityTime.end > startTime,
                 UnavailabilityTime.periodicity == periodicity
             ).all()
-        return overlapping_events
+            # Convert overlapping events to a list of dictionaries
+            overlapping_details = []
+            for event in overlapping_events:
+                overlapping_details.append({
+                    "eventId": event.eventId,
+                    # Add any other attributes you need
+                })
+        return overlapping_details
