@@ -110,3 +110,4 @@ v2_api.add_resource(SpecificVolunteerUnavailabilityV2, '/v2/volunteers/',
 
 v2_api.add_resource(VolunteerUnavailabilityV2, '/v2/volunteers/',
                     '/v2/volunteers/<user_id>/unavailability')
+
