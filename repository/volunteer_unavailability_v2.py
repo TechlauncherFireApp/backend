@@ -38,7 +38,8 @@ class EventRepository:
         :param session: session
         :param userId: Integer, user id, who want to query the events
         """
-        now = datetime.now().replace(microsecond=0)
+        # now = datetime.now().replace(microsecond=0)
+        now = datetime.now()
         with session_scope() as session:
             try:
                 # only show the unavailability time that is end in the future
@@ -48,12 +49,12 @@ class EventRepository:
                     event_records = []
                     for event in events:
                         # if the start time is earlier than now, then show from now to the end time
-                        start_time = max(event.start, now)
+                        # start_time = max(event.start, now)
                         event_record = {
                             "eventId": event.eventId,
                             "userId": event.userId,
                             "title": event.title,
-                            "startTime": start_time.isoformat(),
+                            "startTime": event.start.isoformat(),
                             "endTime": event.end.isoformat(),
                             "periodicity": event.periodicity
                         }
