@@ -7,6 +7,7 @@ from datetime import datetime
 from domain import UnavailabilityTime, session_scope
 
 
+
 class EventRepository:
     def __init__(self):
         pass
@@ -59,7 +60,7 @@ class EventRepository:
                             "periodicity": event.periodicity
                         }
                         event_records.append(event_record)
-                    return jsonify(event_records)
+                    return event_records
                 else:
                     return []
             except Exception as e:

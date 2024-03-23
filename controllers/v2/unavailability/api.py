@@ -19,8 +19,8 @@ class SpecificVolunteerUnavailabilityV2(Resource):
     def __init__(self, event_repository: EventRepository = EventRepository()):
         self.event_repository = event_repository
 
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
         args = edit_parser.parse_args()
         success = self.event_repository.edit_event(user_id, event_id, **args)
@@ -31,8 +31,8 @@ class SpecificVolunteerUnavailabilityV2(Resource):
         else:
             return {"message": "Unexpected Error Occurred"}, 400
 
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def delete(self, user_id, event_id):
         try:
             success = self.event_repository.remove_event(user_id, event_id)
@@ -53,20 +53,19 @@ class VolunteerUnavailabilityV2(Resource):
     def __init__(self, event_repository: EventRepository = EventRepository()):
         self.event_repository = event_repository
 
-    #@requires_auth
-    #@marshal_with(volunteer_unavailability_time)
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         volunteer_unavailability_record = self.event_repository.get_event(user_id)
         if volunteer_unavailability_record is not None and volunteer_unavailability_record != []:
             return volunteer_unavailability_record
         elif volunteer_unavailability_record == []:
-            return {"message": "No unavailability record found."}, 404
+            return {"message": "No unavailability record found."}, 400
         else:
             return {"message": "Internal server error"}, 500
 
-    # @requires_auth
-    # @is_user_or_has_role(None, UserType.ROOT_ADMIN)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
