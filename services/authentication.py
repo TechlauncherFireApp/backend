@@ -59,7 +59,7 @@ class AuthenticationService():
         # Everything seems fine, so we go ahead and create the user & the linked account.
         password_hash = passwordService.hash(password)
         new_user = User(role=UserType.VOLUNTEER, password=password_hash, first_name=given_name, last_name=last_name,
-                        mobile_number=phone, email=email, preferred_hours={}, experience_years=0, possibleRoles=["Basic"],
+                        mobile_number=phone, email=email, preferred_hours=None, experience_years=0, possibleRoles=["Basic"],
                         qualifications=[],
                         availabilities={"Friday": [], "Monday": [], "Sunday": [], "Tuesday": [], "Saturday": [],
                                         "Thursday": [], "Wednesday": []},
