@@ -4,8 +4,8 @@
 name: Unit and Functional Pytest
 
 on:
+  push:
   pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read
