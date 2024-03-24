@@ -1,6 +1,4 @@
 import os
-
-os.environ.setdefault("SQLALCHEMY_DATABASE_URI", 'sqlite:///:memory:')
 import pytest
 from application import app
 from domain.base import Engine, Base, Session
@@ -8,6 +6,7 @@ from domain.entity.user import User
 from domain.type.user_type import UserType
 from datetime import datetime
 
+os.environ.setdefault("SQLALCHEMY_DATABASE_URI", 'sqlite:///:memory:')
 
 @pytest.fixture(scope='session', autouse=True)
 def create_test_database():
@@ -42,7 +41,7 @@ def test_client():
 
 
 @pytest.fixture(scope='module')
-def create_user():
+def create_user(create_test_database):
     session = Session()
     test_user = User(
         role=UserType.ROOT_ADMIN,
