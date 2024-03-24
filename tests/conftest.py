@@ -41,7 +41,7 @@ def test_client():
 
 
 @pytest.fixture(scope='module')
-def create_user(create_test_database):
+def create_user(transactional_test):
     session = Session()
     test_user = User(
         role=UserType.ROOT_ADMIN,
