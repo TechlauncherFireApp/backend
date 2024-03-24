@@ -58,8 +58,8 @@ def create_user():
     session.commit()
     user_id = test_user.id
     yield user_id
-    session.delete(test_user)
-    session.commit()
+    # session.delete(test_user)
+    # session.commit()
     session.close()
 
 
