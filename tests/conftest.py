@@ -34,14 +34,14 @@ def transactional_test(create_test_database, request):
         connection.close()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def test_client():
     with app.test_client() as testing_client:
         with app.app_context():
             yield testing_client
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def create_user():
     session = Session()
     test_user = User(
@@ -63,8 +63,8 @@ def create_user():
     session.close()
 
 
-@pytest.fixture(scope='module')
-def auth_token(test_client):
+@pytest.fixture(scope='session')
+def auth_token(test_client, create_user):
     login_payload = {
         "email": "admin",
         "password": "admin"
