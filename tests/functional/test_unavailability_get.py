@@ -36,7 +36,6 @@ def test_get_volunteer_unavailability_invalid_user(test_client):
                      json=payload
                      )
     response = test_client.get(f"/v2/volunteers/{user_id}/unavailability")
-    assert response.status_code == 401 # Assuming the system treats requests for non-existent users as bad requests
-    # or not found
+    assert response.status_code == 401 # Assuming the system treats requests for unauthenticated users as unauthorized requests
     # assert response.json == {"message": "User not found"}  # Assuming this is the response for an invalid user ID
     # assert response.json == {'message': "The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required."}
