@@ -64,7 +64,8 @@ def create_user():
 
 
 @pytest.fixture(scope='module')
-def auth_token(test_client):
+def auth_token(test_client, create_user):
+    user_id = create_user
     login_payload = {
         "email": "admin",
         "password": "admin"
