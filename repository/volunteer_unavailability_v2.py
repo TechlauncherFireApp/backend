@@ -10,11 +10,12 @@ from domain import UnavailabilityTime, session_scope
 class EventRepository:
     def __init__(self):
         pass
+
     def edit_event(self, userId, eventId, title=None, start=None, end=None, periodicity=None):
         with session_scope() as session:
             try:
                 event = session.query(UnavailabilityTime).filter(UnavailabilityTime.eventId == eventId,
-                                                            UnavailabilityTime.userId == userId).first()
+                                                                 UnavailabilityTime.userId == userId).first()
                 if event is None:
                     return False
                 if title is not None:
@@ -43,7 +44,8 @@ class EventRepository:
             try:
                 # only show the unavailability time that is end in the future
                 events = session.query(UnavailabilityTime).filter(
-                    UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1, UnavailabilityTime.end > now).all()
+                    UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1,
+                    UnavailabilityTime.end > now).all()
                 if events:
                     event_records = []
                     for event in events:
@@ -77,7 +79,7 @@ class EventRepository:
         :param periodicity: Integer, Daily = 1, Weekly = 2, One-Off = 3
         """
         event = UnavailabilityTime(userId=userId, title=title, start=startTime, end=endTime,
-                                       periodicity=periodicity)
+                                   periodicity=periodicity)
         with session_scope() as session:
             session.add(event)
             # session.expunge(question)
@@ -102,7 +104,7 @@ class EventRepository:
                 return True
             return False
 
-    # copy from post function in api.py written by Steven
+    # checks via base value comparison, returns the event Ids of overlapped events
     def check_overlapping_events(self, userId, startTime, endTime, periodicity):
         with session_scope() as session:
             # checks if new time frame overlaps with any existing in the database for specific userId
@@ -112,4 +114,14 @@ class EventRepository:
                 UnavailabilityTime.end > startTime,
                 UnavailabilityTime.periodicity == periodicity
             ).all()
-        return overlapping_events
+            # Convert overlapping events to a list of dictionaries
+            overlapping_details = []
+            for event in overlapping_events:
+                overlapping_details.append({
+                    "eventId": event.eventId,
+                    # Add any other attributes you need
+                })
+        return overlapping_details
+
+
+

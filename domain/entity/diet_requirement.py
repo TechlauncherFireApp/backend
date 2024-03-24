@@ -8,7 +8,7 @@ from domain import Base
 class DietRequirement(Base):
     __tablename__ = 'diet_requirement'
     diet_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     halal = Column(Boolean, nullable=False, default=0)
     vegetarian = Column(Boolean, nullable=False, default=0)
     vegan = Column(Boolean, nullable=False, default=0)

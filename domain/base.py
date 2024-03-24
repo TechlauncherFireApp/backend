@@ -12,11 +12,22 @@ from services.secrets import SecretService
 
 # Configure Session
 Session = sessionmaker()
-Engine = create_engine('mysql+mysqldb://{0}:{1}@{2}:{3}/{4}'.format(os.environ.get('username'),
-                                                                    os.environ.get('password'),
-                                                                    os.environ.get('host'),
-                                                                    os.environ.get('port'),
-                                                                    os.environ.get('dbname')), echo=False)
+if os.environ.get("SQLALCHEMY_DATABASE_URI"):
+    Engine = create_engine(os.environ.get("SQLALCHEMY_DATABASE_URI"))
+
+
+    def enable_fk_listener(dbapi_connection, connection_record):  # enabling foreign key constraint in the test database
+        dbapi_connection.execute('pragma foreign_keys=ON')
+
+
+    event.listen(Engine, 'connect', enable_fk_listener)
+
+else:
+    Engine = create_engine('mysql+mysqldb://{0}:{1}@{2}:{3}/{4}'.format(os.environ.get('username'),
+                                                                        os.environ.get('password'),
+                                                                        os.environ.get('host'),
+                                                                        os.environ.get('port'),
+                                                                        os.environ.get('dbname')), echo=False)
 Session.configure(bind=Engine)
 
 # Configure Declarative Base for ORM
