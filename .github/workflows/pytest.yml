@@ -39,4 +39,4 @@ jobs:
         touch testdb.db
         pytest
       env:
-        SQLALCHEMY_DATABASE_URI: "sqlite://testdb.db"
+        SQLALCHEMY_DATABASE_URI: "sqlite:///testdb.db"
