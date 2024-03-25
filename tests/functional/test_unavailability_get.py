@@ -21,7 +21,7 @@ def test_get_volunteer_unavailability_no_records(test_client, create_user):
     assert response.status_code == 400  # Assuming the endpoint returns a 400 status for no records found
     assert response.json == {"message": "No unavailability record found."}  # Expected response body for no records
 
-
+    
 
 def test_get_volunteer_unavailability_invalid_user(test_client):
     user_id = -1
