@@ -48,19 +48,21 @@ class SpecificVolunteerUnavailabilityV2(Resource):
 
 
 class VolunteerUnavailabilityV2(Resource):
+    event_repository: EventRepository
 
-    def __init__(self):
-        self.event_repository = EventRepository()
+    def __init__(self, event_repository: EventRepository = EventRepository()):
+        self.event_repository = event_repository
 
     @requires_auth
-    @marshal_with(volunteer_unavailability_time)
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         volunteer_unavailability_record = self.event_repository.get_event(user_id)
-        if volunteer_unavailability_record is not None:
+        if volunteer_unavailability_record is not None and volunteer_unavailability_record != []:
             return volunteer_unavailability_record
-        else:
+        elif volunteer_unavailability_record == []:
             return {"message": "No unavailability record found."}, 400
+        else:
+            return {"message": "Internal server error"}, 500
 
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
@@ -76,6 +78,7 @@ class VolunteerUnavailabilityV2(Resource):
             if overlapping_events:
                 return {"message": "Time frames overlap with existing events",
                         "overlapping events": overlapping_events}, 400
+
 
             eventId = self.event_repository.create_event(
                 user_id,

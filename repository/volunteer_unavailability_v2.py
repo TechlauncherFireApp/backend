@@ -7,6 +7,7 @@ from datetime import datetime
 from domain import UnavailabilityTime, session_scope
 
 
+
 class EventRepository:
     def __init__(self):
         pass
@@ -36,7 +37,6 @@ class EventRepository:
     def get_event(self, userId):
         """
         get all the non-availability events of the given user
-        :param session: session
         :param userId: Integer, user id, who want to query the events
         """
         now = datetime.now()
@@ -49,20 +49,19 @@ class EventRepository:
                 if events:
                     event_records = []
                     for event in events:
-                        # if the start time is earlier than now, then show from now to the end time
-                        start_time = max(event.start, now)
+                        # write unavailability information into list
                         event_record = {
                             "eventId": event.eventId,
                             "userId": event.userId,
                             "title": event.title,
-                            "startTime": start_time.isoformat(),
+                            "startTime": event.start.isoformat(),
                             "endTime": event.end.isoformat(),
                             "periodicity": event.periodicity
                         }
                         event_records.append(event_record)
-                    return jsonify(event_records)
+                    return event_records
                 else:
-                    return None
+                    return []
             except Exception as e:
                 logging.error(e)
                 return None
@@ -121,7 +120,5 @@ class EventRepository:
                     "eventId": event.eventId,
                     # Add any other attributes you need
                 })
+
         return overlapping_details
-
-
-
