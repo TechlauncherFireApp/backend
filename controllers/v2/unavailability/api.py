@@ -35,14 +35,13 @@ class SpecificVolunteerUnavailabilityV2(Resource):
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def delete(self, user_id, event_id):
+        # logging is used for easier debugging
         try:
             success = self.event_repository.remove_event(user_id, event_id)
             if success:
-                # Log the successful soft deletion
                 logging.info(f"Soft deleted unavailability event {event_id} for user {user_id}.")
                 return {"message": "Unavailability event removed successfully."}, 200
             else:
-                # If the event does not exist or could not be marked as deleted, log this as a warning
                 logging.warning(
                     f"Attempted to remove non-existing or already removed event {event_id} for user {user_id}.")
                 return {"message": "Unavailability event not found or already removed."}, 404
