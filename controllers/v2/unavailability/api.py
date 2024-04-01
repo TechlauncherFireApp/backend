@@ -5,6 +5,7 @@ from domain import UserType
 from repository.volunteer_unavailability_v2 import EventRepository
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
+import logging
 
 edit_parser = reqparse.RequestParser()
 edit_parser.add_argument("title", type=str)
@@ -37,13 +38,16 @@ class SpecificVolunteerUnavailabilityV2(Resource):
         try:
             success = self.event_repository.remove_event(user_id, event_id)
             if success:
-                # If the event is successfully removed, return HTTP 200 OK.
+                # Log the successful soft deletion
+                logging.info(f"Soft deleted unavailability event {event_id} for user {user_id}.")
                 return {"message": "Unavailability event removed successfully."}, 200
             else:
-                # If the event does not exist or could not be removed, return HTTP 404 Not Found.
-                return {"message": "Unavailability event not found."}, 404
+                # If the event does not exist or could not be marked as deleted, log this as a warning
+                logging.warning(
+                    f"Attempted to remove non-existing or already removed event {event_id} for user {user_id}.")
+                return {"message": "Unavailability event not found or already removed."}, 404
         except Exception as e:
-            # HTTP 500 Internal Server Error
+            logging.error(f"Error during deletion of event {event_id} for user {user_id}: {str(e)}")
             return {"message": "Internal server error", "error": str(e)}, 500
 
 
