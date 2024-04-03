@@ -5,7 +5,7 @@ from domain import UserType
 from repository.volunteer_unavailability_v2 import EventRepository
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
-
+import logging
 edit_parser = reqparse.RequestParser()
 edit_parser.add_argument("title", type=str)
 edit_parser.add_argument("start", type=inputs.datetime_from_iso8601)
@@ -27,8 +27,10 @@ class SpecificVolunteerUnavailabilityV2(Resource):
         if success is True:
             return {"message": "Updated successfully"}, 200
         elif success is False:
+            logging.warning(f"event not found for eventId of  {event_id} and userId of {user_id}.")
             return {"message": "Event not found"}, 404
         else:
+            logging.error(f"Unexpected error happened for event {event_id} for user {user_id}.")
             return {"message": "Unexpected Error Occurred"}, 400
 
     @requires_auth
