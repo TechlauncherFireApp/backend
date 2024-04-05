@@ -21,14 +21,12 @@ class SpecificVolunteerUnavailabilityV2(Resource):
         self.event_repository = event_repository
 
     @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
-        @is_user_or_has_role(user_id, UserType.ROOT_ADMIN)
-        def edit_unavailability():
+        try:
             with session_scope() as session:
                 args = edit_parser.parse_args()
-                return self.event_repository.edit_event(session, user_id, event_id, **args)
-        try:
-            edit_unavailability()
+                self.event_repository.edit_event(session, user_id, event_id, **args)
             return {"message": "Updated successfully"}, 200
         except InvalidArgumentError as argumentException:
             logging.warning(argumentException)
