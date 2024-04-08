@@ -56,5 +56,12 @@ def test_delete_volunteer_unavailability_success(test_client, create_user):
 
     assert response.status_code == 200
 
+def test_delete_event_not_found(test_client, create_user):
+    user_id = create_user
+    test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                     json=payload_1
+                     )
+    response = test_client.delete(f"/v2/volunteers/{user_id}/unavailability/{event_id}")
 
+    assert response.status_code == 404
 
