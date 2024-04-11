@@ -73,11 +73,11 @@ class VolunteerUnavailabilityV2(Resource):
             if args['start'] >= args['end']:
                 return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
-            overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'],
-                                                                                args['periodicity'])
-            if overlapping_events:
-                return {"message": "Time frames overlap with existing events",
-                        "overlapping events": overlapping_events}, 400
+            # overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'],
+            #                                                                     args['periodicity'])
+            # if overlapping_events:
+            #     return {"message": "Time frames overlap with existing events",
+            #             "overlapping events": overlapping_events}, 400
 
 
             eventId = self.event_repository.create_event(
