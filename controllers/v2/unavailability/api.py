@@ -1,11 +1,12 @@
 from flask_restful import reqparse, Resource, marshal_with, inputs
 
 from .response_models import volunteer_unavailability_time
-from domain import UserType
+from domain import UserType, session_scope
 from repository.volunteer_unavailability_v2 import EventRepository
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
 import logging
+from exception import EventNotFoundError, InvalidArgumentError
 
 edit_parser = reqparse.RequestParser()
 edit_parser.add_argument("title", type=str)
@@ -23,14 +24,21 @@ class SpecificVolunteerUnavailabilityV2(Resource):
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, event_id):
-        args = edit_parser.parse_args()
-        success = self.event_repository.edit_event(user_id, event_id, **args)
-        if success is True:
+        try:
+            with session_scope() as session:
+                args = edit_parser.parse_args()
+                self.event_repository.edit_event(session, user_id, event_id, **args)
             return {"message": "Updated successfully"}, 200
-        elif success is False:
-            return {"message": "Event not found"}, 404
-        else:
-            return {"message": "Unexpected Error Occurred"}, 400
+        except InvalidArgumentError as argumentException:
+            logging.warning(argumentException)
+            return {"message": "Invalid argument from the payload"}, 400
+        except EventNotFoundError as notFoundError:
+            logging.warning(notFoundError)
+            return {"message": f"Event {event_id} can not be found"}, 404
+        except Exception as ex:
+            logging.error(ex)
+            return {"message": "Unexpected error happened within the database"}, 500
+
 
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
