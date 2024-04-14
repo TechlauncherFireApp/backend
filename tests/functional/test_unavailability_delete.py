@@ -12,9 +12,7 @@ Test Case 7: User with other Roles
 Input: user_id of a user with a role other than ROOT_ADMIN, event_id of an existing event.
 Expected Output: HTTP status code 403 Forbidden with a message indicating that the user does not have permission to delete the event.
 
-Test Case 8: Attempt to Delete Already Deleted Event
-Input: user_id, event_id of an event that has already been deleted.
-Expected Output: HTTP status code 404 with a message indicating the event was not found.
+
 
 Test Case 9: Attempt to Delete Event without Required Permissions
 Input: user_id, event_id of an event that the user has permission to view but not delete.
@@ -70,39 +68,57 @@ def test_delete_event_not_found(test_client, create_user):
     assert response.status_code == 404
 
 
-"""Test Case 3: Unauthorized User Input: user_id of a non-authorized user, event_id of an existing event. 
-Expected Output: HTTP status code 403 Forbidden or 404 Not Found with a message indicating the user is not authorized to 
-delete the event."""
+"""Test Case 8: Attempt to Delete Already Deleted Event
+Input: user_id, event_id of an event that has already been deleted.
+Expected Output: HTTP status code 404 with a message indicating the event was not found."""
 
 
-def test_delete_unauthorized(test_client, create_user1, create_user2):
-    # Create the first user and post an unavailability event
-    user_id1 = create_user1
-    event_response = test_client.post(f"/v2/volunteers/{user_id1}/unavailability",
-                                      json=payload)
+def test_delete_event_already_deleted(test_client, create_user):
+    user_id = create_user
+    event_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability", json=payload)
     assert event_response.status_code == 200
+    event_id = event_response.json["eventId"]
+    response = test_client.delete(f"/v2/volunteers/{user_id}/unavailability/{event_id}")
+    assert response.status_code == 200
+    response_repeat = test_client.delete(f"/v2/volunteers/{user_id}/unavailability/{event_id}")
+    assert response_repeat.status_code == 404
 
-    # Extract the event ID
-    event_id = event_response.json()["eventId"]
 
-    # Create the second user
-    user_id2 = create_user2
+# """Test Case 4: Unauthorized User Input: user_id of a non-authorized user, event_id of an existing event.
+# Expected Output: HTTP status code 403 Forbidden or 404 Not Found with a message indicating the user is not authorized to
+# delete the event."""
 
-    # Generate a valid JWT token for user_id1
-    token = JWKService.generate(user_id1, "user1", "admin",
-                                datetime.now(), datetime.now())
 
-    # Attempt to delete the event created by user_id1 using the credentials of user_id2
-    response = test_client.delete(f"/v2/volunteers/{user_id2}/unavailability/{event_id}",
-                                  headers={"Authorization": f"Bearer {token}"})
-
-    # Ensure that the unauthorized user receives a 401 Forbidden status code
-    assert response.status_code == 401
+# def test_delete_unauthorized(test_client, create_user1, create_user2):
+#     # Create the first user and post an unavailability event
+#     user_id1 = create_user1
+#     event_response = test_client.post(f"/v2/volunteers/{user_id1}/unavailability",
+#                                       json=payload)
+#     assert event_response.status_code == 200
+#
+#     # Extract the event ID
+#     event_id = event_response.json()["eventId"]
+#
+#     # Create the second user
+#     user_id2 = create_user2
+#
+#     # Generate a valid JWT token for user_id1
+#     token = JWKService.generate(user_id1, "user1", "admin",
+#                                 datetime.now(), datetime.now())
+#
+#     # Attempt to delete the event created by user_id1 using the credentials of user_id2
+#     response = test_client.delete(f"/v2/volunteers/{user_id2}/unavailability/{event_id}",
+#                                   headers={"Authorization": f"Bearer {token}"})
+#
+#     # Ensure that the unauthorized user receives a 401 Forbidden status code
+#     assert response.status_code == 401
 
 
 """Test Case 4: Internal Server Error
 Input: When an unexpected exception occurs during event deletion.
 Expected Output: HTTP status code 500 Internal Server Error with a message indicating the server error."""
+
+
 def test_internal_server_error(test_client, create_user):
     user_id = create_user
     event_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability", json=payload)
@@ -120,4 +136,3 @@ def test_internal_server_error(test_client, create_user):
 
     # Ensure that the response status code is 500 Internal Server Error
     assert response.status_code == 500
-

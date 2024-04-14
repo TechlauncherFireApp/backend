@@ -23,24 +23,24 @@ def test_create_unavailability_consecutive_event_id(test_client, create_user):
     assert response_2.json["eventId"] - response.json["eventId"] == 1
 
 
-# def test_create_unavailability_same_time_interval(test_client, create_user):
-#     user_id = create_user
-#     payload = {
-#         "title": "All Day Event",
-#         "periodicity": 0,
-#         "start": "2024-03-02T00:00:00Z",
-#         "end": "2024-03-02T23:59:59Z"
-#     }
-#     response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
-#                                 json=payload
-#                                 )
-#     response_2 = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
-#                                   json=payload
-#                                   )
-#     print(response.json)
-#
-#     assert response.status_code == 200
-#     assert response_2.status_code == 400
+def test_create_unavailability_same_time_interval(test_client, create_user):
+    user_id = create_user
+    payload = {
+        "title": "All Day Event",
+        "periodicity": 0,
+        "start": "2024-03-02T00:00:00Z",
+        "end": "2024-03-02T23:59:59Z"
+    }
+    response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                                json=payload
+                                )
+    response_2 = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                                  json=payload
+                                  )
+    print(response.json)
+
+    assert response.status_code == 200
+    assert response_2.status_code == 400
 
 
 def test_create_unavailability_nonexistent_user_id(test_client):
