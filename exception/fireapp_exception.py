@@ -1,0 +1,3 @@
+class FireAppException(Exception):
+    pass
+

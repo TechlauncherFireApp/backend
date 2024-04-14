@@ -2,8 +2,8 @@ import logging
 
 from flask import jsonify
 
-from datetime import datetime
-
+from datetime import datetime, timezone
+from exception import EventNotFoundError, InvalidArgumentError
 from domain import UnavailabilityTime, session_scope
 
 
@@ -11,27 +11,27 @@ class EventRepository:
     def __init__(self):
         pass
 
-    def edit_event(self, userId, eventId, title=None, start=None, end=None, periodicity=None):
-        with session_scope() as session:
-            try:
-                event = session.query(UnavailabilityTime).filter(UnavailabilityTime.eventId == eventId,
-                                                                 UnavailabilityTime.userId == userId).first()
-                if event is None:
-                    return False
-                if title is not None:
-                    event.title = title
-                if start is not None:
-                    event.start = start
-                if end is not None:
-                    event.end = end
-                if end is not None:
-                    event.periodicity = periodicity
-                session.commit()
-                return True
-            except Exception as e:
-                session.rollback()
-                logging.error(e)
-                return None
+    def edit_event(self, session, userId, eventId, title=None, start=None, end=None, periodicity=None):
+        now = datetime.now(timezone.utc)
+        event = session.query(UnavailabilityTime).filter(UnavailabilityTime.eventId == eventId,
+                                                         UnavailabilityTime.userId == userId).first()
+        if event is None:
+            raise EventNotFoundError(eventId)
+        # validate user input
+        if start is not None and start < now:
+            raise InvalidArgumentError()
+        if end is not None and (end < now or end < start):
+            raise InvalidArgumentError()
+        # Edit fields with new values
+        if title is not None:
+            event.title = title
+        if start is not None:
+            event.start = start
+        if end is not None:
+            event.end = end
+        if end is not None:
+            event.periodicity = periodicity
+        session.commit()
 
     def get_event(self, userId):
         """
@@ -134,3 +134,4 @@ class EventRepository:
 
         # If the count of duplicate events is greater than 0, duplicates exist, return True
         return duplicate_events_count > 0
+
