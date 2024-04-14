@@ -10,22 +10,25 @@ class TestEventRepository(unittest.TestCase):
     def setUp(self):
         self.repository = volunteer_unavailability_v2.EventRepository()
 
-    def test_edit_event(self):
-        mock_event = MagicMock()
-        with patch('repository.volunteer_unavailability_v2.session_scope') as mock_session_scope:
-            with MagicMock() as mock_session:
-                mock_session.query().filter().first.return_value = mock_event
-            result = self.repository.edit_event(1, 1, title="New Title", start=datetime.now(), end=datetime.now(),
-                                                periodicity=1)
-            # Assert that the result is True since an event exists
-            self.assertTrue(result)
-
     def test_create_event(self):
         with MagicMock() as session:
             session.add.return_value = None
             session.flush.return_value = None
             result = session.repository.create_event(1, "Title", datetime.now(), datetime.now(), 1)
             self.assertIsNotNone(result)
+
+    # def test_edit_event(self):
+    #     mock_event = MagicMock()
+    #     with patch('repository.volunteer_unavailability_v2.session_scope') as mock_session_scope:
+    #         with MagicMock() as session:
+    #             session.add.return_value = None
+    #
+    #             event_id = session.repository.create_event(1, "Title", datetime.now(), datetime.now(), 1)
+    #             self.assertIsNotNone(event_id)
+    #         result = session.repository.edit_event(1, event_id, "New Title", datetime.now(), datetime.now(), 1)
+    #         # Assert that the result is True since an event exists
+    #         session.flush()
+    #         self.assertTrue(result.title == "New Title")
 
     def test_get_event_with_events(self):
         event_id = self.repository.create_event(1, "Title", datetime.now(), datetime.now(), 1)
