@@ -68,7 +68,7 @@ def test_delete_event_not_found(test_client, create_user):
     assert response.status_code == 404
 
 
-"""Test Case 8: Attempt to Delete Already Deleted Event
+"""Test Case 3: Attempt to Delete Already Deleted Event
 Input: user_id, event_id of an event that has already been deleted.
 Expected Output: HTTP status code 404 with a message indicating the event was not found."""
 
