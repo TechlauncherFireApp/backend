@@ -22,8 +22,6 @@ def test_update_unavailability_successful(test_client, create_user):
     assert edit_response.status_code == 200
     assert edit_response.json == {"message": "Updated successfully"}
 
-# 出现edit输入的和原本信息相同时 弹出什么提醒？
-# 如果请求为空，弹出什么提醒
 
 def test_update_unavailability_event_not_found(test_client, create_user):
     user_id = create_user
