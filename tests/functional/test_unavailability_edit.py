@@ -36,7 +36,7 @@ def test_update_unavailability_event_not_found(test_client, create_user):
     assert edit_response.status_code == 404
     # assert response.json == {"message": f"Event {event_id} can not be found"}
 
-def test_update_unavailability_with_invalid_data_endtime_earlier_than_starttime(test_client, create_user):
+def test_update_unavailability_with_invalid_data_changeboth_endtime_earlier_than_starttime(test_client, create_user):
     user_id = create_user
     payload_1 = {
         "title": "All Day Event",
@@ -51,10 +51,54 @@ def test_update_unavailability_with_invalid_data_endtime_earlier_than_starttime(
     invalid_details = {
         "title": "Invalid Time Range",
         "start": "2024-05-04T00:00:00Z",  # Start time is after the end time
-        "end": "2024-05-03T23:59:59Z"
+        "end": "2024-05-01T23:59:59Z"
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
+    assert create_response.status_code == 200
+    assert edit_response.status_code == 400
+    # assert edit_response.json == {"message": "Invalid argument from the payload"}
+
+def test_update_unavailability_with_invalid_data_changestart_endtime_earlier_than_starttime(test_client, create_user):
+    user_id = create_user
+    payload_1 = {
+        "title": "All Day Event",
+        "periodicity": 0,
+        "start": "2024-05-02T00:00:00Z",
+        "end": "2024-05-02T23:59:59Z"
+    }
+    create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                                       json=payload_1
+                                       )
+    event_id = create_response.json['eventId']
+    invalid_details = {
+        "title": "Invalid Start time for Later than Original End Time",
+        "start": "2024-05-04T23:59:59Z"
+    }
+    edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
+                               json=invalid_details)
+    assert create_response.status_code == 200
+    assert edit_response.status_code == 400
+    # assert edit_response.json == {"message": "Invalid argument from the payload"}
+
+def test_update_unavailability_with_invalid_data_changeend_endtime_earlier_than_starttime(test_client, create_user):
+    user_id = create_user
+    payload_1 = {
+        "title": "All Day Event",
+        "periodicity": 0,
+        "start": "2024-05-02T00:00:00Z",
+        "end": "2024-05-02T23:59:59Z"
+    }
+    create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                                       json=payload_1
+                                       )
+    event_id = create_response.json['eventId']
+    invalid_details = {
+        "title": "Invalid End time for Earlier than Original Start Time",
+        "end": "2024-05-01T00:00:00Z"
+    }
+    edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
+                                    json=invalid_details)
     assert create_response.status_code == 200
     assert edit_response.status_code == 400
     # assert edit_response.json == {"message": "Invalid argument from the payload"}
@@ -72,8 +116,8 @@ def test_update_unavailability_with_invalid_data_starttime_in_the_past(test_clie
                                        )
     event_id = create_response.json['eventId']
     invalid_details = {
-        "title": "Invalid Start Time",
-        "start": "2024-03-04T00:00:00Z",
+        "title": "Meaningless Start Time",
+        "start": "2024-03-04T00:00:00Z"
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
@@ -94,8 +138,8 @@ def test_update_unavailability_with_invalid_data_endtime_in_the_past(test_client
                                        )
     event_id = create_response.json['eventId']
     invalid_details = {
-        "title": "Invalid Start Time",
-        "end": "2024-03-05T00:00:00Z",
+        "title": "Meaningless End Time",
+        "end": "2024-03-05T00:00:00Z"
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
