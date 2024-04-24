@@ -121,3 +121,17 @@ class EventRepository:
                 })
 
         return overlapping_details
+
+    def check_duplicate_event(self, userId, startTime, endTime, periodicity):
+        with session_scope() as session:
+            # Query the database for events with the same start time, end time, and periodicity
+            duplicate_events_count = session.query(UnavailabilityTime).filter(
+                UnavailabilityTime.userId == userId,
+                UnavailabilityTime.start == startTime,
+                UnavailabilityTime.end == endTime,
+                UnavailabilityTime.periodicity == periodicity
+            ).count()
+
+        # If the count of duplicate events is greater than 0, duplicates exist, return True
+        return duplicate_events_count > 0
+
