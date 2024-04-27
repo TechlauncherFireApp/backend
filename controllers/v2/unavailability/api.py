@@ -80,16 +80,15 @@ class VolunteerUnavailabilityV2(Resource):
     def post(self, user_id):
         try:
             args = edit_parser.parse_args()
-            # Check if start time is earlier than end time.
+            # Check if start time is earlier than end time. redundancy may remove
             if args['start'] >= args['end']:
                 return {"message": "Start time must be earlier than end time"}, 400  # HTTP 400 Bad Request
 
-            overlapping_events = self.event_repository.check_overlapping_events(user_id, args['start'], args['end'],
-                                                                                args['periodicity'])
-            if overlapping_events:
-                return {"message": "Time frames overlap with existing events",
-                        "overlapping events": overlapping_events}, 400
-
+            duplicate_event = self.event_repository.check_duplicate_event(user_id, args['start'], args['end'],
+                                                                          args['periodicity'])
+            # Prevent duplicate events from being created.
+            if duplicate_event:
+                return {"message": "Event to be added already exist"}, 400
 
             eventId = self.event_repository.create_event(
                 user_id,
