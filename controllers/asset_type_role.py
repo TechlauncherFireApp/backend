@@ -37,6 +37,7 @@ class AssetTypeRole(Resource):
         with session_scope() as session:
             return get_seats(session, args['assetTypeId'])
 
+    @requires_auth
     def delete(self):
         args = parser.parse_args()
         if args['assetTypeRoleId'] is None:
