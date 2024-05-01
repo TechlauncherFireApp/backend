@@ -3,8 +3,8 @@ def test_get_volunteer_unavailability_success(test_client, create_user):
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-05-02T00:00:00Z",
-        "end": "2024-05-02T23:59:59Z"
+        "start": "2024-05-02T00:00:00",
+        "end": "2024-05-02T23:59:59"
     }
     test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                      json=payload_1
@@ -29,8 +29,8 @@ def test_get_volunteer_unavailability_invalid_user(test_client):
     payload = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-03-02T00:00:00Z",
-        "end": "2024-03-02T23:59:59Z"
+        "start": "2024-03-02T00:00:00",
+        "end": "2024-03-02T23:59:59"
     }
     test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                      json=payload

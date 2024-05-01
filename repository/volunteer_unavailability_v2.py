@@ -12,15 +12,16 @@ class EventRepository:
         pass
 
     def edit_event(self, session, userId, eventId, title=None, start=None, end=None, periodicity=None):
-        now = datetime.now(timezone.utc)
+        now = datetime.now()
         event = session.query(UnavailabilityTime).filter(UnavailabilityTime.eventId == eventId,
-                                                         UnavailabilityTime.userId == userId).first()
+                                                         UnavailabilityTime.userId == userId,
+                                                         UnavailabilityTime.status != 0).first()
         if event is None:
             raise EventNotFoundError(eventId)
         # validate user input
-        if start is not None and start < now:
+        if start is not None and (now > start or (end is None and start > event.end)):
             raise InvalidArgumentError()
-        if end is not None and (end < now or end < start):
+        if end is not None and (end < now or (start is not None and end < start) or (start is None and end < event.start)):
             raise InvalidArgumentError()
         # Edit fields with new values
         if title is not None:
@@ -29,7 +30,7 @@ class EventRepository:
             event.start = start
         if end is not None:
             event.end = end
-        if end is not None:
+        if periodicity is not None:
             event.periodicity = periodicity
         session.commit()
 
