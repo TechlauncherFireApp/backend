@@ -130,7 +130,8 @@ class EventRepository:
                 UnavailabilityTime.userId == userId,
                 UnavailabilityTime.start == startTime,
                 UnavailabilityTime.end == endTime,
-                UnavailabilityTime.periodicity == periodicity
+                UnavailabilityTime.periodicity == periodicity,
+                UnavailabilityTime.status != 0
             ).count()
 
         # If the count of duplicate events is greater than 0, duplicates exist, return True
