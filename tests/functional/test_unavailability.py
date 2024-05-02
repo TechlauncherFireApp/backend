@@ -3,14 +3,14 @@ def test_create_unavailability_consecutive_event_id(test_client, create_user):
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-03-02T00:00:00Z",
-        "end": "2024-03-02T23:59:59Z"
+        "start": "2024-03-02T00:00:00",
+        "end": "2024-03-02T23:59:59"
     }
     payload_2 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-03-03T00:00:00Z",
-        "end": "2024-03-03T23:59:59Z"
+        "start": "2024-03-03T00:00:00",
+        "end": "2024-03-03T23:59:59"
     }
     response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                 json=payload_1
@@ -28,8 +28,8 @@ def test_create_unavailability_same_time_interval(test_client, create_user):
     payload = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-03-02T00:00:00Z",
-        "end": "2024-03-02T23:59:59Z"
+        "start": "2024-03-02T00:00:00",
+        "end": "2024-03-02T23:59:59"
     }
     response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                 json=payload
@@ -48,8 +48,8 @@ def test_create_unavailability_nonexistent_user_id(test_client):
     payload = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-03-02T00:00:00Z",
-        "end": "2024-03-02T23:59:59Z"
+        "start": "2024-03-02T00:00:00",
+        "end": "2024-03-02T23:59:59"
     }
     response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                 json=payload
@@ -62,8 +62,8 @@ def test_create_unavailability_end_before_start(test_client, create_user):
     payload = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-03-02T00:00:00Z",
-        "end": "2024-03-01T23:59:59Z"
+        "start": "2024-03-02T00:00:00",
+        "end": "2024-03-01T23:59:59"
     }
     response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                 json=payload
@@ -71,28 +71,28 @@ def test_create_unavailability_end_before_start(test_client, create_user):
     assert response.status_code == 400
 
 
-# def test_create_unavailability_overlapped_time(test_client, create_user):
-#     user_id = create_user
-#     payload_1 = {
-#         "title": "All Day Event",
-#         "periodicity": 0,
-#         "start": "2024-03-03T00:00:00Z",
-#         "end": "2024-03-04T23:59:59Z"
-#     }
-#     payload_2 = {
-#         "title": "All Day Event",
-#         "periodicity": 0,
-#         "start": "2024-03-01T00:00:00Z",
-#         "end": "2024-03-05T23:59:59Z"
-#     }
-#     response_1 = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
-#                                   json=payload_1
-#                                   )
-#     response_2 = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
-#                                   json=payload_2
-#                                   )
-#     assert response_1.status_code == 200
-#     assert response_2.status_code == 400
+def test_create_unavailability_overlapped_time(test_client, create_user):
+    user_id = create_user
+    payload_1 = {
+        "title": "All Day Event",
+        "periodicity": 0,
+        "start": "2024-03-03T00:00:00",
+        "end": "2024-03-04T23:59:59"
+    }
+    payload_2 = {
+        "title": "All Day Event",
+        "periodicity": 0,
+        "start": "2024-03-01T00:00:00",
+        "end": "2024-03-05T23:59:59"
+    }
+    response_1 = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                                  json=payload_1
+                                  )
+    response_2 = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
+                                  json=payload_2
+                                  )
+    assert response_1.status_code == 200
+    assert response_2.status_code == 400
 
 
 # def test_merge_overlapping_unavailability_intervals(test_client, create_user):
