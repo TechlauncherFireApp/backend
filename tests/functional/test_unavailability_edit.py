@@ -1,10 +1,15 @@
+from datetime import datetime, timedelta
+
+now = datetime.now()
 def test_update_unavailability_successful(test_client, create_user):
     user_id = create_user
+    start = now + timedelta(days=1)
+    end = start + timedelta(hours=23, minutes=59, seconds=59)
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-05-02T00:00:00",
-        "end": "2024-05-02T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                      json=payload_1
@@ -12,8 +17,8 @@ def test_update_unavailability_successful(test_client, create_user):
     event_id = create_response.json['eventId']
     new_details = {
         "title": "Updated Event",
-        "start": "2024-05-03T00:00:00",
-        "end": "2024-05-03T23:59:59",
+        "start": (start + timedelta(days=1)).isoformat(),
+        "end": (end + timedelta(days=1)).isoformat(),
         "periodicity": 1
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
@@ -26,10 +31,12 @@ def test_update_unavailability_successful(test_client, create_user):
 def test_update_unavailability_event_not_found(test_client, create_user):
     user_id = create_user
     event_id = -1
+    start = now + timedelta(days=10)
+    end = start + timedelta(hours=23, minutes=59, seconds=59)
     new_details = {
         "title": "Nonexistent Event",
-        "start": "2024-10-03T00:00:00",
-        "end": "2024-10-03T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=new_details)
@@ -38,11 +45,13 @@ def test_update_unavailability_event_not_found(test_client, create_user):
 
 def test_update_unavailability_with_invalid_data_changeboth_endtime_earlier_than_starttime(test_client, create_user):
     user_id = create_user
+    start = now + timedelta(days=1)
+    end = start + timedelta(hours=23, minutes=59, seconds=59)
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-05-02T00:00:00",
-        "end": "2024-05-02T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                        json=payload_1
@@ -50,8 +59,8 @@ def test_update_unavailability_with_invalid_data_changeboth_endtime_earlier_than
     event_id = create_response.json['eventId']
     invalid_details = {
         "title": "Invalid Time Range",
-        "start": "2024-05-04T00:00:00",  # Start time is after the end time
-        "end": "2024-05-01T23:59:59"
+        "start": (start + timedelta(days=3)).isoformat(), # start time is later than end time
+        "end": (end + timedelta(days=1)).isoformat()
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
@@ -61,11 +70,13 @@ def test_update_unavailability_with_invalid_data_changeboth_endtime_earlier_than
 
 def test_update_unavailability_with_invalid_data_changestart_endtime_earlier_than_starttime(test_client, create_user):
     user_id = create_user
+    start = now + timedelta(days=1)
+    end = start + timedelta(hours=23, minutes=59, seconds=59)
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-05-02T00:00:00",
-        "end": "2024-05-02T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                        json=payload_1
@@ -73,7 +84,7 @@ def test_update_unavailability_with_invalid_data_changestart_endtime_earlier_tha
     event_id = create_response.json['eventId']
     invalid_details = {
         "title": "Invalid Start time for Later than Original End Time",
-        "start": "2024-05-04T23:59:59"
+        "start": (start + timedelta(days=3)).isoformat()
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
@@ -83,11 +94,13 @@ def test_update_unavailability_with_invalid_data_changestart_endtime_earlier_tha
 
 def test_update_unavailability_with_invalid_data_changeend_endtime_earlier_than_starttime(test_client, create_user):
     user_id = create_user
+    start = now + timedelta(days=2)
+    end = start + timedelta(hours=23, minutes=59, seconds=59)
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-05-02T00:00:00",
-        "end": "2024-05-02T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                        json=payload_1
@@ -95,7 +108,7 @@ def test_update_unavailability_with_invalid_data_changeend_endtime_earlier_than_
     event_id = create_response.json['eventId']
     invalid_details = {
         "title": "Invalid End time for Earlier than Original Start Time",
-        "end": "2024-05-01T00:00:00"
+        "end": (start - timedelta(days=1)).isoformat()
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                     json=invalid_details)
@@ -105,11 +118,13 @@ def test_update_unavailability_with_invalid_data_changeend_endtime_earlier_than_
 
 def test_update_unavailability_with_invalid_data_starttime_in_the_past(test_client, create_user):
     user_id = create_user
+    start = now + timedelta(days=2)
+    end = start + timedelta(hours=23, minutes=59, seconds=59)
     payload_1 = {
         "title": "All Day Event",
         "periodicity": 0,
-        "start": "2024-05-02T00:00:00",
-        "end": "2024-05-02T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                        json=payload_1
@@ -117,7 +132,7 @@ def test_update_unavailability_with_invalid_data_starttime_in_the_past(test_clie
     event_id = create_response.json['eventId']
     invalid_details = {
         "title": "Meaningless Start Time",
-        "start": "2024-03-04T00:00:00"
+        "start": (now - timedelta(days=1)).isoformat()
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
@@ -127,11 +142,13 @@ def test_update_unavailability_with_invalid_data_starttime_in_the_past(test_clie
 
 def test_update_unavailability_with_invalid_data_endtime_in_the_past(test_client, create_user):
     user_id = create_user
+    start = now - timedelta(days=10)
+    end = now + timedelta(days=10)
     payload_1 = {
-        "title": "Two Months Event",
+        "title": "Twenty Days Event",
         "periodicity": 0,
-        "start": "2024-03-02T00:00:00",
-        "end": "2024-05-02T23:59:59"
+        "start": start.isoformat(),
+        "end": end.isoformat()
     }
     create_response = test_client.post(f"/v2/volunteers/{user_id}/unavailability",
                                        json=payload_1
@@ -139,7 +156,7 @@ def test_update_unavailability_with_invalid_data_endtime_in_the_past(test_client
     event_id = create_response.json['eventId']
     invalid_details = {
         "title": "Meaningless End Time",
-        "end": "2024-03-05T00:00:00"
+        "end": (now - timedelta(days=1)).isoformat()
     }
     edit_response = test_client.put(f"/v2/volunteers/{user_id}/unavailability/{event_id}",
                                json=invalid_details)
