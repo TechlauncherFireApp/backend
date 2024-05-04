@@ -22,6 +22,10 @@ class EventRepository:
         actual_end = end if end is not None else event.end
         if actual_end < actual_start:
             raise InvalidArgumentError("The end time must not be before the start time.")
+        if actual_start < now:
+            raise InvalidArgumentError("The start time must not be in the past.")
+        if actual_end < now:
+            raise InvalidArgumentError("The end time must not be in the past.")
         # Edit fields with new values
         event.start = actual_start
         event.end = actual_end
