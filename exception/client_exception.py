@@ -8,7 +8,7 @@ class EventNotFoundError(FireAppException):
 
     def __str__(self):
         # Optionally customize the string representation for this specific error
-        return f"{self.message}: Event ID {self.event_id} could not be located."
+        return f"Event not found: Event ID {self.event_id} could not be located."
 
 
 class InvalidArgumentError(FireAppException):
@@ -17,4 +17,4 @@ class InvalidArgumentError(FireAppException):
 
     def __str__(self):
         # Optionally customize the string representation for this specific error
-        return f"{self.message}: unexpected values in the payload"
+        return f"InvalidArgumentError: unexpected values in the payload"
