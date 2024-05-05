@@ -12,24 +12,26 @@ class EventRepository:
         pass
 
     def edit_event(self, session, userId, eventId, title=None, start=None, end=None, periodicity=None):
-        now = datetime.now(timezone.utc)
+        now = datetime.now()
         event = session.query(UnavailabilityTime).filter(UnavailabilityTime.eventId == eventId,
-                                                         UnavailabilityTime.userId == userId).first()
+                                                         UnavailabilityTime.userId == userId,
+                                                         UnavailabilityTime.status != 0).first()
         if event is None:
             raise EventNotFoundError(eventId)
-        # validate user input
-        if start is not None and start < now:
-            raise InvalidArgumentError()
-        if end is not None and (end < now or end < start):
-            raise InvalidArgumentError()
+        actual_start = start if start is not None else event.start
+        actual_end = end if end is not None else event.end
+        if actual_end < actual_start:
+            raise InvalidArgumentError("The end time must not be before the start time.")
+        if actual_start < now:
+            raise InvalidArgumentError("The start time must not be in the past.")
+        if actual_end < now:
+            raise InvalidArgumentError("The end time must not be in the past.")
         # Edit fields with new values
+        event.start = actual_start
+        event.end = actual_end
         if title is not None:
             event.title = title
-        if start is not None:
-            event.start = start
-        if end is not None:
-            event.end = end
-        if end is not None:
+        if periodicity is not None:
             event.periodicity = periodicity
         session.commit()
 
