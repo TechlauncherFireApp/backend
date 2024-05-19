@@ -1,9 +1,10 @@
 from flask import Blueprint
 from flask_restful import fields, Resource, marshal_with, reqparse, Api
 
+from domain import UserType
 from services.mail_sms import MailSender
 
-from services.jwk import requires_auth
+from services.jwk import requires_auth, has_role
 
 send_email_result = {
     "result": fields.String
@@ -12,6 +13,7 @@ send_email_result = {
 
 class SendEmail(Resource):
     @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     @marshal_with(send_email_result)
     def post(self):
         parser = reqparse.RequestParser()
@@ -23,7 +25,7 @@ class SendEmail(Resource):
         generate_code = args['content']
         content = """
             Hi,</br>
-            You recently requested to rest the password for your %s account. Use the code below to proceed.
+            You recently requested to reset the password for your %s account. Use the code below to proceed.
             </br></br>
             code: <strong>%s</strong>
             </br></br>
