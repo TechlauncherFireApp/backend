@@ -1,13 +1,13 @@
 from flask import Blueprint, request
 from flask_restful import reqparse, fields, Resource, marshal_with, Api
 
-from domain import session_scope
+from domain import session_scope, UserType
 from domain.type.dietary import DietaryRestriction
 from repository.diet_repository import save_dietary_requirements
 
 from repository.diet_requirement_repository import get_dietary_requirements, get_formatted_dietary_requirements
 from repository.diet_requirement_repository import diet_requirement_to_dict
-from services.jwk import requires_auth, JWKService
+from services.jwk import requires_auth, JWKService, is_user_or_has_role
 
 # getting the data from the frontend
 new_parser = reqparse.RequestParser()
@@ -27,7 +27,6 @@ options = [
     'diabetic',
     'egg_allergy'
 ]
-
 
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('user_id', type=int, required=True)
@@ -58,17 +57,18 @@ class DietaryOptions(Resource):
         } for k in options], 200
 
 
+"""
+This is a class to store the data of dietary requirement to the database
+"""
+
+
 class DietaryRequirement(Resource):
     """
-        This is a class to store the data of dietary requirement to the database
-        """
-
+    Returns: True if the data is updated; False if the data is unable to upload
+    """
     @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def post(self):
-        """
-        Returns:
-            True if the data is updated; False if the data is unable to upload
-        """
         try:
             request.get_json(force=True)
             args = new_parser.parse_args()
@@ -81,9 +81,11 @@ class DietaryRequirement(Resource):
             return {'result': False}, 400
 
     """
-    This is a class to retrieve the dietary requirement data from the database
+    This is a function to retrieve the dietary requirement data from the database
     """
+
     @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self):
         try:
             user_id = JWKService.decode_user_id()
