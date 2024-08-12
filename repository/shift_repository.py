@@ -28,7 +28,7 @@ class ShiftRepository:
                     for shift in shifts:
                         # write shift information into list
                         shift_record = {
-                            "eventId": shift.eventId,
+                            "shiftId": shift.shiftId,
                             "userId": shift.userId,
                             "title": shift.title,
                             "startTime": shift.start.isoformat(),
