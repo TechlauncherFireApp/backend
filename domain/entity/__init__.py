@@ -13,3 +13,4 @@ from .password_retrieval import PasswordRetrieval
 from .unavailability_time import UnavailabilityTime
 from .chatbot_input import ChatbotInput
 from .shift import Shift
+from .input_shift import InputShift
