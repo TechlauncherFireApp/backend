@@ -36,7 +36,7 @@ class Calculator:
         self._session_ = session
         self.request_id = request_id
 
-        # Fetch all the request data that will be used in the optimisation functions once.
+        # Get all the data to be optimised from database
         self.__get_request_data()
 
     def get_number_of_roles(self):
@@ -57,19 +57,20 @@ class Calculator:
     def get_role_by_index(self, index) -> Role:
         return self._roles_[index]
 
+    def get_roles(self) -> List[Role]:
+        return self._roles_
+
     def __get_request_data(self):
         """
         Initialising function that fetches a list of reference data from the database. This is done to simplify future
         functions as they don't need to be concerned about data fetching.
         @return:
         """
-        self._users_ = self._session_.query(User) \
-            .all()
-        self._roles_ = self._session_.query(Role) \
-            .filter(Role.deleted == False) \
-            .all()
+        self._users_ = self._session_.query(User).all()
+        self._roles_ = self._session_.query(Role).filter(Role.deleted == False).all()
 
-    def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
+
+def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
         """
         Given the start time and end time of a shift, generate a list of shift "blocks" which represent a
         self._time_granularity_ period that the user would need to be available for
