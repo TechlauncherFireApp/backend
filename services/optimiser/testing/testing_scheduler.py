@@ -4,14 +4,16 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 from services.optimiser import Optimiser
+"""
+run the below command to run this file
+export username='user'
+export password='password'
+export host='127.0.0.1'
+export port='3306'
+export dbname='db'
+python -m services.optimiser.testing.testing_scheduler
+"""
 
-# run the below command to run this file
-# export username='user'
-# export password='password'
-# export host='127.0.0.1'
-# export port='3306'
-# export dbname='db'
-# python -m services.optimiser.testing.testing_scheduler
 
 # get database connection details from environment variables
 username = os.getenv('DB_USERNAME', 'user')
