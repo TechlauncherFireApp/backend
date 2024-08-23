@@ -11,10 +11,10 @@ class ShiftRequest(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.id'), name='user_id', nullable=False)
-    title = Column(String(256), name='title', nullable=False)
+    title = Column(String(29), name='title', nullable=False)
     startTime = Column(DateTime, name='from', nullable=False)
     endTime = Column(DateTime, name='to', nullable=False)
-    status = Column(String(256), name='status', default='waiting', nullable=False)
+    status = Column(String(12), name='status', default='waiting', nullable=False)
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)
 
