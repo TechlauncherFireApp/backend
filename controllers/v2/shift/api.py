@@ -1,12 +1,11 @@
 from flask_restful import reqparse, Resource, marshal_with, inputs
 
 from .response_models import shift
-from domain import UserType, session_scope
+from domain import UserType
 from repository.shift_repository import ShiftRepository
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
 import logging
-from exception import EventNotFoundError, InvalidArgumentError
 
 parser = reqparse.RequestParser()
 parser.add_argument('title', type=str)
