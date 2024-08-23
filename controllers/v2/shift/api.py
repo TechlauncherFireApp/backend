@@ -36,32 +36,6 @@ class ShowShift(Resource):
             return {"message": "Internal server error"}, 500
 
 
-class CreateShift(Resource):
-    shift_repository: ShiftRepository
-
-    def __init__(self, shift_repository: ShiftRepository = ShiftRepository()):
-        self.shift_repository = shift_repository
-
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
-    def post(self):
-        try:
-            args = parser.parse_args()
-
-            new_shift = self.shift_repository.create_shift(
-                title=args['title'],
-                start=args['start'],
-                end=args['end'],
-                roles=args['roles']
-            )
-            return {"message": "Shift created successfully."}, 200
-        except ValueError as e:
-            return {"message": str(e)}, 400
-        except Exception as e:
-            logging.error(f"Error creating shift: {e}")
-            return {"message": "Internal server error"}, 500
 
 
-v2_api.add_resource(ShowShift, '/v2/volunteers/<user_id>/shift')
-
-v2_api.add_resource(CreateShift, '/v2/volunteers/shift')
+v2_api.add_resource(ShowShift,'/v2/volunteers/<user_id>/shift')
