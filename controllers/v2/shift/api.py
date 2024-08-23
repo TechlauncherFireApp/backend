@@ -14,7 +14,7 @@ parser.add_argument('end', type=inputs.datetime_from_iso8601, required=True, hel
 parser.add_argument('roles', type=list, location='json', required=True, help="Roles cannot be blank!")
 
 
-class ShowShift(Resource):
+class VolunteerShiftV2(Resource):
     shift_repository: ShiftRepository
 
     def __init__(self, shift_repository: ShiftRepository = ShiftRepository()):
@@ -37,4 +37,5 @@ class ShowShift(Resource):
 
 
 
-v2_api.add_resource(ShowShift,'/v2/volunteers/<user_id>/shift')
+v2_api.add_resource(VolunteerShiftV2,'/v2/volunteers/<user_id>/shift',
+                              '/v2/volunteers/<user_id>/shift/<status>')
