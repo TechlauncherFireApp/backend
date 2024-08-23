@@ -67,6 +67,7 @@ class ShiftRepository:
                     shift_record = {
                         "shiftId": shift.request_id,
                         "status": shift.status,
+                        "title": shift.shift_request.title,
                         "start": shift.shift_request.startTime,
                         "end": shift.shift_request.endTime
                     }
