@@ -14,30 +14,36 @@ class ShiftRepository:
 
     def get_shift(self, userId):
         """
-            Retrieves all shift events for a given user that have not ended yet.
+        Retrieves all shift events for a given user that have not ended yet.
 
-            :param user_id: ID of the user whose shifts are being queried.
-            :return: A list of shift records or an empty list if none found.
+        :param userId: ID of the user whose shifts are being queried.
+        :return: A list of shift records or an empty list if none found.
         """
         now = datetime.now()
         with session_scope() as session:
             try:
-            #only show the shift that is end in the future
+                # only show the shift that is end in the future
                 shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
-                    ShiftRequestVolunteer.user_id == userId,
-                    ShiftRequest.endTime > now).all()
+                        ShiftRequestVolunteer.user_id == userId,
+                        ShiftRequest.endTime > now
+                    ).all()
+
+                # check if there's some results
+                if not shifts:
+                    logging.info(f"No active shifts found for user {userId}")
+                    return []
                 shift_records = []
+                # write shift information into list
                 for shift in shifts:
-                    # write shift information into list
                     shift_record = {
                         "shiftId": shift.request_id,
                         "status": shift.status,
                         "title": shift.shift_request.title,
-                        "start": shift.shift_request.startTime,
-                        "end": shift.shift_request.endTime
+                        "start": shift.shift_request.startTime.isoformat(),
+                        "end": shift.shift_request.endTime.isoformat(),
                     }
                     shift_records.append(shift_record)
                 return shift_records
             except Exception as e:
                 logging.error(f"Error retrieving shifts for user {userId}: {e}")
-            return []
+                return []

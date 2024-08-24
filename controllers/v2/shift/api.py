@@ -22,7 +22,7 @@ class VolunteerShiftV2(Resource):
 
     #@requires_auth
     #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
-    @marshal_with(shift)
+    #@marshal_with(shift)
     def get(self, user_id):
         try:
             shifts = self.shift_repository.get_shift(user_id)
@@ -37,5 +37,4 @@ class VolunteerShiftV2(Resource):
 
 
 
-v2_api.add_resource(VolunteerShiftV2,'/v2/volunteers/<user_id>/shift',
-                              '/v2/volunteers/<user_id>/shift/<status>')
+v2_api.add_resource(VolunteerShiftV2,'/v2/volunteers/<user_id>/shift')
