@@ -14,10 +14,10 @@ class ShiftRepository:
 
     def get_shift(self, userId):
         """
-        Retrieves all shift events for a given user that have not ended yet.
+            Retrieves all shift events for a given user that have not ended yet.
 
-        :param userId: ID of the user whose shifts are being queried.
-        :return: A list of shift records or an empty list if none found.
+            :param userId: ID of the user whose shifts are being queried.
+            :return: A list of shift records or an empty list if none found.
         """
         now = datetime.now()
         with session_scope() as session:
@@ -25,9 +25,7 @@ class ShiftRepository:
                 # only show the shift that is end in the future
                 shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
                         ShiftRequestVolunteer.user_id == userId,
-                        ShiftRequest.endTime > now
-                    ).all()
-
+                        ShiftRequest.endTime > now).all()
                 # check if there's some results
                 if not shifts:
                     logging.info(f"No active shifts found for user {userId}")
