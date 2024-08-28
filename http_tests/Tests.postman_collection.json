@@ -14,7 +14,7 @@
 					"script": {
 						"exec": [
 							"base_url = pm.variables.get(\"base_url\");",
-							"new Promise((resume) => {",
+							"await new Promise((resume) => {",
 							"    pm.sendRequest({",
 							"        url: `${base_url}/authentication/login`,",
 							"        method: 'POST',",
@@ -95,7 +95,7 @@
 					"script": {
 						"exec": [
 							"base_url = pm.variables.get(\"base_url\");",
-							"auth = new Promise((resume) => {",
+							"await new Promise((resume) => {",
 							"    pm.sendRequest({",
 							"        url: `${base_url}/authentication/login`,",
 							"        method: 'POST',",
@@ -117,8 +117,7 @@
 							"    })",
 							"});",
 							"",
-							"new Promise(async (resume) => {",
-							"    await auth;",
+							"await new Promise(async (resume) => {",
 							"    pm.sendRequest({",
 							"        url: `${base_url}/v2/volunteers/5/unavailability`,",
 							"        method: 'POST',",
@@ -155,6 +154,8 @@
 							"",
 							"pm.test(\"Output correct\", () => {",
 							"    pm.response.to.have.jsonBody()",
+							"    json = pm.response.json()",
+							"    pm.expect(json.some((b) => b.title == \"ThisTest\")).to.eql(true);",
 							"});"
 						],
 						"type": "text/javascript",
@@ -245,7 +246,7 @@
 					"script": {
 						"exec": [
 							"base_url = pm.variables.get(\"base_url\");",
-							"auth = new Promise((resume) => {",
+							"await new Promise((resume) => {",
 							"    pm.sendRequest({",
 							"        url: `${base_url}/authentication/login`,",
 							"        method: 'POST',",
@@ -376,6 +377,28 @@
 				}
 			},
 			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
