@@ -72,5 +72,5 @@ jobs:
       run: docker compose -f "docker-compose.frontend.yml" up -d --wait
     - uses: matt-ball/newman-action@master
       with:
-        collection: postman_collection.json
-        environment: postman_environment.json
+        collection: http_tests/Tests.postman_collection.json
+        environment: http_tests/Tests.postman_environment.json
