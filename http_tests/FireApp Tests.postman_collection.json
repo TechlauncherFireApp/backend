@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "cf919fa3-d777-4768-a8a8-6ad095982393",
+		"name": "FireApp Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37959514"
+	},
+	"item": [
+		{
+			"name": "Volunteer Shift Authenticated",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"base_url = pm.variables.get(\"base_url\");",
+							"pm.sendRequest({",
+							"    url: `${base_url}/authentication/login`,",
+							"    method: 'POST',",
+							"    header: {",
+							"        'content-type': 'application/json'",
+							"    },",
+							"    body: {",
+							"        mode: 'raw',",
+							"        raw: JSON.stringify(",
+							"            {",
+							"                \"email\":\"admin\",",
+							"                \"password\":\"admin\"",
+							"            }",
+							"        )",
+							"    }",
+							"}, (err, res) => pm.collectionVariables.set(\"TOKEN\", res.json().access_token));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code 200\", () => {",
+							"    pm.response.to.have.status(200)",
+							"});",
+							"",
+							"pm.test(\"Output correct\", () => {",
+							"    pm.response.to.have.jsonBody(",
+							"        [{\"shiftId\": 2, \"status\": \"pending\", \"title\": \"Afternoon Shift\", \"start\": \"2024-09-24T13:00:00\", \"end\": \"2024-09-24T17:00:00\"}, {\"shiftId\": 4, \"status\": \"pending\", \"title\": \"Late Night Shift\", \"start\": \"2024-09-24T23:00:00\", \"end\": \"2024-09-25T03:00:00\"}]",
+							"    )",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/v2/volunteers/6/shift",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"v2",
+						"volunteers",
+						"6",
+						"shift"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Volunteer Shift Unauthenticated",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code 401\", () => {",
+							"    pm.response.to.have.status(401)",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/v2/volunteers/6/shift",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"v2",
+						"volunteers",
+						"6",
+						"shift"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
