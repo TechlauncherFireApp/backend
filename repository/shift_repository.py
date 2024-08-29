@@ -7,7 +7,7 @@ from flask import jsonify
 from datetime import datetime, timezone
 
 from exception import EventNotFoundError, InvalidArgumentError
-from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord
+from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord, UnavailabilityTime
 
 
 class ShiftRepository:
@@ -76,6 +76,22 @@ class ShiftRepository:
                 if shift_request_volunteer:
                     shift_request_volunteer.status = new_status
                     shift_request_volunteer.last_update_datetime = datetime.now()
+                    # If the status is CONFIRMED, add an unavailability time record
+                    if new_status == "CONFIRMED":
+                        # Fetch start and end times from the ShiftRequest table
+                        shift_request = session.query(ShiftRequest).filter_by(id=shift_id).first()
+                        if shift_request:
+                            unavailability_record = UnavailabilityTime(
+                                userId=user_id,
+                                title=f"shift {shift_id}",
+                                periodicity=1,
+                                start=shift_request.startTime,
+                                end=shift_request.endTime
+                            )
+                            session.add(unavailability_record)
+                        else:
+                            logging.info(f"No shift request found with shift_id {shift_id}")
+                            return False
                     session.commit()
                     return True
                 else:
