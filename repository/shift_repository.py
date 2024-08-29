@@ -47,3 +47,41 @@ class ShiftRepository:
             except Exception as e:
                 logging.error(f"Error retrieving shifts for user {userId}: {e}")
                 return []
+
+    def update_shift_status(self, user_id, shift_id, new_status):
+        """
+            Updates the status of a volunteer's shift request in the database.
+
+            Parameters:
+            ----------
+            user_id : int
+                The ID of the user whose shift request status is to be updated.
+            shift_id : int
+                The ID of the shift request to be updated.
+            new_status : str
+            The new status to set for the shift request.
+            Returns:
+            -------
+            bool
+                Returns `True` if the status was successfully updated, or `False` if the update
+                failed due to the shift request not being found or an error occurring during the update.
+        """
+        with session_scope() as session:
+            try:
+                # Fetch the shift based on user_id
+                shift_request_volunteer = session.query(ShiftRequestVolunteer).filter_by(
+                    user_id=user_id, request_id=shift_id).first()
+
+                # If record exists, update the status
+                if shift_request_volunteer:
+                    shift_request_volunteer.status = new_status
+                    shift_request_volunteer.last_update_datetime = datetime.now()
+                    session.commit()
+                    return True
+                else:
+                    logging.info(f"No shift request volunteer with user id {user_id} and shift {shift_id} not found")
+                    return False
+            except Exception as e:
+                session.rollback()
+                logging.error(f"Error updating shift request for user {user_id} and shift_id {shift_id}: {e}")
+                return False
