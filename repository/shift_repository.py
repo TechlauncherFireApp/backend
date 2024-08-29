@@ -1,10 +1,13 @@
 import logging
+from typing import List
 
+from dataclasses import asdict
 from flask import jsonify
 
 from datetime import datetime, timezone
+
 from exception import EventNotFoundError, InvalidArgumentError
-from domain import session_scope, ShiftRequestVolunteer, ShiftRequest
+from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord
 
 
 class ShiftRepository:
@@ -12,7 +15,7 @@ class ShiftRepository:
     def __init__(self):
         pass
 
-    def get_shift(self, userId):
+    def get_shift(self, userId) -> List[ShiftRecord]:
         """
             Retrieves all shift events for a given user that have not ended yet.
 
@@ -33,13 +36,12 @@ class ShiftRepository:
                 shift_records = []
                 # write shift information into list
                 for shift in shifts:
-                    shift_record = {
-                        "shiftId": shift.request_id,
-                        "status": shift.status,
-                        "title": shift.shift_request.title,
-                        "start": shift.shift_request.startTime.isoformat(),
-                        "end": shift.shift_request.endTime.isoformat(),
-                    }
+                    shift_record = ShiftRecord(
+                        shiftId=shift.request_id,
+                        status=shift.status.value,
+                        title=shift.shift_request.title,
+                        start=shift.shift_request.startTime,
+                        end=shift.shift_request.endTime)
                     shift_records.append(shift_record)
                 return shift_records
             except Exception as e:

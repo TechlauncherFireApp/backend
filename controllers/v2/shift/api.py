@@ -1,4 +1,4 @@
-from flask_restful import reqparse, Resource, marshal_with, inputs
+from flask_restful import reqparse, Resource, marshal_with, inputs, marshal
 
 from .response_models import shift
 from domain import UserType
@@ -20,14 +20,13 @@ class VolunteerShiftV2(Resource):
     def __init__(self, shift_repository: ShiftRepository = ShiftRepository()):
         self.shift_repository = shift_repository
 
-    #@requires_auth
-    #@is_user_or_has_role(None, UserType.ROOT_ADMIN)
-    #@marshal_with(shift)
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
         try:
             shifts = self.shift_repository.get_shift(user_id)
             if shifts:
-                return shifts, 200
+                return marshal(shifts, shift), 200
             else:
                 return {"message": "No shift record found."}, 400
         except Exception as e:
