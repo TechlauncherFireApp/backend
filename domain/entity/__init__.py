@@ -12,3 +12,5 @@ from .question import Question
 from .password_retrieval import PasswordRetrieval
 from .unavailability_time import UnavailabilityTime
 from .chatbot_input import ChatbotInput
+from .shift_request import ShiftRequest
+from .shift_request_volunteer import ShiftRequestVolunteer

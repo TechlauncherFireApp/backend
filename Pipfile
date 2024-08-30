@@ -48,6 +48,7 @@ virtualenv = "==20.25.1"
 werkzeug = ">=1.0.1"
 numpy = "==1.24.4"
 pytest = "*"
+dataclasses = "*"
 
 [dev-packages]
 
