@@ -7,3 +7,6 @@ from .Gender import Gender
 from .forgot_password_result import ForgotPassword
 from .Verify_code import VerifyCode
 from .reset_password import ResetPassword
+from .shift_record import ShiftRecord
+from .shift_status import ShiftStatus
+from .shift_volunteer_status import ShiftVolunteerStatus

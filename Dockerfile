@@ -1,5 +1,9 @@
 FROM minizinc/minizinc:2.5.5
 
+LABEL org.opencontainers.image.source=https://github.com/TechlauncherFireApp/backend
+LABEL org.opencontainers.image.description="A web API designed to efficiently manage and schedule volunteer firefighters."
+LABEL org.opencontainers.image.licenses=MIT
+
 # Install Python3.8 and some packages
 RUN apt update \
     && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -yqq pkg-config wget git gnupg curl python3.8 python3-pip libmysqlclient-dev
