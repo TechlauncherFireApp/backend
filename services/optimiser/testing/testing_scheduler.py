@@ -3,7 +3,9 @@ from sqlalchemy.orm import sessionmaker
 
 import os
 
-from services.optimiser import Optimiser
+# Update the imports to point to the v2 versions
+from services.v2.optimiser_v2 import Optimiser
+
 """
 run the below command to run this file
 export username='user'
@@ -13,7 +15,6 @@ export port='3306'
 export dbname='db'
 python -m services.optimiser.testing.testing_scheduler
 """
-
 
 # get database connection details from environment variables
 username = os.getenv('DB_USERNAME', 'user')
@@ -34,7 +35,7 @@ session = Session()
 request_id = int(os.getenv('REQUEST_ID', 1))  # Example request ID, can be overridden by environment variable
 debug = os.getenv('DEBUG_MODE', 'True').lower() == 'true'  # Set to False to disable debug output
 
-# create and run the optimiser
+# create and run the optimiser using the new v2 version
 optimiser = Optimiser(session=session, request_id=request_id, debug=debug)
 result = optimiser.solve()
 

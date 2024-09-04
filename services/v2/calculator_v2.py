@@ -71,47 +71,47 @@ class Calculator:
 
 
 def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
-        """
-        Given the start time and end time of a shift, generate a list of shift "blocks" which represent a
-        self._time_granularity_ period that the user would need to be available for
-        @param start: The start time of the shift.
-        @param end: The end time of the shift.
-        @return: A list of dates between the two dates.
-        """
-        deltas = []
-        curr = start
-        while curr < end:
-            deltas.append(curr)
-            curr += self._time_granularity_
-        return deltas
+    """
+    Given the start time and end time of a shift, generate a list of shift "blocks" which represent a
+    self._time_granularity_ period that the user would need to be available for
+    @param start: The start time of the shift.
+    @param end: The end time of the shift.
+    @return: A list of dates between the two dates.
+    """
+    deltas = []
+    curr = start
+    while curr < end:
+        deltas.append(curr)
+        curr += self._time_granularity_
+    return deltas
 
-    def calculate_compatibility(self) -> List[List[bool]]:
-        """
-        Generates a 2D array of compatibilities between volunteers' availabilities and the requirements of the shift.
-        This is the critical function of the optimizer as it determines if a user is available for assignment, regardless of role.
+def calculate_compatibility(self) -> List[List[bool]]:
+    """
+    Generates a 2D array of compatibilities between volunteers' availabilities and the requirements of the shift.
+    This is the critical function of the optimizer as it determines if a user is available for assignment, regardless of role.
 
-        Example 1: The volunteer is available between 2pm to 3pm and the shift is from 2pm to 2:30pm:
-            Result: True
-        Example 2: The volunteer is unavailable from 1pm to 2pm and the shift is from 1pm to 3pm:
-            Result: False
-        @return: A 2D array of compatibilities.
-        """
-        compatibilities = []
+    Example 1: The volunteer is available between 2pm to 3pm and the shift is from 2pm to 2:30pm:
+        Result: True
+    Example 2: The volunteer is unavailable from 1pm to 2pm and the shift is from 1pm to 3pm:
+        Result: False
+    @return: A 2D array of compatibilities.
+    """
+    compatibilities = []
 
-        # Iterate through each user
-        for user in self._users_:
-            # We start by assuming the user is available for all shifts
-            user_availability = [True] * len(self._users_)
+    # Iterate through each user
+    for user in self._users_:
+        # We start by assuming the user is available for all shifts
+        user_availability = [True] * len(self._users_)
 
-            # Iterate through each shift block to see if the user is unavailable during any part of the shift
-            for idx, shift_block in enumerate(self.calculate_deltas(user.shift_start, user.shift_end)):
-                # If the shift block overlaps with any of the user's unavailabilities, mark as unavailable
-                for unavailability in user.unavailabilities:
-                    if unavailability[0] <= shift_block <= unavailability[1]:
-                        user_availability[idx] = False
-                        break  # No need to check further unavailabilities for this shift block
+        # Iterate through each shift block to see if the user is unavailable during any part of the shift
+        for idx, shift_block in enumerate(self.calculate_deltas(user.shift_start, user.shift_end)):
+            # If the shift block overlaps with any of the user's unavailabilities, mark as unavailable
+            for unavailability in user.unavailabilities:
+                if unavailability[0] <= shift_block <= unavailability[1]:
+                    user_availability[idx] = False
+                    break  # No need to check further unavailabilities for this shift block
 
-            compatibilities.append(user_availability)
+        compatibilities.append(user_availability)
 
-        # Return the 2D array of compatibilities
-        return compatibilities
+    # Return the 2D array of compatibilities
+    return compatibilities
