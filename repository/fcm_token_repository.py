@@ -25,7 +25,7 @@ class FCMTokenRepository:
                 if existing_token:
                     existing_token.updated_at = datetime.now()
                     session.commit()
-                    # logging.info(f" Token is already existed")
+                    logging.info(f" A New token is registered for user {user_id}")
                 else:
                     new_token = FCMToken(
                         user_id=user_id,
@@ -36,11 +36,11 @@ class FCMTokenRepository:
                     )
                     session.add(new_token)
                     session.commit()
-                    # logging.info(f" A New token is registered for user {user_id}")
+                    logging.info(f" A New token is registered for user {user_id}")
 
             except Exception as e:
-                # logging.error(f"Error registering FCM token for user {user_id}: {e}")
-                session.rollback()  # Roll back the transaction if an error occurs
+                logging.error(f"Error registering FCM token for user {user_id}: {e}")
+                session.rollback()
 
     def unregister_token(self, fcm_token):
         pass
