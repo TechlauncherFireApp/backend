@@ -8,13 +8,6 @@ parser.add_argument('userId', type=int, required=True, help ="userId must be pro
 parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
 parser.add_argument('device_type', type=str, required=True, help ="DeviceType must be provided.")
 
-{
-  "userId": "<USER_ID>",
-  "token": "<FCM_TOKEN>",
-  "device_type": "<DEVICE_TYPE>"
-}
-
-
 class FCMToken(Resource):
 
     token_repository: FCMTokenRepository
