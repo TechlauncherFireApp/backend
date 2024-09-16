@@ -1,7 +1,9 @@
+import logging
 from datetime import datetime
 from domain.entity.fcm_tokens import FCMToken
 from domain import session_scope
-import logging
+from exception import InvalidTokenError
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class FCMTokenRepository:
@@ -47,10 +49,14 @@ class FCMTokenRepository:
                     logging.info(f" Unregistered the token for user {user_id}")
                     return True
                 else:
-                    logging.info(f" Invalid token for user {user_id}")
-                    return False
+                    logging.error(f"Invalid token for user {user_id}")
+                    raise InvalidTokenError(f"Invalid token for user {user_id}")
+
+            except SQLAlchemyError as e:
+                logging.error(f"Database error while unregistering FCM token for user {user_id}:{e}")
+                session.rollback()
+                raise e
 
             except Exception as e:
                 logging.error(f"Error unregistering FCM token for user {user_id}: {e}")
-                session.rollback()
-                return False
+                raise e

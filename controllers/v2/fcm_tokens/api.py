@@ -5,6 +5,8 @@ from controllers.v2.v2_blueprint import v2_api
 from services.jwk import requires_auth
 from controllers.v2.fcm_tokens.response_models import response_model
 from repository.user_repository import check_user_exists
+from exception import InvalidTokenError
+from sqlalchemy.exc import SQLAlchemyError
 
 
 parser = reqparse.RequestParser()
@@ -63,13 +65,21 @@ class FCMTokenUnregister(Resource):
         fcm_token = args['token']
 
         try:
+            # Check if user exist
             if not check_user_exists(user_id):
                 return {"message": "User not found"}, 400
 
-            if self.token_repository.unregister_token(user_id, fcm_token):
-                return {"message": "FCM token unregistered successfully"}, 200
-            else:
-                return {"message": "FCM token unregistration failed"}, 400
+            # Unregister the token
+            self.token_repository.unregister_token(user_id, fcm_token)
+            return {"message": "FCM token unregistered successfully"}, 200
+
+        except InvalidTokenError as e:
+            logging.error(f"Error unregistering FCM token: {e}")
+            return {"message": str(e)}, 400
+
+        except SQLAlchemyError as e:
+            logging.error(f"Database error while unregistering token: {e}")
+            return {"message": "Database error"}, 500
 
         except Exception as e:
             logging.error(f"Error unregistering FCM token: {e}")
