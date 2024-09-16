@@ -1,7 +1,9 @@
 import logging
 from repository.fcm_token_repository import FCMTokenRepository
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, reqparse, marshal_with
 from controllers.v2.v2_blueprint import v2_api
+from services.jwk import requires_auth
+from controllers.v2.fcm_tokens.response_models import response_model
 
 parser = reqparse.RequestParser()
 parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
@@ -14,6 +16,8 @@ class FCMToken(Resource):
     def __init__(self, token_repository: FCMTokenRepository = FCMTokenRepository()):
         self.token_repository = token_repository
 
+    @requires_auth
+    @marshal_with(response_model)
     def post(self, user_id):
 
         args = parser.parse_args()
@@ -49,6 +53,8 @@ class FCMTokenUnregister(Resource):
     def __init__(self, token_repository: FCMTokenRepository = FCMTokenRepository()):
         self.token_repository = token_repository
 
+    @requires_auth
+    @marshal_with(response_model)
     def delete(self, user_id):
         args = unregister_parser.parse_args()
         fcm_token = args['token']
