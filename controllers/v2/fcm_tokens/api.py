@@ -39,7 +39,6 @@ v2_api.add_resource(FCMToken,'/v2/user/<int:user_id>/token')
 
 
 unregister_parser = reqparse.RequestParser()
-unregister_parser.add_argument('userId', type=int, required=True, help ="userId must be provided.")
 unregister_parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
 
 
@@ -50,9 +49,8 @@ class FCMTokenUnregister(Resource):
     def __init__(self, token_repository: FCMTokenRepository = FCMTokenRepository()):
         self.token_repository = token_repository
 
-    def post(self):
+    def delete(self, user_id):
         args = unregister_parser.parse_args()
-        user_id = args['userId']
         fcm_token = args['token']
 
         try:
@@ -69,4 +67,4 @@ class FCMTokenUnregister(Resource):
             return {"message": "Internal server error"}, 500
 
 
-v2_api.add_resource(FCMTokenUnregister, '/v2/unregister-token')
+v2_api.add_resource(FCMTokenUnregister, '/v2/user/<int:user_id>/token')
