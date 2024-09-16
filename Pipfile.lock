@@ -547,12 +547,12 @@
         },
         "pipenv": {
             "hashes": [
-                "sha256:5360835c613837423a99b8c94952b139b777b3eaabb42cb9edb34556245b4c25",
-                "sha256:ae5a83fa5b66065cebd2bd8f73f0b281b3bd202a13d58cc644f0b9765128c990"
+                "sha256:3e9556c72fda1706186edfe66b72f4eae59ff1326fc2c9a60f4a1d590a4eb7f3",
+                "sha256:f4aca545b472e5ea00bd5131ef2b9047f509c420b89e998caa1085ed06d197cb"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==2024.0.1"
+            "version": "==2024.0.2"
         },
         "platformdirs": {
             "hashes": [
@@ -662,11 +662,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:0274581a0037b638b9fc1c6883cc71c0210865aaa76073f7882376b641b84e8f",
-                "sha256:a85e96b8be2b906f3e3e789adec6a9323abf79758ecfa3065bd740d81158b11e"
+                "sha256:35ab7fd3bcd95e6b7fd704e4a1539513edad446c097797f2985e0e4b960772f2",
+                "sha256:d59a21b17a275fb872a9c3dae73963160ae079f1049ed956880cd7c09b120538"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==74.0.0"
+            "version": "==75.1.0"
         },
         "six": {
             "hashes": [
