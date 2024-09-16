@@ -4,7 +4,6 @@ from flask_restful import Resource, reqparse
 from controllers.v2.v2_blueprint import v2_api
 
 parser = reqparse.RequestParser()
-parser.add_argument('userId', type=int, required=True, help ="userId must be provided.")
 parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
 parser.add_argument('device_type', type=str, required=True, help ="DeviceType must be provided.")
 
@@ -15,10 +14,9 @@ class FCMToken(Resource):
     def __init__(self, token_repository: FCMTokenRepository = FCMTokenRepository()):
         self.token_repository = token_repository
 
-    def post(self):
+    def post(self, user_id):
 
         args = parser.parse_args()
-        user_id = args['userId']
         fcm_token = args['token']
         device_type = args['device_type']
 
@@ -37,7 +35,7 @@ class FCMToken(Resource):
             return {"message": "Internal server error"}, 500
 
 
-v2_api.add_resource(FCMToken,'/v2/register-token')
+v2_api.add_resource(FCMToken,'/v2/user/<int:user_id>/token')
 
 
 unregister_parser = reqparse.RequestParser()
