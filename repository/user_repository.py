@@ -1,5 +1,15 @@
-from domain import User, UserType
+from domain import User, UserType, session_scope
 
+
+def check_user_exists(user_id):
+    """
+    Check if a user exists in the database
+    :param user_id
+    :return bool: True if the user exists, False otherwise
+    """
+    with session_scope() as session:
+        user = session.query(User).filter_by(id=user_id).first()
+        return user is not None
 
 def get_user_role(session, user_id):
     user = session.query(User). \

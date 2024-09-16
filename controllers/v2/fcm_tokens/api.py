@@ -4,10 +4,13 @@ from flask_restful import Resource, reqparse, marshal_with
 from controllers.v2.v2_blueprint import v2_api
 from services.jwk import requires_auth
 from controllers.v2.fcm_tokens.response_models import response_model
+from repository.user_repository import check_user_exists
+
 
 parser = reqparse.RequestParser()
 parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
 parser.add_argument('device_type', type=str, required=True, help ="DeviceType must be provided.")
+
 
 class FCMToken(Resource):
 
@@ -26,7 +29,7 @@ class FCMToken(Resource):
 
         try:
             # 1. Check if the user exist
-            if not self.token_repository.check_user_exists(user_id):
+            if not check_user_exists(user_id):
                 return {"message": "User not found"}, 400
 
             # 2. Register the token for the user
@@ -60,7 +63,7 @@ class FCMTokenUnregister(Resource):
         fcm_token = args['token']
 
         try:
-            if not self.token_repository.check_user_exists(user_id):
+            if not check_user_exists(user_id):
                 return {"message": "User not found"}, 400
 
             if self.token_repository.unregister_token(user_id, fcm_token):

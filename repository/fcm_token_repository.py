@@ -1,19 +1,12 @@
 from datetime import datetime
 from domain.entity.fcm_tokens import FCMToken
-from domain import session_scope, User
+from domain import session_scope
 import logging
 
 
 class FCMTokenRepository:
     def __init__(self):
         pass
-
-    def check_user_exists(self, user_id):
-
-        # Check if a user with the given user_id exists
-        with session_scope() as session:
-            user = session.query(User).filter_by(id=user_id).first()
-            return user is not None
 
     def register_token(self, user_id, fcm_token, device_type):
 
