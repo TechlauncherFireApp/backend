@@ -10,7 +10,7 @@ class FCMTokenRepository:
     def __init__(self):
         pass
 
-    def register_token(self, user_id, fcm_token, device_type):
+    def register_token(self, user_id: int, fcm_token: str, device_type: str) -> None:
 
         with session_scope() as session:
             try:
@@ -37,7 +37,7 @@ class FCMTokenRepository:
                 logging.error(f"Error registering FCM token for user {user_id}: {e}")
                 session.rollback()
 
-    def unregister_token(self, user_id, fcm_token):
+    def unregister_token(self, user_id: int, fcm_token: str) -> bool:
 
         with session_scope() as session:
             try:

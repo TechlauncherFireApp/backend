@@ -23,7 +23,7 @@ class FCMToken(Resource):
 
     @requires_auth
     @marshal_with(response_model)
-    def post(self, user_id):
+    def post(self, user_id: int):
 
         args = parser.parse_args()
         fcm_token = args['token']
@@ -60,7 +60,7 @@ class FCMTokenUnregister(Resource):
 
     @requires_auth
     @marshal_with(response_model)
-    def delete(self, user_id):
+    def delete(self, user_id: int):
         args = unregister_parser.parse_args()
         fcm_token = args['token']
 
