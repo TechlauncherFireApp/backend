@@ -6,7 +6,6 @@ from services.jwk import requires_auth, JWKService
 from controllers.v2.fcm_tokens.response_models import response_model
 from repository.user_repository import UserRepository
 from exception import InvalidTokenError
-from sqlalchemy.exc import SQLAlchemyError
 
 
 parser = reqparse.RequestParser()

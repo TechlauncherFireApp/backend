@@ -37,7 +37,7 @@ class FCMTokenRepository:
                 logging.error(f"Error registering FCM token for user {user_id}: {e}")
                 session.rollback()
 
-    def unregister_token(self, user_id: int, fcm_token: str) -> bool:
+    def unregister_token(self, user_id: int, fcm_token: str) -> None:
 
         with session_scope() as session:
             try:
@@ -47,7 +47,6 @@ class FCMTokenRepository:
                     session.delete(existing_token)
                     session.commit()
                     logging.info(f" Unregistered the token for user {user_id}")
-                    return True
                 else:
                     logging.error(f"Invalid token for user {user_id}")
                     raise InvalidTokenError(f"Invalid token for user {user_id}")
