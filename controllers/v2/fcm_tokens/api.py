@@ -84,7 +84,7 @@ class FCMToken(Resource):
 
         except InvalidTokenError as e:
             logging.error(f"Error unregistering FCM token: {e}")
-            return {"message": str(e)}, 400
+            return {"message": "Invalid FCM token"}, 400
 
         except Exception as e:
             logging.error(f"Error unregistering FCM token: {e}")
