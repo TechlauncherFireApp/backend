@@ -56,7 +56,3 @@ class FCMTokenRepository:
                 logging.error(f"Database error while unregistering FCM token for user {user_id}:{e}")
                 session.rollback()
                 raise e
-
-            except Exception as e:
-                logging.error(f"Error unregistering FCM token for user {user_id}: {e}")
-                raise e
