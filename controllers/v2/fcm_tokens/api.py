@@ -86,10 +86,6 @@ class FCMToken(Resource):
             logging.error(f"Error unregistering FCM token: {e}")
             return {"message": str(e)}, 400
 
-        except SQLAlchemyError as e:
-            logging.error(f"Database error while unregistering token: {e}")
-            return {"message": "Database error"}, 500
-
         except Exception as e:
             logging.error(f"Error unregistering FCM token: {e}")
             return {"message": "Internal server error"}, 500
