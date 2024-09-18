@@ -1,1 +1,1 @@
-from .api import FCMToken, FCMTokenUnregister
+from .api import FCMToken

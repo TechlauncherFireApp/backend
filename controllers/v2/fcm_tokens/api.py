@@ -12,6 +12,8 @@ from sqlalchemy.exc import SQLAlchemyError
 parser = reqparse.RequestParser()
 parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
 parser.add_argument('device_type', type=str, required=True, help ="DeviceType must be provided.")
+unregister_parser = reqparse.RequestParser()
+unregister_parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
 
 
 class FCMToken(Resource):
@@ -26,8 +28,6 @@ class FCMToken(Resource):
     ):
         self.token_repository = token_repository
         self.user_repository = user_repository
-
-
 
     @requires_auth
     @marshal_with(response_model)
@@ -58,27 +58,6 @@ class FCMToken(Resource):
 
             logging.error(f"Error registering FCM token: {e}")
             return {"message": "Internal server error"}, 500
-
-
-v2_api.add_resource(FCMToken,'/v2/user/<int:user_id>/token')
-
-
-unregister_parser = reqparse.RequestParser()
-unregister_parser.add_argument('token', type=str, required=True, help ="Token must be provided.")
-
-
-class FCMTokenUnregister(Resource):
-
-    token_repository: FCMTokenRepository
-    user_repository: UserRepository
-
-    def __init__(
-            self,
-            token_repository: FCMTokenRepository = FCMTokenRepository(),
-            user_repository: UserRepository = UserRepository()
-    ):
-        self.token_repository = token_repository
-        self.user_repository = user_repository
 
     @requires_auth
     @marshal_with(response_model)
@@ -116,4 +95,4 @@ class FCMTokenUnregister(Resource):
             return {"message": "Internal server error"}, 500
 
 
-v2_api.add_resource(FCMTokenUnregister, '/v2/user/<int:user_id>/token')
+v2_api.add_resource(FCMToken,'/v2/user/<int:user_id>/token')
