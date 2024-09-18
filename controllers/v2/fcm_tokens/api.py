@@ -2,7 +2,7 @@ import logging
 from repository.fcm_token_repository import FCMTokenRepository
 from flask_restful import Resource, reqparse, marshal_with
 from controllers.v2.v2_blueprint import v2_api
-from services.jwk import requires_auth
+from services.jwk import requires_auth, JWKService
 from controllers.v2.fcm_tokens.response_models import response_model
 from repository.user_repository import UserRepository
 from exception import InvalidTokenError
@@ -27,10 +27,20 @@ class FCMToken(Resource):
         self.token_repository = token_repository
         self.user_repository = user_repository
 
+
+
     @requires_auth
     @marshal_with(response_model)
     def post(self, user_id: int):
 
+        # Decode authenticated user id
+        authenticated_user_id = JWKService.decode_user_id()
+
+        # Check if they are matched
+        if authenticated_user_id != user_id:
+            return {"message": "User ID mismatch"}, 403
+
+        # Check if decoding fail
         args = parser.parse_args()
         fcm_token = args['token']
         device_type = args['device_type']
@@ -73,6 +83,14 @@ class FCMTokenUnregister(Resource):
     @requires_auth
     @marshal_with(response_model)
     def delete(self, user_id: int):
+
+        # Decode authenticated user id
+        authenticated_user_id = JWKService.decode_user_id()
+
+        # Check if they are matched
+        if authenticated_user_id != user_id:
+            return {"message": "User ID mismatch"}, 403
+
         args = unregister_parser.parse_args()
         fcm_token = args['token']
 
