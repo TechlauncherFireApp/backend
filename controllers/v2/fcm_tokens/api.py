@@ -1,11 +1,11 @@
 import logging
-from repository.fcm_token_repository import FCMTokenRepository
-from flask_restful import Resource, reqparse, marshal_with
-from controllers.v2.v2_blueprint import v2_api
-from services.jwk import requires_auth, JWKService
 from controllers.v2.fcm_tokens.response_models import response_model
-from repository.user_repository import UserRepository
+from controllers.v2.v2_blueprint import v2_api
 from exception import InvalidTokenError
+from flask_restful import Resource, reqparse, marshal_with
+from repository.fcm_token_repository import FCMTokenRepository
+from repository.user_repository import UserRepository
+from services.jwk import requires_auth, JWKService
 
 
 parser = reqparse.RequestParser()

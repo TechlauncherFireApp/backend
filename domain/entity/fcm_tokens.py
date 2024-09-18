@@ -1,7 +1,7 @@
 from datetime import datetime
+from domain.base import Base
 from sqlalchemy import Column, String, ForeignKey, Integer, Boolean, TIMESTAMP
 from sqlalchemy.orm import relationship
-from domain.base import Base
 
 
 class FCMToken(Base):
