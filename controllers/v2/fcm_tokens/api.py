@@ -4,7 +4,7 @@ from flask_restful import Resource, reqparse, marshal_with
 from controllers.v2.v2_blueprint import v2_api
 from services.jwk import requires_auth
 from controllers.v2.fcm_tokens.response_models import response_model
-from repository.user_repository import check_user_exists
+from repository.user_repository import UserRepository
 from exception import InvalidTokenError
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -17,9 +17,15 @@ parser.add_argument('device_type', type=str, required=True, help ="DeviceType mu
 class FCMToken(Resource):
 
     token_repository: FCMTokenRepository
+    user_repository: UserRepository
 
-    def __init__(self, token_repository: FCMTokenRepository = FCMTokenRepository()):
+    def __init__(
+            self,
+            token_repository: FCMTokenRepository = FCMTokenRepository(),
+            user_repository: UserRepository = UserRepository()
+    ):
         self.token_repository = token_repository
+        self.user_repository = user_repository
 
     @requires_auth
     @marshal_with(response_model)
@@ -31,7 +37,7 @@ class FCMToken(Resource):
 
         try:
             # 1. Check if the user exist
-            if not check_user_exists(user_id):
+            if not self.user_repository.check_user_exists(user_id):
                 return {"message": "User not found"}, 400
 
             # 2. Register the token for the user
@@ -54,9 +60,15 @@ unregister_parser.add_argument('token', type=str, required=True, help ="Token mu
 class FCMTokenUnregister(Resource):
 
     token_repository: FCMTokenRepository
+    user_repository: UserRepository
 
-    def __init__(self, token_repository: FCMTokenRepository = FCMTokenRepository()):
+    def __init__(
+            self,
+            token_repository: FCMTokenRepository = FCMTokenRepository(),
+            user_repository: UserRepository = UserRepository()
+    ):
         self.token_repository = token_repository
+        self.user_repository = user_repository
 
     @requires_auth
     @marshal_with(response_model)
@@ -66,7 +78,7 @@ class FCMTokenUnregister(Resource):
 
         try:
             # Check if user exist
-            if not check_user_exists(user_id):
+            if not self.user_repository.check_user_exists(user_id):
                 return {"message": "User not found"}, 400
 
             # Unregister the token
