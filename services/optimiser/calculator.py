@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from typing import List
 from sqlalchemy import orm, func, alias
 
-from domain import User, AssetRequestVehicle, AssetType, Role, UserRole, AssetTypeRole
+from domain import User, AssetRequestVehicle, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftRequestVolunteer, UnavailabilityTime
 
 
 class Calculator:
@@ -15,10 +15,10 @@ class Calculator:
     # Master list of all volunteers, these fetched once so that the order of the records in the list is deterministic.
     # This matters as the lists passed to Minizinc are not keyed and are instead used by index.
     _users_ = []
-    _asset_request_vehicles_ = []
-    _asset_types_ = []
+    _shift_ = []
+
     _roles_ = []
-    _asset_type_seats_ = []
+
 
     # A single database session is used for all transactions in the optimiser. This is initialised by the calling
     # function.
@@ -55,6 +55,11 @@ class Calculator:
         @return: The number of vehicles to be optimised.
         """
         return len(self._asset_request_vehicles_)
+    ## vehicle_count = self._asset_request_vehicles_.filter( asset_request_vehicles.vheicle_id == self.request_id,
+    ## asset_request_vehicles.vehicle_id == self.vehicle_id  # Compare the vehicle ID
+    ## ).count()
+
+        return vehicle_count
 
     def get_number_of_roles(self):
         """
@@ -74,11 +79,11 @@ class Calculator:
     def get_role_by_index(self, index) -> Role:
         return self._roles_[index]
 
-    def get_asset_request_by_index(self, index) -> AssetRequestVehicle:
-        return self._asset_request_vehicles_[index]
-
-    def get_asset_requests(self) -> List[AssetRequestVehicle]:
-        return self._asset_request_vehicles_
+    # def get_asset_request_by_index(self, index) -> AssetRequestVehicle:
+    #     return self._asset_request_vehicles_[index]
+    #
+    # def get_asset_requests(self) -> List[AssetRequestVehicle]:
+    #     return self._asset_request_vehicles_
 
     def get_roles(self) -> List[Role]:
         return self._roles_
@@ -91,19 +96,25 @@ class Calculator:
         """
         self._users_ = self._session_.query(User) \
             .all()
-        self._asset_request_vehicles_ = self._session_.query(AssetRequestVehicle) \
-            .filter(AssetRequestVehicle.request_id == self.request_id) \
-            .all()
-        self._asset_types_ = self._session_.query(AssetType) \
-            .filter(AssetType.deleted == False) \
-            .all()
+        self._shift_ = self._session_.query(ShiftRequest.id == self.request_id)
+
+        # self._asset_request_vehicles_ = self._session_.query(AssetRequestVehicle) \
+        #     .filter(AssetRequestVehicle.request_id == self.request_id) \
+        #     .all()
+        # self._asset_types_ = self._session_.query(AssetType) \
+        #     .filter(AssetType.deleted == False) \
+        #     .all()
+
+        # return the roles that have not been deleted for the specific shift
         self._roles_ = self._session_.query(Role) \
             .filter(Role.deleted == False) \
+            .filter(Role.shift_request_id == self.request_id) \
             .all()
-        self._asset_type_seats_ = self._session_.query(AssetTypeRole) \
-            .join(Role, Role.id == AssetTypeRole.role_id) \
-            .filter(Role.deleted == False) \
-            .all()
+
+        # self._asset_type_seats_ = self._session_.query(AssetTypeRole) \
+        #     .join(Role, Role.id == AssetTypeRole.role_id) \
+        #     .filter(Role.deleted == False) \
+        #     .all()
 
     def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
         """
@@ -120,22 +131,26 @@ class Calculator:
             curr += self._time_granularity_
         return deltas
 
-    @staticmethod
-    def float_time_to_datetime(float_hours: float, d: datetime) -> datetime:
-        """
-        Given a users available time as a date agnostic decimal hour and a shift blocks date, combine the two into a
-        datetime that can be used for equality and range comparisons.
-        @param float_hours: The users decimal hour availability, i.e. 3.5 is 3:30am, 4.0 is 4am,
-        @param d: The shift blocks date time
-        @return: The decimal hours time on the shift blocks day as datetime
-        """
-        # Assertion to ensure the front end garbage hasn't continued
-        assert 0 <= float_hours <= 23.5
+    # @staticmethod
+    # def float_time_to_datetime(float_hours: float, d: datetime) -> datetime:
+    #     """
+    #     Given a users available time as a date agnostic decimal hour and a shift blocks date, combine the two into a
+    #     datetime that can be used for equality and range comparisons.
+    #     @param float_hours: The users decimal hour availability, i.e. 3.5 is 3:30am, 4.0 is 4am,
+    #     @param d: The shift blocks date time
+    #     @return: The decimal hours time on the shift blocks day as datetime
+    #     """
+    #     # Assertion to ensure the front end garbage hasn't continued
+    #     assert 0 <= float_hours <= 23.5
+    #
+    #     # Calculate the actual datetime
+    #     hours = int(float_hours)
+    #     minutes = int((float_hours * 60) % 60)
+    #     return datetime(d.year, d.month, d.day, hours, minutes, 0)
 
-        # Calculate the actual datetime
-        hours = int(float_hours)
-        minutes = int((float_hours * 60) % 60)
-        return datetime(d.year, d.month, d.day, hours, minutes, 0)
+    """
+    original method/s has structure of double, made redundant as times from unavailability_time table is already in datetime format.
+    """
 
     def calculate_compatibility(self) -> List[List[bool]]:
         """
