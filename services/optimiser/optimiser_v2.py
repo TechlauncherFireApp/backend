@@ -2,7 +2,7 @@ import minizinc
 from sqlalchemy import orm
 
 from domain import session_scope, ShiftRequestVolunteer
-from repository.shift_request_volunteer_repository import add_shift
+from repository.asset_request_volunteer_repository import add_shift
 from services.optimiser.calculator import Calculator
 
 
