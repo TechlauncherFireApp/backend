@@ -19,5 +19,5 @@ class ShiftRequest(Base):
     status = Column(Enum(ShiftStatus), name='status', default=ShiftStatus.WAITING, nullable=False)
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)
-
+    Column()
     user = relationship("User")

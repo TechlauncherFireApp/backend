@@ -13,7 +13,7 @@ class ShiftRequestVolunteer(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.id'), name='user_id', nullable=False)
     request_id = Column(Integer, ForeignKey('shift_request.id'), name='request_id', nullable=False)
-    role_id = Column(Integer, ForeignKey('role.id'), name="role_id", nullable=False)
+    position_id = Column(Integer, ForeignKey('role.id'), name="role_id", nullable=False)
     status = Column(Enum(ShiftVolunteerStatus), name='status', nullable=False, default=ShiftVolunteerStatus.PENDING)
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)

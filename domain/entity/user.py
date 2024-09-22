@@ -23,6 +23,7 @@ class User(Base):
     experience_years = Column(Integer, name='experience_years')
     possibleRoles = Column(JSON, name='possible_roles')
     qualifications = Column(JSON, name='qualifications')
+    unavailability = Column(JSON, name='unavailability')
     availabilities = Column(JSON, name='availabilities')
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)
