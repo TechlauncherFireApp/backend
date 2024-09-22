@@ -1,7 +1,7 @@
 import minizinc
 from sqlalchemy import orm
 
-from domain import session_scope, AssetRequestVolunteer
+from domain import session_scope, ShiftRequestVolunteer, ShiftStatus
 from repository.asset_request_volunteer_repository import add_shift
 from services.optimiser.calculator import Calculator
 
@@ -23,7 +23,7 @@ class Optimiser:
     def generate_model_string():
         """
         Generate the model string for the optimiser logic.
-        This handles volunteer assignment based on shifts (no vehicles).
+        This model assigns volunteers to shifts based on availability and other constraints.
         @return: A string representation of the MiniZinc model.
         """
         model_str = """
@@ -42,15 +42,18 @@ class Optimiser:
 
             array[SHIFTS, VOLUNTEERS, POSITIONS] of var bool: assignment;
 
+            % Constraint: Ensure the positions required for each shift are filled.
             constraint forall(s in SHIFTS)(
                 sum(p in POSITIONS)(position_requirements[s, p]) >= 
                 sum(v in VOLUNTEERS, p in POSITIONS)(bool2int(assignment[s, v, p]))
             );
 
+            % Constraint: Volunteers can be assigned to at most one position per shift.
             constraint forall(s in SHIFTS, v in VOLUNTEERS)(
                 sum(p in POSITIONS)(bool2int(assignment[s, v, p])) <= 1
             );
 
+            % Constraint: Volunteers should not be assigned to shifts they are unavailable for.
             constraint forall(v in VOLUNTEERS, s in SHIFTS where availability[v, s] == 0)(
                 sum(p in POSITIONS)(assignment[s, v, p]) == 0 
             );
@@ -92,7 +95,7 @@ class Optimiser:
 
     def save_result(self, session, result):
         """
-        Save the optimisation result to the database.
+        Save the optimisation result to the database using ShiftRequestVolunteer.
         @param session: SQL Alchemy session to use
         @param result: The model result
         """
@@ -106,10 +109,9 @@ class Optimiser:
                             volunteer = self.calculator.get_volunteer_by_index(volunteer_index)
                             shift = self.calculator.get_shift_by_index(shift_index)
                             print(f'Volunteer {volunteer.email} assigned to position {role.name} for shift {shift.id}')
-                            shift_assignment = AssetRequestVolunteer(
+                            shift_assignment = ShiftRequestVolunteer(
                                 user_id=volunteer.id,
-                                shift_id=shift.id,
-                                role_id=role.id,
+                                request_id=shift.id,
                                 status='pending'
                             )
                             session.add(shift_assignment)
