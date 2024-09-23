@@ -93,7 +93,8 @@ class ShiftRepository:
                                 title=f"shift {shift_id}",
                                 periodicity=1,
                                 start=shift_request.startTime,
-                                end=shift_request.endTime
+                                end=shift_request.endTime,
+                                is_shift=True
                             )
                             session.add(unavailability_record)
                     session.commit()
