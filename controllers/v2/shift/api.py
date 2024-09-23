@@ -1,4 +1,6 @@
 from flask_restful import reqparse, Resource, marshal_with, inputs, marshal
+
+from exception.client_exception import ConflictError
 from .response_models import shift
 from domain import UserType
 from repository.shift_repository import ShiftRepository
@@ -45,6 +47,9 @@ class VolunteerShiftV2(Resource):
                 return {"message": "Status updated successfully"}, 200
             else:
                 return {"message": "No user or shift record is found, status not updated."}, 400
+        except ConflictError as e:  # Handle conflict error
+            logging.error(f"Conflict when updating shift for user {user_id}: {e}")
+            return {"message": "Shift time conflict detected. Cannot confirm shift."}, 409
         except Exception as e:
             logging.error(f"Error updating shifts for user {user_id}: {e}")
             return {"message": "Internal server error"}, 500
