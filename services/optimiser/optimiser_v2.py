@@ -1,19 +1,20 @@
 import minizinc
 from sqlalchemy import orm
+from datetime import datetime
 
-from domain import session_scope, ShiftRequestVolunteer
+from domain import ShiftRequestVolunteer, ShiftRequest
 from repository.asset_request_volunteer_repository import add_shift
 from services.optimiser.calculator import Calculator
 
 
 class Optimiser:
+    # The calculator generates data structures for the optimiser to solve.
     calculator = None
 
-    def __init__(self, session: orm.session, request_id: int, debug: bool = False):
+    def __init__(self, session: orm.session, request_id: int, debug: bool):
         """
-        Initialize the optimiser with session, request_id, and debug mode.
         @param session: The SQLAlchemy session to use.
-        @param request_id: The request ID to solve.
+        @param request_id: The ShiftRequest ID to solve.
         @param debug: If this should be executed in debug (printing) mode.
         """
         self.calculator = Calculator(session, request_id)
@@ -22,81 +23,74 @@ class Optimiser:
     @staticmethod
     def generate_model_string():
         """
-        Generate the MiniZinc model string for the optimiser logic.
-        This model assigns volunteers to shifts based on availability and other constraints.
-        @return: A string representation of the MiniZinc model.
+        Generate the MiniZinc model string for the optimiser.
+        @return: The MiniZinc model as a string.
         """
         model_str = """
-            int: S; % Number of Shifts
-            int: V; % Number of Volunteers
-            int: P; % Number of Positions
+        int: R;  % Number of roles, passed dynamically
+        set of int: ROLE = 1..R;
 
-            set of int: SHIFTS = 1..S;
-            set of int: VOLUNTEERS = 1..V;
-            set of int: POSITIONS = 1..P;
+        int: V;  % Number of volunteers, passed dynamically
+        set of int: VOLUNTEER = 1..V;
 
-            array[SHIFTS, POSITIONS] of bool: position_requirements;
-            array[VOLUNTEERS, SHIFTS] of bool: availability;
-            array[VOLUNTEERS] of bool: personal_transport;
+        % Compatibility matrix [VOLUNTEER, ROLE], passed dynamically
+        array[VOLUNTEER, ROLE] of bool: compatibility;
 
-            array[SHIFTS, VOLUNTEERS, POSITIONS] of var bool: assignment;
+        % Decision variable: assignment of volunteers to roles
+        array[VOLUNTEER, ROLE] of var bool: possible_assignment;
 
-            % Constraint: Ensure the positions required for each shift are filled.
-            constraint forall(s in SHIFTS)(
-                sum(p in POSITIONS)(position_requirements[s, p]) >= 
-                sum(v in VOLUNTEERS, p in POSITIONS)(bool2int(assignment[s, v, p]))
-            );
+        % Constraints
+        % A volunteer should be assigned to at most one role
+        constraint forall(v in VOLUNTEER)(
+            sum(r in ROLE)(bool2int(possible_assignment[v, r])) <= 1
+        );
 
-            % Constraint: Volunteers can be assigned to at most one position per shift.
-            constraint forall(s in SHIFTS, v in VOLUNTEERS)(
-                sum(p in POSITIONS)(bool2int(assignment[s, v, p])) <= 1
-            );
+        % A role should only be assigned to at most one volunteer
+        constraint forall(r in ROLE)(
+            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) <= 1
+        );
 
-            % Constraint: Volunteers should not be assigned to shifts they are unavailable for.
-            constraint forall(v in VOLUNTEERS, s in SHIFTS where availability[v, s] == false)(
-                sum(p in POSITIONS)(assignment[s, v, p]) == 0 
-            );
+        % A volunteer can only be assigned to a role if they are compatible with it
+        constraint forall(v in VOLUNTEER, r in ROLE)(
+            possible_assignment[v, r] -> compatibility[v, r]
+        );
 
-            % Objective function: Maximise the number of valid assignments
-            solve maximize (
-                sum(s in SHIFTS, v in VOLUNTEERS, p in POSITIONS)(
-                    bool2int(assignment[s, v, p])
-                )
-            );
+        % Objective: Maximize the number of valid role assignments
+        solve maximize sum(v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[v, r]));
 
-            % Output assignments without using a var in the output condition
-            output ["Assignment: \n"] ++ 
-                   [if fix(assignment[s,v,p]) == 1 
-                    then "Shift = " ++ show(s) ++ ", Volunteer = " ++ show(v) ++ ", Position = " ++ show(p) ++ "\\n"
-                    else "" endif
-                    | s in SHIFTS, v in VOLUNTEERS, p in POSITIONS];
+        % Output the possible assignments
+        output ["Possible Assignments:\\n"] ++
+               [ if fix(possible_assignment[v, r]) then
+                   "Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\\n"
+                 else ""
+                 endif
+                 | v in VOLUNTEER, r in ROLE
+               ];
         """
         return model_str
 
     def solve(self):
-        """
-        Solves the MiniZinc model for the given request using the shift and volunteer data.
-        """
+        # Create the MiniZinc model and solver
         gecode = minizinc.Solver.lookup("gecode")
         model = minizinc.Model()
-        model.add_string(Optimiser.generate_model_string())
+        model.add_string(self.generate_model_string())
+
+        # Create an instance
         instance = minizinc.Instance(gecode, model)
 
-        if self.debug:
-            print(f"'S' = {self.calculator.get_number_of_shifts()}")
-            print(f"'V' = {self.calculator.get_number_of_volunteers()}")
-            print(f"'P' = {self.calculator.get_number_of_roles()}")
-            print(f"'availability' = {self.calculator.calculate_availability()}")
-            print(f"'position_requirements' = {self.calculator.calculate_position_requirements()}")
+        # Calculate the number of roles and volunteers dynamically
+        num_roles = self.calculator.get_number_of_roles()
+        num_volunteers = self.calculator.get_number_of_volunteers()
 
-        # Add model parameters
-        instance["S"] = self.calculator.get_number_of_shifts()
-        instance["V"] = self.calculator.get_number_of_volunteers()
-        instance["P"] = self.calculator.get_number_of_roles()
-        instance["availability"] = self.calculator.calculate_availability()
-        instance["position_requirements"] = self.calculator.calculate_position_requirements()
-        instance["personal_transport"] = self.calculator.calculate_personal_transport()
+        # Fetch compatibility matrix from the calculator (or create dynamically)
+        compatibility_matrix = self.calculator.calculate_compatibility()
 
+        # Assign the dynamic values to the MiniZinc instance
+        instance["R"] = num_roles
+        instance["V"] = num_volunteers
+        instance["compatibility"] = compatibility_matrix
+
+        # Solve the instance
         result = instance.solve()
 
         if self.debug:
@@ -104,28 +98,31 @@ class Optimiser:
 
         return result
 
-    def save_result(self, session, result):
+    def save_result(self, session, result) -> None:
         """
-        Save the optimisation result to the database using ShiftRequestVolunteer.
-        @param session: SQLAlchemy session to use.
-        @param result: The model result from the MiniZinc solver.
+        Save the possible assignments to the ShiftRequestVolunteer table with status PENDING.
+        @param session: SQLAlchemy session to use
+        @param result: The model result from MiniZinc
         """
-        # Iterate through the solution and save it to the database
-        if result.solution is not None:
-            for shift_index in range(self.calculator.get_number_of_shifts()):
-                for volunteer_index in range(self.calculator.get_number_of_volunteers()):
-                    for position_index in range(self.calculator.get_number_of_roles()):
-                        if result["assignment"][shift_index][volunteer_index][position_index]:
-                            shift = self.calculator.get_shift_by_index(shift_index)
-                            volunteer = self.calculator.get_volunteer_by_index(volunteer_index)
-                            role = self.calculator.get_role_by_index(position_index)
+        shift_request_id = self.calculator.request_id
 
-                            print(f'Volunteer {volunteer.email} assigned to position {role.name} for shift {shift.id}')
+        # Process the MiniZinc result
+        for role_index, role_assignments in enumerate(result["possible_assignment"]):
+            for volunteer_index, is_assigned in enumerate(role_assignments):
+                if is_assigned:  # If a volunteer is assigned to a role
+                    user = self.calculator.get_volunteer_by_index(volunteer_index)
+                    role = self.calculator.get_role_by_index(role_index)
 
-                            shift_assignment = ShiftRequestVolunteer(
-                                user_id=volunteer.id,
-                                request_id=shift.id,
-                                status='assigned'
-                            )
-                            session.add(shift_assignment)
+                    # Create a ShiftRequestVolunteer entry with status PENDING
+                    shift_volunteer = ShiftRequestVolunteer(
+                        user_id=user.id,
+                        request_id=shift_request_id,
+                        position_id=role.id,
+                        status='PENDING',  # Marking as pending since it's just a possible assignment
+                        update_date_time=datetime.now(),
+                        insert_date_time=datetime.now(),
+                    )
+                    session.add(shift_volunteer)
+
+        # Commit the results to the database
         session.commit()
