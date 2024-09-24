@@ -116,20 +116,20 @@ class Calculator:
         #     .filter(Role.deleted == False) \
         #     .all()
 
-    def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
-        """
-        Given the start time and end time of a shift, generate a list of shift "blocks" which represent a
-        self._time_granularity_ period that the user would need to be available for
-        @param start: The start time of the shift.
-        @param end: The end time of the shift.
-        @return: A list of dates between the two dates.
-        """
-        deltas = []
-        curr = start
-        while curr < end:
-            deltas.append(curr)
-            curr += self._time_granularity_
-        return deltas
+    # def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
+    #     """
+    #     Given the start time and end time of a shift, generate a list of shift "blocks" which represent a
+    #     self._time_granularity_ period that the user would need to be available for
+    #     @param start: The start time of the shift.
+    #     @param end: The end time of the shift.
+    #     @return: A list of dates between the two dates.
+    #     """
+    #     deltas = []
+    #     curr = start
+    #     while curr < end:
+    #         deltas.append(curr)
+    #         curr += self._time_granularity_
+    #     return deltas
 
     # @staticmethod
     # def float_time_to_datetime(float_hours: float, d: datetime) -> datetime:
@@ -146,30 +146,6 @@ class Calculator:
     #     # Calculate the actual datetime
     #     hours = int(float_hours)
     #     minutes = int((float_hours * 60) % 60)
-    #     return datetime(d.year, d.month, d.day, hours, minutes, 0)
-
-    def calculate_compatibility(self) -> List[bool]:
-        compatibilities = []
-        # Shift blocks are the _time_granularity_ sections the volunteer would need to be available for.
-        # It's calculated by finding all the 30 minute slots between the start time and end time (inclusive)
-        shift_block = self.calculate_deltas(self._shift_.startTime, self._shift_.endTime)
-        for user in self._users_:
-            available = True # assume volunteer is available
-            # first pull then calculate the unavailability block of the user and check if it overlaps with the shift block
-            unavailabilities = self._session_.query(UnavailabilityTime) \
-                .filter(UnavailabilityTime.userId == user.id)\
-                .all()
-            for unavailability in unavailabilities:
-                 
-
-
-
-
-
-
-    """
-    original method/s has structure of double, made redundant as times from unavailability_time table is already in datetime format.
-    """
 
     def calculate_compatibility(self) -> List[List[bool]]:
         """
