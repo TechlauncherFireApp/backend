@@ -1,20 +1,19 @@
 import minizinc
 from sqlalchemy import orm
+from datetime import datetime
 
-from domain import session_scope, AssetRequestVehicle, AssetRequestVolunteer
-from repository.asset_request_volunteer_repository import add_shift
+from domain import ShiftRequestVolunteer
 from services.optimiser.calculator import Calculator
 
 
 class Optimiser:
-    # The calculator generates data structures for the optimiser to solve. Separating these two concerns improves
-    # readability of the code dramatically.
+    # The calculator generates data structures for the optimiser to solve.
     calculator = None
 
     def __init__(self, session: orm.session, request_id: int, debug: bool):
         """
         @param session: The SQLAlchemy session to use.
-        @param request_id: The request ID to solve.
+        @param request_id: The ShiftRequest ID to solve.
         @param debug: If this should be executed in debug (printing) mode.
         """
         self.calculator = Calculator(session, request_id)
@@ -23,209 +22,122 @@ class Optimiser:
     @staticmethod
     def generate_model_string():
         """
-        Generate a the model string, factored out into a separete function only to increase readability.
-        @return:
+        Generate the MiniZinc model string for the optimiser.
+        @return: The MiniZinc model as a string.
         """
         model_str = """
-            % Simple Parameters
-            int: A; 
-            set of int: ASSETSHIFT = 1..A;
+        int: R;  % Number of roles, passed dynamically
+        set of int: ROLE = 1..R;
 
-            int: R;
-            set of int: ROLE = 1..R;
+        int: V;  % Number of volunteers, passed dynamically
+        set of int: VOLUNTEER = 1..V;
 
-            int: P;
-            set of int: POSITION = 1..P;
+        % Compatibility matrix passed as a flat array [V * R]
+        array[1..V * R] of bool: compatibility;
 
-            int: V;
-            set of int: VOLUNTEER = 1..V;
+        % Helper function to map 2D indices to the flattened array
+        function int: flat_index(int: v, int: r) = (v - 1) * R + r;
 
-            int: Q;
-            set of int: QUALIFICATION = 1..Q;
+        % Decision variable: assignment of volunteers to roles
+        array[VOLUNTEER, ROLE] of var bool: possible_assignment;
 
-            int: C;
-            set of int: COEFFICIENTS = 0..C;
+        % Constraints
+        % A volunteer should be assigned to at most one role
+        constraint forall(v in VOLUNTEER)(
+            sum(r in ROLE)(bool2int(possible_assignment[v, r])) <= 1
+        );
 
+        % A role should only be assigned to at most one volunteer
+        constraint forall(r in ROLE)(
+            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) <= 1
+        );
 
-            % Supervisor Customisation
-            array[ASSETSHIFT, POSITION, QUALIFICATION] of bool: qualrequirements;
-            array[ASSETSHIFT, POSITION, ROLE] of bool: rolerequirements;
-            array[POSITION, ASSETSHIFT] of bool: posrequirements;
+        % A volunteer can only be assigned to a role if they are compatible with it
+        constraint forall(v in VOLUNTEER, r in ROLE)(
+            possible_assignment[v, r] -> compatibility[flat_index(v, r)]
+        );
 
-            % Volunteer Abilities
-            array[VOLUNTEER, QUALIFICATION] of bool: qualability;
-            array[VOLUNTEER, ROLE] of bool: roleability;
+        % Objective: Maximize the number of valid role assignments
+        solve maximize sum(v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[v, r]));
 
-            % Volunteer Availabilities
-            array[VOLUNTEER, ASSETSHIFT] of bool: availability;
-            array[ASSETSHIFT, ASSETSHIFT] of bool: clashes;
-
-            % Prioritisation of Volunteers
-            array[VOLUNTEER, ASSETSHIFT, ASSETSHIFT] of COEFFICIENTS: shiftcoefficient;
-
-            % Decision Variable
-            array[ASSETSHIFT, VOLUNTEER, POSITION] of var bool: assignment;
-            array[VOLUNTEER, ASSETSHIFT, ASSETSHIFT] of var int: shiftpair;
-
-
-            % Constraints
-            % The number of positions assigned should not exceed the number of positions needed for a shift.
-            constraint forall(a in ASSETSHIFT)(
-            sum(p in POSITION)(posrequirements[p, a]) >= sum(p in POSITION, v in VOLUNTEER)(bool2int(assignment[a, v, p]))
-            );
-
-            % A volunteer should be assigned to at most one position per shift.
-            constraint forall(a in ASSETSHIFT, v in VOLUNTEER)(
-            sum(p in POSITION)(bool2int(assignment[a, v, p])) <= 1
-            );
-
-            % A position should only be assigned to at most once for all shifts.
-            constraint forall(p in POSITION)(
-            sum(a in ASSETSHIFT, v in VOLUNTEER)(assignment[a, v, p]) <= 1
-            );
-
-            % If a volunteer either does not have the qualification or role for a position, then they should not be assigned to a shift.
-            constraint forall(a in ASSETSHIFT, p in POSITION, v in VOLUNTEER, r in ROLE, q in QUALIFICATION where ((qualrequirements[a, p, q] == true /\ qualability[v, q] == false) \/ (rolerequirements[a, p, r] == true /\ roleability[v, r] == false)))(
-            bool2int(assignment[a, v, p]) == 0
-            );
-
-
-            % If a volutneer is not available for a shift, they should not be assigned in the shift.
-            constraint forall(v in VOLUNTEER, a in ASSETSHIFT where availability[v, a] == 0)(
-            sum(p in POSITION)(assignment[a, v, p]) == 0 
-            );
-
-            % If a shift clashes with another shift, then the volunteer should not be assigned to both shifts.
-            constraint forall(aone in ASSETSHIFT, v in VOLUNTEER)(
-            forall(atwo in ASSETSHIFT where clashes[aone, atwo] == true)(
-                not(sum(p in POSITION)(assignment[aone, v, p]) == true /\ sum(p in POSITION)(assignment[atwo, v, p]) == true)
-            )
-            );
-
-
-            % Volunteers should only be assigned to a position that is needed for the shift. i.e. there should not be any positions assigned for a shift if it hasn't been 
-            % intended by the supervisor through customisation.
-            constraint forall(a in ASSETSHIFT, v in VOLUNTEER, p in POSITION)(
-            not(assignment[a, v, p] == true /\ posrequirements[p, a] == false)
-            );
-
-
-
-            %-----NEW CONSTRAINTS FOR SHIFT PRIORITISATION-------------------------------------------------------------------------------------------------------------------
-            %-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-            %-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-            % If the volunteer is assigned to two shifts, then the coefficients for those two shift pairs are turned on.
-            constraint forall(v in VOLUNTEER, aone in ASSETSHIFT, atwo in ASSETSHIFT, pone in POSITION, ptwo in POSITION where (assignment[aone, v, pone] == 1 /\ assignment[atwo, v, ptwo] == 1))(
-            shiftpair[v, aone, atwo] == shiftcoefficient[v, aone, atwo] /\ shiftpair[v, atwo, aone] == shiftcoefficient[v, aone, atwo]
-            );
-
-            % If the volunteer is not assigned to two shifts, then the coefficients for those two shift pairs are turned off.
-            constraint forall(v in VOLUNTEER, aone in ASSETSHIFT, atwo in ASSETSHIFT, p in POSITION where (assignment[aone, v, p] == 1))(
-            shiftpair[v, aone, atwo] == shiftcoefficient[v, aone, atwo] /\ shiftpair[v, atwo, aone] == shiftcoefficient[v, atwo, aone]
-            );
-
-            % If a volunteer is not assigned to a shift, then they have the maximum penalty.
-            constraint forall(v in VOLUNTEER, aone in ASSETSHIFT, atwo in ASSETSHIFT where (sum(a in ASSETSHIFT, p in POSITION)(assignment[a, v, p]) == 0))(
-            shiftpair[v, aone, atwo] == max(COEFFICIENTS) /\ shiftpair[v, atwo, aone] == max(COEFFICIENTS)
-            );
-
-            % The value of each element of the decision variable is limited between the maximum and minimum coefficient values.
-            constraint forall(v in VOLUNTEER, aone in ASSETSHIFT, atwo in ASSETSHIFT)(
-            shiftpair[v, aone, atwo] <= max(COEFFICIENTS) /\ shiftpair[v, aone, atwo] >= min(COEFFICIENTS)
-            );
-
-            %-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-            %-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-            % Objective
-            solve maximize (sum(a in ASSETSHIFT, v in VOLUNTEER, p in POSITION)(bool2int(assignment[a,v,p])) - sum(v in VOLUNTEER, aone in ASSETSHIFT, atwo in ASSETSHIFT)(shiftpair[v, aone, atwo]));
-
-
-            %~~~~~~~~~~~~~~~~~~~
-            % OUTPUT
-            output [ "Assignment: \n"] ++
-                ["Asset Shift = " ++ show(a) ++ "\n"
-                    ++
-                concat([ if (show(assignment[a,v,p]) == "true")
-                    then "\tVolunteer = " ++ show(v) ++ ", \tPosition = " ++ show(p) ++ "\n"
-                    endif
-                    | v in VOLUNTEER, p in POSITION])
-                | a in ASSETSHIFT]
+        % Output the possible assignments
+        output ["Possible Assignments:\\n"] ++
+               [ if fix(possible_assignment[v, r]) then
+                   "Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\\n"
+                 else ""
+                 endif
+                 | v in VOLUNTEER, r in ROLE
+               ];
         """
         return model_str
 
+    @staticmethod
+    def flatten_compatibility(compatibility_2d):
+        """
+        Flattens a 2D compatibility matrix into a 1D list for MiniZinc.
+
+        :param compatibility_2d: A 2D list where each row represents a volunteer's compatibility with roles
+        :return: A 1D list representing the flattened compatibility matrix
+        """
+        return [item for sublist in compatibility_2d for item in sublist]
+
     def solve(self):
-        # Instantiate the model
-        gecode = minizinc.Solver.lookup("coin-bc")
+        # Create the MiniZinc model and solver
+        gecode = minizinc.Solver.lookup("gecode")
         model = minizinc.Model()
-        model.add_string(Optimiser.generate_model_string())
+        model.add_string(self.generate_model_string())
+
+        # Create an instance
         instance = minizinc.Instance(gecode, model)
 
+        # Calculate the number of roles and volunteers dynamically
+        num_roles = self.calculator.get_number_of_roles()
+        num_volunteers = self.calculator.get_number_of_volunteers()
+
+        # Fetch compatibility matrix from the calculator (or create dynamically)
+        compatibility_2d = self.calculator.calculate_compatibility()
+
+        # Flatten the 2D compatibility matrix
+        flattened_compatibility = self.flatten_compatibility(compatibility_2d)
+
+        # Assign the dynamic values to the MiniZinc instance
+        instance["R"] = num_roles
+        instance["V"] = num_volunteers
+        instance["compatibility"] = flattened_compatibility
+
+        # Solve the instance
+        result = instance.solve()
+
         if self.debug:
-            print(f"'A' = {self.calculator.get_number_of_vehicles()}")
-            print(f"'C' = {self.calculator.get_number_of_vehicles()}")
-            print(f"'R' = {self.calculator.get_number_of_volunteers()}")
-            print(f"'S' = {self.calculator.get_number_of_roles()}")
-            print(f"'clashing' = {self.calculator.calculate_clashes()}")
-            print(f"'sreq' = {self.calculator.calculate_skill_requirement()}")
-            print(f"'compatible' = {self.calculator.calculate_compatibility()}")
-            print(f"'mastery' = {self.calculator.calculate_mastery()}")
-            print(f'==========')
-            print(f'roles= {[x.code for x in self.calculator.get_roles()]}')
-            print(f'==========')
+            print(result)
 
-        # Add the model parameters
-        instance["A"] = self.calculator.get_number_of_vehicles()
-        instance["C"] = self.calculator.get_number_of_vehicles()
-        instance["R"] = self.calculator.get_number_of_volunteers()
-        instance["S"] = self.calculator.get_number_of_roles()
-        instance["clashing"] = self.calculator.calculate_clashes()
-        instance["sreq"] = self.calculator.calculate_skill_requirement()
-        instance['compatible'] = self.calculator.calculate_compatibility()
-        instance['mastery'] = self.calculator.calculate_mastery()
-
-        return instance.solve()
+        return result
 
     def save_result(self, session, result) -> None:
         """
-        Save a model result to the database.
-        @param session: SQL Alchemy session to use
-        @param result: The model result
+        Save the possible assignments to the ShiftRequestVolunteer table with status PENDING.
+        @param session: SQLAlchemy session to use
+        @param result: The model result from MiniZinc
         """
-        # Simple data structure to help find whats missing and whats populated from the decision variable
-        persist = []
-        for x in self.calculator.get_asset_requests():
-            roles = {}
-            for role in self.calculator.get_roles():
-                roles[role.id] = {'count': self.calculator.get_role_count(x.asset_type.id, role.id), 'assigned': []}
-            persist.append(roles)
+        shift_request_id = self.calculator.request_id
 
-        # Iterate over the results, adding them to our persistence data structure
-        if result is not None:
-            for asset_request_index, asset_request in enumerate(result['contrib']):
-                for volunteer_index, volunteer in enumerate(asset_request):
-                    for role_index, assigned in enumerate(volunteer):
-                        if assigned:
-                            role_domain = self.calculator.get_role_by_index(role_index)
-                            user_domain = self.calculator.get_volunteer_by_index(volunteer_index)
-                            asset_request_domain = self.calculator.get_asset_request_by_index(asset_request_index)
-                            print(
-                                f'Volunteer {user_domain.email} should be assigned to role {role_domain.code} on asset request {asset_request_domain.id}')
-                            asset_request_obj = persist[asset_request_index]
-                            role_map = asset_request_obj[role_domain.id]
-                            role_map['assigned'].append(user_domain.id)
+        # Process the MiniZinc result
+        for role_index, role_assignments in enumerate(result["possible_assignment"]):
+            for volunteer_index, is_assigned in enumerate(role_assignments):
+                if is_assigned:  # If a volunteer is assigned to a role
+                    user = self.calculator.get_volunteer_by_index(volunteer_index)
+                    role = self.calculator.get_role_by_index(role_index)
 
-        # Now, actually persist it!
-        for asset_request_index, _ in enumerate(persist):
-            asset_request = self.calculator.get_asset_request_by_index(asset_request_index)
-            asset_request_roles = persist[asset_request_index]
-            for role_id in asset_request_roles:
-                for assign_count in range(asset_request_roles[role_id]['count']):
-                    if assign_count < len(asset_request_roles[role_id]['assigned']):
-                        ar = AssetRequestVolunteer(user_id=asset_request_roles[role_id]['assigned'][assign_count],
-                                                   vehicle_id=asset_request.id, role_id=role_id, status='pending')
-                    else:
-                        ar = AssetRequestVolunteer(user_id=None, vehicle_id=asset_request.id, role_id=role_id)
-                    session.add(ar)
+                    # Create a ShiftRequestVolunteer entry with status PENDING
+                    shift_volunteer = ShiftRequestVolunteer(
+                        user_id=user.id,
+                        request_id=shift_request_id,
+                        position_id=role.id,
+                        status='PENDING',  # Marking as pending since it's just a possible assignment
+                        update_date_time=datetime.now(),
+                        insert_date_time=datetime.now(),
+                    )
+                    session.add(shift_volunteer)
+
+        # Commit the results to the database
+        session.commit()
