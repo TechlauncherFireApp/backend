@@ -104,7 +104,7 @@ jobs:
             ghcr.io/${{ env.REPOSITORY_LC }}:latest
             ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
           else
-            echo "TAGS=ghcr.io/${{ env.REPOSITORY_LC }}:pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+            echo "TAGS=ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
           fi
         id: tag
       - name: Build and push Docker image
