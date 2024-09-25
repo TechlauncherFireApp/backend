@@ -122,6 +122,6 @@ jobs:
       - version
     steps:
       - call-workflow-passing-data:
-        uses: .github/workflows/test.yml
+        uses: ./.github/workflows/test.yml
         with:
           version: ${{ needs.version.outputs.version }}
