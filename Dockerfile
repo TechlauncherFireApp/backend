@@ -15,6 +15,8 @@ COPY . /app
 WORKDIR /app
 RUN pipenv install --system --deploy --ignore-pipfile
 
+VOLUME [/app/google-credentials.json]
+
 # Expose web server port & execute
 EXPOSE 5000
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "--workers=2", "--threads=2", "--timeout=1800", "--log-level=debug", "--pythonpath", "/", "application:app"]

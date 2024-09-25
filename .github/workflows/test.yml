@@ -11,8 +11,6 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
       - name: Lowercase Repository
         run: |
           echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
@@ -26,16 +24,25 @@ jobs:
           find: "ghcr.io/${{ env.REPOSITORY_LC }}:latest"
           replace: "ghcr.io/${{ env.REPOSITORY_LC }}:${{ inputs.version }}"
           regex: false
+      - name: Inject google-credentials.json
+        run: echo "$GOOGLE_CREDENTIALS" >> google-credentials.json
+        env:
+          GOOGLE_CREDENTIALS: ${{secrets.FCM_CREDENTIALS}}
       - name: Docker Compose version
         run: docker compose version
       - name: Start containers
         run: docker compose -f "docker-compose.frontend.yml" up -d --wait
       - name: Test container
-        run: docker run --network container:backend-fireapp-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
+        run: 
+          docker run --network container:backend-fireapp-1 appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
   pytest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Inject google-credentials.json
+        run: echo "$GOOGLE_CREDENTIALS" >> google-credentials.json
+        env:
+          GOOGLE_CREDENTIALS: ${{secrets.FCM_CREDENTIALS}}
       - name: Set up Python 3.10
         uses: actions/setup-python@v3
         with:
