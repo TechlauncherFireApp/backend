@@ -121,6 +121,8 @@ jobs:
       - docker
       - version
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - uses: ./.github/workflows/test.yml
         with:
           version: ${{ needs.version.outputs.version }}
