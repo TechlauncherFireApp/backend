@@ -99,7 +99,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          if [[ "${{ github.event_name != 'pull_request' }}" == "true"]]; then
+          if [[ "${{ github.event_name != 'pull_request' }}" == "true" ]]; then
             echo "TAGS=${{ steps.meta.outputs.tags }}
             ghcr.io/${{ env.REPOSITORY_LC }}:latest
             ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
