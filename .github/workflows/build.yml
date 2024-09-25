@@ -3,14 +3,13 @@ name: Build
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  pull_request:
 
 jobs:
   version:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.gitversion.outputs.semVer }}
-
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -30,10 +29,10 @@ jobs:
       - name: Display SemVer
         run: |
           echo "SemVer: ${{ steps.gitversion.outputs.semVer }}"
-
   release:
     runs-on: ubuntu-latest
     needs: version
+    if: github.event_name != 'pull_request'
     permissions:
       contents: write
     steps:
@@ -61,7 +60,6 @@ jobs:
           asset_path: ./fireapp-${{ needs.version.outputs.version }}.zip
           asset_name: fireapp-${{ needs.version.outputs.version }}.zip
           asset_content_type: application/zip
-
   docker:
     runs-on: ubuntu-latest
     needs: version
@@ -75,12 +73,17 @@ jobs:
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+      - name: Lowercase Repository
+        run: |
+          echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
+        env:
+          REPOSITORY: '${{ github.repository }}'
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/techlauncherfireapp/backend
+            ghcr.io/${{ env.REPOSITORY_LC }}
           tags: |
             type=schedule
             type=ref,event=branch
@@ -95,6 +98,15 @@ jobs:
           registry: https://ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          if [[ "${{ github.event_name != 'pull_request' }}" == "true" ]]; then
+            echo "TAGS=${{ steps.meta.outputs.tags }}
+            ghcr.io/${{ env.REPOSITORY_LC }}:latest
+            ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
+          else
+            echo "TAGS=ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
+          fi
+        id: tag
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -102,6 +114,11 @@ jobs:
           platforms: linux/amd64, linux/arm64, linux/riscv64, linux/arm/v7, linux/arm/v6
           push: true
           tags: |
-            ${{ steps.meta.outputs.tags }}
-            ghcr.io/techlauncherfireapp/backend:latest
-            ghcr.io/techlauncherfireapp/backend:${{ needs.version.outputs.version }}
+            ${{ env.TAGS }}
+  call_test:
+    needs:
+      - docker
+      - version
+    uses: ./.github/workflows/test.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
