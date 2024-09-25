@@ -116,6 +116,9 @@ jobs:
           tags: |
             ${{ env.TAGS }}
   call_test:
+    needs:
+      - docker
+      - version
     uses: ./.github/workflows/test.yml
     with:
       version: ${{ needs.version.outputs.version }}
