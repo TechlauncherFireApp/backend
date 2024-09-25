@@ -115,3 +115,13 @@ jobs:
           push: true
           tags: |
             ${{ env.TAGS }}
+  call_test:
+    runs-on: ubuntu-latest
+    needs:
+      - docker
+      - version
+    steps:
+      - call-workflow-passing-data:
+        uses: .github/workflows/test.yml
+        with:
+          version: ${{ needs.version.outputs.version }}
