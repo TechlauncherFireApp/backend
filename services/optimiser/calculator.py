@@ -243,10 +243,7 @@ class Calculator:
 
     def get_role_count(self, asset_type_id, role_id):
         """
-        Determines the number of each role required for each asset type or 0 if not required.
-        @param asset_type_id: The asset type to search for.
-        @param role_id: The role to search for.
-        @return: The volunteers required or 0 if not required.
+        check for vehicle type flag and generate a
         """
         query = self._session_.query(AssetTypeRole) \
             .join(Role, Role.id == AssetTypeRole.role_id) \
