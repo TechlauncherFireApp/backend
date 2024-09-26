@@ -32,8 +32,17 @@ class Optimiser:
         int: V;  % Number of volunteers, passed dynamically
         set of int: VOLUNTEER = 1..V;
 
+        int: S;  % Number of shifts, passed dynamically
+        set of int: SHIFT = 1..S;
+
         % Compatibility matrix passed as a flat array [V * R]
         array[1..V * R] of bool: compatibility;
+
+        % Mastery matrix passed as a flat array [V * R]
+        array[1..V * R] of bool: mastery;
+
+        % Skill requirement matrix passed as a 2D array [SHIFT, ROLE]
+        array[SHIFT, ROLE] of int: skill_requirements;
 
         % Helper function to map 2D indices to the flattened array
         function int: flat_index(int: v, int: r) = (v - 1) * R + r;
@@ -52,9 +61,14 @@ class Optimiser:
             sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) <= 1
         );
 
-        % A volunteer can only be assigned to a role if they are compatible with it
+        % A volunteer can only be assigned to a role if they are compatible with it and have mastery of the role
         constraint forall(v in VOLUNTEER, r in ROLE)(
-            possible_assignment[v, r] -> compatibility[flat_index(v, r)]
+            possible_assignment[v, r] -> (compatibility[flat_index(v, r)] /\ mastery[flat_index(v, r)])
+        );
+
+        % Ensure that each role meets the required skill for the shift
+        constraint forall(s in SHIFT, r in ROLE)(
+            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) >= skill_requirements[s, r]
         );
 
         % Objective: Maximize the number of valid role assignments
@@ -90,20 +104,31 @@ class Optimiser:
         # Create an instance
         instance = minizinc.Instance(gecode, model)
 
-        # Calculate the number of roles and volunteers dynamically
+        # Calculate the number of roles, volunteers, and shifts dynamically
         num_roles = self.calculator.get_number_of_roles()
         num_volunteers = self.calculator.get_number_of_volunteers()
+        num_shifts = len(self.calculator._shifts_)
 
-        # Fetch compatibility matrix from the calculator (or create dynamically)
+        # Fetch compatibility matrix from the calculator
         compatibility_2d = self.calculator.calculate_compatibility()
 
-        # Flatten the 2D compatibility matrix
+        # Fetch mastery matrix from the calculator
+        mastery_2d = self.calculator.calculate_mastery()
+
+        # Fetch skill requirements matrix from the calculator
+        skill_requirements = self.calculator.calculate_skill_requirement()
+
+        # Flatten the 2D compatibility and mastery matrices
         flattened_compatibility = self.flatten_compatibility(compatibility_2d)
+        flattened_mastery = self.flatten_compatibility(mastery_2d)
 
         # Assign the dynamic values to the MiniZinc instance
         instance["R"] = num_roles
         instance["V"] = num_volunteers
+        instance["S"] = num_shifts
         instance["compatibility"] = flattened_compatibility
+        instance["mastery"] = flattened_mastery
+        instance["skill_requirements"] = skill_requirements
 
         # Solve the instance
         result = instance.solve()
