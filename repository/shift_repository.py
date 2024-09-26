@@ -41,7 +41,9 @@ class ShiftRepository:
         return shift_request.id  # Optionally return the created ShiftRequest object id
 
 
-    # def create_roles(self, session, vehicleType, ):
+    def create_positions(self, session, vehicleType):
+        ## TODO implement the position creation when posting/creating new shift
+        return 0
     def get_shift(self, userId) -> List[ShiftRecord]:
 
         """
