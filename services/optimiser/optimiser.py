@@ -26,26 +26,26 @@ class Optimiser:
         @return: The MiniZinc model as a string.
         """
         model_str = """
-        int: R;  % Number of roles, passed dynamically
+        int: R;  % Number of roles
         set of int: ROLE = 1..R;
 
-        int: V;  % Number of volunteers, passed dynamically
+        int: V;  % Number of volunteers
         set of int: VOLUNTEER = 1..V;
 
-        int: S;  % Number of shifts, passed dynamically
+        int: S;  % Number of shifts
         set of int: SHIFT = 1..S;
 
-        % Compatibility matrix passed as a flat array [V * R]
+        % Compatibility matrix (flattened 1D array [V * R] from a 2D matrix)
         array[1..V * R] of bool: compatibility;
 
-        % Mastery matrix passed as a flat array [V * R]
+        % Mastery matrix (flattened 1D array [V * R] from a 2D matrix)
         array[1..V * R] of bool: mastery;
 
-        % Skill requirement matrix passed as a 2D array [SHIFT, ROLE]
-        array[SHIFT, ROLE] of int: skill_requirements;
+        % Skill requirement matrix (flattened 1D array [S * R] from a 2D matrix)
+        array[1..S * R] of int: skill_requirements;
 
         % Helper function to map 2D indices to the flattened array
-        function int: flat_index(int: v, int: r) = (v - 1) * R + r;
+        function int: flat_index(int: s, int: r) = (s - 1) * R + r;
 
         % Decision variable: assignment of volunteers to roles
         array[VOLUNTEER, ROLE] of var bool: possible_assignment;
@@ -68,16 +68,16 @@ class Optimiser:
 
         % Ensure that each role meets the required skill for the shift
         constraint forall(s in SHIFT, r in ROLE)(
-            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) >= skill_requirements[s, r]
+            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) >= skill_requirements[flat_index(s, r)]
         );
 
         % Objective: Maximize the number of valid role assignments
         solve maximize sum(v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[v, r]));
 
         % Output the possible assignments
-        output ["Possible Assignments:\\n"] ++
+        output ["Possible Assignments:\n"] ++
                [ if fix(possible_assignment[v, r]) then
-                   "Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\\n"
+                   "Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\n"
                  else ""
                  endif
                  | v in VOLUNTEER, r in ROLE
@@ -94,6 +94,16 @@ class Optimiser:
         :return: A 1D list representing the flattened compatibility matrix
         """
         return [item for sublist in compatibility_2d for item in sublist]
+
+    @staticmethod
+    def flatten_skill_requirements(skill_requirements_2d):
+        """
+        Flattens a 2D skill requirement matrix into a 1D list for MiniZinc.
+
+        :param skill_requirements_2d: A 2D list where each row represents skill requirements per shift and role
+        :return: A 1D list representing the flattened skill requirements matrix
+        """
+        return [item for sublist in skill_requirements_2d for item in sublist]
 
     def solve(self):
         # Create the MiniZinc model and solver
@@ -116,11 +126,12 @@ class Optimiser:
         mastery_2d = self.calculator.calculate_mastery()
 
         # Fetch skill requirements matrix from the calculator
-        skill_requirements = self.calculator.calculate_skill_requirement()
+        skill_requirements_2d = self.calculator.calculate_skill_requirement()
 
-        # Flatten the 2D compatibility and mastery matrices
+        # Flatten the 2D compatibility, mastery, and skill requirements matrices
         flattened_compatibility = self.flatten_compatibility(compatibility_2d)
         flattened_mastery = self.flatten_compatibility(mastery_2d)
+        flattened_skill_requirements = self.flatten_skill_requirements(skill_requirements_2d)
 
         # Assign the dynamic values to the MiniZinc instance
         instance["R"] = num_roles
@@ -128,7 +139,7 @@ class Optimiser:
         instance["S"] = num_shifts
         instance["compatibility"] = flattened_compatibility
         instance["mastery"] = flattened_mastery
-        instance["skill_requirements"] = skill_requirements
+        instance["skill_requirements"] = flattened_skill_requirements
 
         # Solve the instance
         result = instance.solve()
@@ -146,23 +157,30 @@ class Optimiser:
         """
         shift_request_id = self.calculator.request_id
 
-        # Process the MiniZinc result
-        for role_index, role_assignments in enumerate(result["possible_assignment"]):
-            for volunteer_index, is_assigned in enumerate(role_assignments):
-                if is_assigned:  # If a volunteer is assigned to a role
-                    user = self.calculator.get_volunteer_by_index(volunteer_index)
-                    role = self.calculator.get_role_by_index(role_index)
+        try:
+            # Process the MiniZinc result
+            for role_index, role_assignments in enumerate(result["possible_assignment"]):
+                for volunteer_index, is_assigned in enumerate(role_assignments):
+                    if is_assigned:  # If a volunteer is assigned to a role
+                        user = self.calculator.get_volunteer_by_index(volunteer_index)
+                        role = self.calculator.get_role_by_index(role_index)
 
-                    # Create a ShiftRequestVolunteer entry with status PENDING
-                    shift_volunteer = ShiftRequestVolunteer(
-                        user_id=user.id,
-                        request_id=shift_request_id,
-                        position_id=role.id,
-                        status='PENDING',  # Marking as pending since it's just a possible assignment
-                        update_date_time=datetime.now(),
-                        insert_date_time=datetime.now(),
-                    )
-                    session.add(shift_volunteer)
+                        # Create a ShiftRequestVolunteer entry with status PENDING
+                        shift_volunteer = ShiftRequestVolunteer(
+                            user_id=user.id,
+                            request_id=shift_request_id,
+                            position_id=role.id,
+                            status='PENDING',  # Marking as pending since it's just a possible assignment
+                            update_date_time=datetime.now(),
+                            insert_date_time=datetime.now(),
+                        )
+                        session.add(shift_volunteer)
 
-        # Commit the results to the database
-        session.commit()
+            # Commit the results to the database
+            session.commit()
+
+        except Exception as e:
+            # In case of an error, rollback the transaction
+            session.rollback()
+            print(f"Error during database transaction: {e}")
+            raise  # Re-raise the exception after logging or handling it
