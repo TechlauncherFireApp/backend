@@ -42,7 +42,6 @@ class VolunteerShiftV2(Resource):
         args = parser_modify_status.parse_args()
         status = args["status"]
         status_enum = ShiftVolunteerStatus[status.upper()]
-        print(type(status_enum))
         try:
             success = self.shift_repository.update_shift_status(user_id, shift_id, status_enum)
             if success:
