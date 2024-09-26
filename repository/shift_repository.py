@@ -3,11 +3,10 @@ from typing import List
 
 from dataclasses import asdict
 from flask import jsonify
-
 from datetime import datetime, timezone
 
 from exception import EventNotFoundError, InvalidArgumentError
-from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord
+from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord, ShiftStatus
 
 
 class ShiftRepository:
@@ -15,7 +14,36 @@ class ShiftRepository:
     def __init__(self):
         pass
 
+    def post_shift_request(self, user_id, title, start_time, end_time):
+        now = datetime.now()  # Get the current timestamp
+        with session_scope() as session:
+            try:
+                # Create a new ShiftRequest object and populate its fields
+                shift_request = ShiftRequest(
+                    user_id=user_id,
+                    title=title,
+                    start_time=start_time,
+                    end_time=end_time,
+                    status=ShiftStatus.WAITING,  # need to be changed to submitted after linda pr approved
+                    update_date_time=now,  # Update timestamp
+                    insert_date_time=now  # Insert timestamp
+                )
+
+                # Add the ShiftRequest object to the session and commit
+                session.add(shift_request)
+
+                # Add roles to the table now
+
+                session.commit()
+            except Exception as e:
+                logging.error(f"Error creating new shift request: {e}")
+
+        return shift_request.id  # Optionally return the created ShiftRequest object id
+
+
+    # def create_roles(self, session, vehicleType, ):
     def get_shift(self, userId) -> List[ShiftRecord]:
+
         """
             Retrieves all shift events for a given user that have not ended yet.
 
@@ -27,8 +55,8 @@ class ShiftRepository:
             try:
                 # only show the shift that is end in the future
                 shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
-                        ShiftRequestVolunteer.user_id == userId,
-                        ShiftRequest.endTime > now).all()
+                    ShiftRequestVolunteer.user_id == userId,
+                    ShiftRequest.endTime > now).all()
                 # check if there's some results
                 if not shifts:
                     logging.info(f"No active shifts found for user {userId}")
