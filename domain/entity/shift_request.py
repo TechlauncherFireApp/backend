@@ -16,7 +16,7 @@ class ShiftRequest(Base):
     title = Column(String(29), name='title', nullable=False)
     startTime = Column(DateTime, name='from', nullable=False)
     endTime = Column(DateTime, name='to', nullable=False)
-    status = Column(Enum(ShiftStatus), name='status', default=ShiftStatus.WAITING, nullable=False)
+    status = Column(Enum(ShiftStatus), name='status', default=ShiftStatus.PENDING, nullable=False)
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)
 
