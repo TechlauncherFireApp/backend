@@ -77,14 +77,14 @@ class ShiftRepository:
                 if shift_request_volunteer:
                     # check for conflict
                     is_conflict = self.check_conflict_shifts(session, user_id, shift_id)
-                    if is_conflict and new_status == "CONFIRMED":
+                    if is_conflict and new_status == ShiftVolunteerStatus.CONFIRMED:
                         # Raise the ConflictError if there's a conflict
                         raise ConflictError(f"Shift {shift_id} conflicts with other confirmed shifts.")
                     # update status
                     shift_request_volunteer.status = new_status
                     shift_request_volunteer.last_update_datetime = datetime.now()
                     # If the new status is CONFIRMED, add an unavailability time record
-                    if new_status == "CONFIRMED":
+                    if new_status == ShiftVolunteerStatus.CONFIRMED:
                         # Fetch start and end times from the ShiftRequest table
                         shift_request = session.query(ShiftRequest).filter_by(id=shift_id).first()
                         if shift_request:
@@ -120,11 +120,10 @@ class ShiftRepository:
         :return: True if there is a conflict, False if no conflicts are found.
         """
         try:
-            # Query all confirmed shifts for the user, excluding the current shift
+            # Query all confirmed shifts for the user
             confirmed_shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
                 ShiftRequestVolunteer.user_id == userId,
-                ShiftRequestVolunteer.status == ShiftVolunteerStatus.CONFIRMED,  # Use enum for confirmed status
-                ShiftRequestVolunteer.request_id != shiftId  # Exclude the current shift request
+                ShiftRequestVolunteer.status == ShiftVolunteerStatus.CONFIRMED  # Use enum for confirmed status
             ).all()
             # The current shift information with start time and end time
             current_shift_information = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(

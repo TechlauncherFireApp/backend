@@ -2,7 +2,7 @@ from flask_restful import reqparse, Resource, marshal_with, inputs, marshal
 
 from exception.client_exception import ConflictError
 from .response_models import shift
-from domain import UserType
+from domain import UserType, ShiftVolunteerStatus
 from repository.shift_repository import ShiftRepository
 from services.jwk import requires_auth, is_user_or_has_role
 from controllers.v2.v2_blueprint import v2_api
@@ -41,8 +41,10 @@ class VolunteerShiftV2(Resource):
     def put(self, user_id, shift_id):
         args = parser_modify_status.parse_args()
         status = args["status"]
+        status_enum = ShiftVolunteerStatus[status.upper()]
+        print(type(status_enum))
         try:
-            success = self.shift_repository.update_shift_status(user_id, shift_id, status)
+            success = self.shift_repository.update_shift_status(user_id, shift_id, status_enum)
             if success:
                 return {"message": "Status updated successfully"}, 200
             else:
