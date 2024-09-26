@@ -76,15 +76,15 @@ class ShiftRepository:
                 # If record exists, update the status
                 if shift_request_volunteer:
                     # check for conflict
-                    is_conflict = self.check_conflict_shifts(session, shift_request_volunteer)
-                    if is_conflict and new_status == ShiftVolunteerStatus.CONFIRMED:
+                    is_conflict = self.check_conflict_shifts(session, user_id, shift_id)
+                    if is_conflict and new_status == "CONFIRMED":
                         # Raise the ConflictError if there's a conflict
                         raise ConflictError(f"Shift {shift_id} conflicts with other confirmed shifts.")
                     # update status
                     shift_request_volunteer.status = new_status
                     shift_request_volunteer.last_update_datetime = datetime.now()
                     # If the new status is CONFIRMED, add an unavailability time record
-                    if new_status == ShiftVolunteerStatus.CONFIRMED:
+                    if new_status == "CONFIRMED":
                         # Fetch start and end times from the ShiftRequest table
                         shift_request = session.query(ShiftRequest).filter_by(id=shift_id).first()
                         if shift_request:
@@ -110,27 +110,26 @@ class ShiftRepository:
                 logging.error(f"Error updating shift request for user {user_id} and shift_id {shift_id}: {e}")
                 return False
 
-    def check_conflict_shifts(session, current_shift):
+    def check_conflict_shifts(self, session, userId, shiftId):
         """
         Check if a given user has any conflicting confirmed shifts with the current shift request.
 
         :param session: Database session.
-        :param current_shift: the current shift request to check for conflicts.
+        :param userId: the user id of the current shift request to check for conflicts.
+        :param shiftId: the ID of the current shift request to check for conflicts.
         :return: True if there is a conflict, False if no conflicts are found.
         """
-        user_id = current_shift.user_id
-        shift_id = current_shift.request_id
         try:
             # Query all confirmed shifts for the user, excluding the current shift
             confirmed_shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
-                ShiftRequestVolunteer.user_id == user_id,
+                ShiftRequestVolunteer.user_id == userId,
                 ShiftRequestVolunteer.status == ShiftVolunteerStatus.CONFIRMED,  # Use enum for confirmed status
-                ShiftRequestVolunteer.request_id != shift_id  # Exclude the current shift request
+                ShiftRequestVolunteer.request_id != shiftId  # Exclude the current shift request
             ).all()
             # The current shift information with start time and end time
             current_shift_information = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
-                ShiftRequestVolunteer.user_id == user_id,
-                ShiftRequestVolunteer.request_id == shift_id
+                ShiftRequestVolunteer.user_id == userId,
+                ShiftRequestVolunteer.request_id == shiftId
             ).first()
             # Iterate over all confirmed shifts and check for time conflicts
             for shift in confirmed_shifts:
@@ -142,5 +141,5 @@ class ShiftRepository:
             return False
         except Exception as e:
             # Log the error and return False in case of an exception
-            logging.error(f"Error checking shift conflicts for user {user_id} and request {shift_id}: {e}")
+            logging.error(f"Error checking shift conflicts for user {userId} and request {shiftId}: {e}")
             return False
