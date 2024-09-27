@@ -14,4 +14,3 @@ from .unavailability_time import UnavailabilityTime
 from .chatbot_input import ChatbotInput
 from .shift_request import ShiftRequest
 from .shift_request_volunteer import ShiftRequestVolunteer
-from .shift_position import ShiftPosition

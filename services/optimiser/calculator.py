@@ -3,8 +3,7 @@ from datetime import timedelta, datetime
 from typing import List
 from sqlalchemy import orm, func, alias
 
-from domain import (User, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftPosition,
-                    UnavailabilityTime)
+from domain import User, AssetRequestVehicle, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftRequestVolunteer, UnavailabilityTime
 
 
 class Calculator:
@@ -17,7 +16,7 @@ class Calculator:
     # This matters as the lists passed to Minizinc are not keyed and are instead used by index.
     _users_ = []
     _shifts_ = []
-    _positions_ = []
+
     _roles_ = []
 
 
@@ -99,8 +98,14 @@ class Calculator:
             .all()
         self._shift_ = self._session_.query(ShiftRequest) \
             .all()
-        self._positions_ = self._session_.query(ShiftPosition) \
-            .all()
+
+        # self._asset_request_vehicles_ = self._session_.query(AssetRequestVehicle) \
+        #     .filter(AssetRequestVehicle.request_id == self.request_id) \
+        #     .all()
+        # self._asset_types_ = self._session_.query(AssetType) \
+        #     .filter(AssetType.deleted == False) \
+        #     .all()
+
         # return the roles that have not been deleted for the all shifts
         self._roles_ = self._session_.query(Role) \
             .filter(Role.deleted == False) \
@@ -215,34 +220,37 @@ class Calculator:
         @return: List of lists containing the required number of people for each role in each shift.
         """
         rtn = []
+
         # Iterate through each shift
         for shift in self._shifts_:
             this_position = []
+
             # Iterate through each role
             for role in self._roles_:
-                # Use the get_role_count function to query the number of people required for this role in the current
-                # shift
-                role_count = self.get_role_count(shift.id, role.code)
+                # Query the number of people required for this role in the current shift
+                role_count = self._session_.query(func.count(Role.id)) \
+                    .join(ShiftRequest, ShiftRequest.role_id == Role.id) \
+                    .filter(ShiftRequest.shift_id == shift.id) \
+                    .filter(Role.id == role.id) \
+                    .scalar()  # Use scalar() to get the count as an integer
 
-                # Append the role count to the current shift's list
                 this_position.append(role_count)
 
-            # Append the list of role counts for this shift to the return list
+            # Append the role counts for this shift to the return list
             rtn.append(this_position)
 
         return rtn
 
-    def get_role_count(self, shift_request_id, role_code):
+    def get_role_count(self, asset_type_id, role_id):
         """
-        given a shift id and a role code, return the number of people required for that specific role
-        this is done by counting the entries of shift positions that match the role
+        check for vehicle type flag and generate a
         """
-        query = self._session_.query(func.count(ShiftPosition.id)) \
-            .join(Role, Role.code == ShiftPosition.role_code) \
+        query = self._session_.query(AssetTypeRole) \
+            .join(Role, Role.id == AssetTypeRole.role_id) \
+            .join(AssetType, AssetType.id == AssetTypeRole.asset_type_id) \
             .filter(Role.deleted == False) \
-            .filter(Role.code == role_code) \
-            .filter(ShiftPosition.shift_id == shift_request_id) \
-
+            .filter(Role.id == role_id) \
+            .filter(AssetType.id == asset_type_id)
         result = self._session_.query(func.count('*')).select_from(alias(query)).scalar()
         if result is None:
             result = 0
