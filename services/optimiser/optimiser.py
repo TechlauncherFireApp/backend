@@ -47,40 +47,37 @@ class Optimiser:
         % Helper function to map 2D indices to the flattened array
         function int: flat_index(int: s, int: r) = (s - 1) * R + r;
 
-        % Decision variable: assignment of volunteers to roles
-        array[VOLUNTEER, ROLE] of var bool: possible_assignment;
+        % Decision variable: assignment of volunteers to roles for each shift
+        array[SHIFT, VOLUNTEER, ROLE] of var bool: possible_assignment;
 
         % Constraints
-        % A volunteer should be assigned to at most one role
-        constraint forall(v in VOLUNTEER)(
-            sum(r in ROLE)(bool2int(possible_assignment[v, r])) <= 1
+        % A volunteer should be assigned to at most one role per shift
+        constraint forall(s in SHIFT, v in VOLUNTEER)(
+            sum(r in ROLE)(bool2int(possible_assignment[s, v, r])) <= 1
         );
 
-        % A role should only be assigned to at most one volunteer
-        constraint forall(r in ROLE)(
-            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) <= 1
+        % A role should only be assigned to at most one volunteer per shift
+        constraint forall(s in SHIFT, r in ROLE)(
+            sum(v in VOLUNTEER)(bool2int(possible_assignment[s, v, r])) <= 1
         );
 
         % A volunteer can only be assigned to a role if they are compatible with it and have mastery of the role
-        constraint forall(v in VOLUNTEER, r in ROLE)(
-            possible_assignment[v, r] -> (compatibility[flat_index(v, r)] /\ mastery[flat_index(v, r)])
+        constraint forall(s in SHIFT, v in VOLUNTEER, r in ROLE)(
+            possible_assignment[s, v, r] -> (compatibility[flat_index(v, r)] /\ mastery[flat_index(v, r)])
         );
 
         % Ensure that each role meets the required skill for the shift
         constraint forall(s in SHIFT, r in ROLE)(
-            sum(v in VOLUNTEER)(bool2int(possible_assignment[v, r])) >= skill_requirements[flat_index(s, r)]
+            sum(v in VOLUNTEER)(bool2int(possible_assignment[s, v, r])) >= skill_requirements[flat_index(s, r)]
         );
 
         % Objective: Maximize the number of valid role assignments
-        solve maximize sum(v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[v, r]));
+        solve maximize sum(s in SHIFT, v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[s, v, r]));
 
-        % Output the possible assignments
+        % Output the possible assignments per shift
         output ["Possible Assignments:\n"] ++
-               [ if fix(possible_assignment[v, r]) then
-                   "Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\n"
-                 else ""
-                 endif
-                 | v in VOLUNTEER, r in ROLE
+               [ "Shift = " ++ show(s) ++ ", Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\n"
+                 | s in SHIFT, v in VOLUNTEER, r in ROLE where fix(possible_assignment[s, v, r])
                ];
         """
         return model_str
@@ -158,23 +155,26 @@ class Optimiser:
         shift_request_id = self.calculator.request_id
 
         try:
-            # Process the MiniZinc result
-            for role_index, role_assignments in enumerate(result["possible_assignment"]):
-                for volunteer_index, is_assigned in enumerate(role_assignments):
-                    if is_assigned:  # If a volunteer is assigned to a role
-                        user = self.calculator.get_volunteer_by_index(volunteer_index)
-                        role = self.calculator.get_role_by_index(role_index)
+            # Process the MiniZinc result by iterating over shifts, roles, and volunteers
+            for shift_index, shift_assignments in enumerate(result["possible_assignment"]):  # Iterate over shifts
+                for role_index, role_assignments in enumerate(shift_assignments):  # Iterate over roles in the shift
+                    for volunteer_index, is_assigned in enumerate(role_assignments):  # Iterate over volunteers
+                        if is_assigned:  # If a volunteer is assigned to a role for this shift
+                            user = self.calculator.get_volunteer_by_index(volunteer_index)
+                            role = self.calculator.get_role_by_index(role_index)
+                            shift = self.calculator.get_shift_by_index(shift_index)  # You may need to add this method
 
-                        # Create a ShiftRequestVolunteer entry with status PENDING
-                        shift_volunteer = ShiftRequestVolunteer(
-                            user_id=user.id,
-                            request_id=shift_request_id,
-                            position_id=role.id,
-                            status='PENDING',  # Marking as pending since it's just a possible assignment
-                            update_date_time=datetime.now(),
-                            insert_date_time=datetime.now(),
-                        )
-                        session.add(shift_volunteer)
+                            # Create a ShiftRequestVolunteer entry with status PENDING
+                            shift_volunteer = ShiftRequestVolunteer(
+                                user_id=user.id,
+                                request_id=shift_request_id,
+                                position_id=role.id,
+                                shift_id=shift.id,  # Track which shift the assignment applies to
+                                status='PENDING',  # Marking as pending since it's just a possible assignment
+                                update_date_time=datetime.now(),
+                                insert_date_time=datetime.now(),
+                            )
+                            session.add(shift_volunteer)
 
             # Commit the results to the database
             session.commit()
