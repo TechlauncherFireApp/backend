@@ -7,14 +7,14 @@ from domain.base import Base
 
 
 class ShiftPosition(Base):
-    __tablename__ = 'position'
+    __tablename__ = 'shift_position'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    shift_id = Column(Integer, ForeignKey('shift.id'), nullable=False)
+    shift_id = Column(Integer, ForeignKey('shift_request.id'), nullable=False)
     role_code = Column(String(256), ForeignKey('role.code'), nullable=False)
 
     # Many-to-one relationship with Role
     role = relationship("Role")
 
     # One-to-one relationship with ShiftRequestVolunteer using backref
-    volunteer = relationship("ShiftRequestVolunteer", uselist=False, backref="position")
+    volunteer = relationship("ShiftRequestVolunteer", uselist=False, backref="shift_position")
