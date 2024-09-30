@@ -16,8 +16,11 @@ class ShiftRequest(Base):
     title = Column(String(29), name='title', nullable=False)
     startTime = Column(DateTime, name='from', nullable=False)
     endTime = Column(DateTime, name='to', nullable=False)
-    status = Column(Enum(ShiftStatus), name='status', default=ShiftStatus.WAITING, nullable=False)
+    status = Column(Enum(ShiftStatus), name='status', default=ShiftStatus.SUBMITTED, nullable=False)
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)
 
+
     user = relationship("User")
+    # One-to-many relationship: A shift can have multiple positions
+    positions = relationship("ShiftPosition", backref="shift_request")

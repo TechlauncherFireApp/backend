@@ -3,18 +3,83 @@ from typing import List
 
 from dataclasses import asdict
 from flask import jsonify
-
 from datetime import datetime, timezone
 
 from exception import EventNotFoundError, InvalidArgumentError
 from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord, UnavailabilityTime, ShiftVolunteerStatus
 from exception.client_exception import ConflictError
+from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftPosition, Role, ShiftRecord, ShiftStatus
 
 
 class ShiftRepository:
 
     def __init__(self):
         pass
+
+    def post_shift_request(self, user_id, title, start_time, end_time, vehicle_type):
+        now = datetime.now()  # Get the current timestamp
+        with session_scope() as session:
+            try:
+                # Create a new ShiftRequest object and populate its fields
+                shift_request = ShiftRequest(
+                    user_id=user_id,
+                    title=title,
+                    startTime=start_time,
+                    endTime=end_time,
+                    status=ShiftStatus.PENDING,  # need to be changed to submitted after linda pr approved
+                    update_date_time=now,  # Update timestamp
+                    insert_date_time=now  # Insert timestamp
+                )
+
+                # Add the ShiftRequest object to the session and commit
+                session.add(shift_request)
+                session.commit()
+                # Add roles to the table now
+                positions_created = self.create_positions(session, shift_request.id, vehicle_type)
+                if not positions_created:
+                    session.rollback()
+                    return None
+                session.commit()
+                return shift_request.id  # Optionally return the created ShiftRequest object id
+
+            except Exception as e:
+                logging.error(f"Error creating new shift request: {e}")
+                session.rollback()
+                return None
+
+
+
+
+    def create_positions(self, session, shiftId, vehicleType):
+        # implement the position creation when posting/creating new shift
+        try:
+            if vehicleType == 11:  # Heavy Tanker
+                roles = ['Crew Leader', 'Driver', 'Advanced', 'Advanced', 'Basic', 'Basic']
+            elif vehicleType == 12:  # Medium Tanker
+                roles = ['Crew Leader', 'Driver', 'Advanced', 'Basic']
+            elif vehicleType == 13:  # Light Unit
+                roles = ['Driver', 'Basic']
+            else:
+                logging.error(f"Invalid vehicle type: {vehicleType}")
+                return False
+
+                # create record in ShiftPosition
+            for role_name in roles:
+                role = session.query(Role).filter_by(name=role_name).first()
+                if role:
+                    shift_position = ShiftPosition(
+                        shift_id=shiftId,
+                        role_code=role.code
+                    )
+                    session.add(shift_position)
+                else:
+                    logging.error(f"Role not found: {role_name}")
+                    return False
+            return True
+        except Exception as e:
+            logging.error(f"Error creating positions: {e}")
+            return False
+
 
     def get_shift(self, userId) -> List[ShiftRecord]:
         """
@@ -28,8 +93,8 @@ class ShiftRepository:
             try:
                 # only show the shift that is end in the future
                 shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
-                        ShiftRequestVolunteer.user_id == userId,
-                        ShiftRequest.endTime > now).all()
+                    ShiftRequestVolunteer.user_id == userId,
+                    ShiftRequest.endTime > now).all()
                 # check if there's some results
                 if not shifts:
                     logging.info(f"No active shifts found for user {userId}")
@@ -39,10 +104,11 @@ class ShiftRepository:
                 for shift in shifts:
                     shift_record = ShiftRecord(
                         shiftId=shift.request_id,
-                        status=shift.status.value,
+                        roleId=shift.position_id,
                         title=shift.shift_request.title,
                         start=shift.shift_request.startTime,
-                        end=shift.shift_request.endTime)
+                        end=shift.shift_request.endTime,
+                        status=shift.status.value)
                     shift_records.append(shift_record)
                 return shift_records
             except Exception as e:
