@@ -17,4 +17,5 @@ class ShiftPosition(Base):
     role = relationship("Role")
 
     # One-to-one relationship with ShiftRequestVolunteer using backref
-    volunteer = relationship("ShiftRequestVolunteer", uselist=False, backref="shift_position")
+    volunteer = relationship("ShiftRequestVolunteer", uselist=False, backref="shift_position",
+                             primaryjoin="ShiftPosition.id == ShiftRequestVolunteer.position_id")
