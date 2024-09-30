@@ -35,6 +35,7 @@ class VolunteerShiftV2(Resource):
             else:
                 return {"message": "Failed to create shift."}, 400
         except Exception as e:
+            logging.error(f"Error creating new shift request: {e}")
             return {"message": "Internal server error"}, 500
 
 

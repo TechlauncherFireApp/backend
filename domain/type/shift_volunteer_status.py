@@ -3,5 +3,5 @@ from enum import Enum
 
 class ShiftVolunteerStatus(Enum):
     PENDING = "pending"
-    CONFIRMED = "confirmed"
+    ACCEPTED = "accepted"
     REJECTED = "rejected"
