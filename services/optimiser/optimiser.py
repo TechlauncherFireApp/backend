@@ -157,19 +157,19 @@ class Optimiser:
         try:
             # Process the MiniZinc result by iterating over shifts, roles, and volunteers
             for shift_index, shift_assignments in enumerate(result["possible_assignment"]):  # Iterate over shifts
+                shift = self.calculator._shifts_[shift_index]  # Directly access the shift by index
                 for role_index, role_assignments in enumerate(shift_assignments):  # Iterate over roles in the shift
                     for volunteer_index, is_assigned in enumerate(role_assignments):  # Iterate over volunteers
                         if is_assigned:  # If a volunteer is assigned to a role for this shift
                             user = self.calculator.get_volunteer_by_index(volunteer_index)
                             role = self.calculator.get_role_by_index(role_index)
-                            shift = self.calculator.get_shift_by_index(shift_index)  # You may need to add this method
 
                             # Create a ShiftRequestVolunteer entry with status PENDING
                             shift_volunteer = ShiftRequestVolunteer(
                                 user_id=user.id,
                                 request_id=shift_request_id,
                                 position_id=role.id,
-                                shift_id=shift.id,  # Track which shift the assignment applies to
+                                shift_id=shift.id,  # Use the shift directly from the shifts list
                                 status='PENDING',  # Marking as pending since it's just a possible assignment
                                 update_date_time=datetime.now(),
                                 insert_date_time=datetime.now(),
