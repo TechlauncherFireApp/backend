@@ -7,7 +7,6 @@ from domain import ShiftStatus
 from domain.base import Base
 
 
-
 class ShiftRequest(Base):
     __tablename__ = 'shift_request'
 
