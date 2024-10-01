@@ -5,6 +5,8 @@ from datetime import datetime
 
 from domain import ShiftRequestVolunteer
 from services.optimiser.calculator import Calculator
+from repository.shift_repository import ShiftRepository
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -15,13 +17,14 @@ class Optimiser:
     # The calculator generates data structures for the optimiser to solve.
     calculator = None
 
-    def __init__(self, session: orm.session, request_id: int, debug: bool):
+    def __init__(self, repository: ShiftRepository, request_id: int, debug: bool):
         """
-        @param session: The SQLAlchemy session to use.
+        @param repository: The repository class for database operations.
         @param request_id: The ShiftRequest ID to solve.
         @param debug: If this should be executed in debug (printing) mode.
         """
-        self.calculator = Calculator(session, request_id)
+        self.calculator = Calculator(repository, request_id)
+        self.repository = repository
         self.debug = debug
 
     @staticmethod
@@ -151,13 +154,14 @@ class Optimiser:
 
         return result
 
-    def save_result(self, session, result) -> None:
+    def save_result(self, result) -> None:
         """
         Save the possible assignments to the ShiftRequestVolunteer table with status PENDING.
         @param session: SQLAlchemy session to use
         @param result: The model result from MiniZinc
         """
         shift_request_id = self.calculator.request_id
+        shift_volunteers = []
 
         try:
             # Process the MiniZinc result by iterating over shifts, roles, and volunteers
@@ -179,13 +183,12 @@ class Optimiser:
                                 update_date_time=datetime.now(),
                                 insert_date_time=datetime.now(),
                             )
-                            session.add(shift_volunteer)
+                            shift_volunteers.append(shift_volunteer)
 
             # Commit the results to the database
-            session.commit()
+            self.repository.save_shift_volunteers(shift_volunteers)
+
 
         except Exception as e:
-            # Log the error and rollback the transaction
-            logger.error(f"Error during database transaction: {e}", exc_info=True)
-            session.rollback()
-            raise  # Re-raise the exception after logging
+            logging.error(f"Error processing result data: {e}")
+            raise  # Rethrow the exception after logging
