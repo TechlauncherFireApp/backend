@@ -14,6 +14,7 @@ parser.add_argument('title', type=str)
 parser.add_argument('start', type=inputs.datetime_from_iso8601, required=True, help="Start time cannot be blank!")
 parser.add_argument('end', type=inputs.datetime_from_iso8601, required=True, help="End time cannot be blank!")
 parser.add_argument('vehicle_type', type=int, required=True, help="Vehicle type cannot be blank!")
+
 parser_modify_status = reqparse.RequestParser()
 parser_modify_status.add_argument('status', type=str, location='json', required=True, help="Status cannot be blank!")
 
@@ -33,7 +34,7 @@ class VolunteerShiftV2(Resource):
             vehicle_type = args['vehicle_type']
             new_shift_id = self.shift_repository.post_shift_request(user_id, title, start, end, vehicle_type)
             if new_shift_id:
-                return {"shift_id:", new_shift_id}, 200
+                return {"shift_id": new_shift_id}, 200
             else:
                 return {"message": "Failed to create shift."}, 400
         except Exception as e:

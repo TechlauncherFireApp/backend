@@ -1,14 +1,10 @@
 import logging
 from typing import List
 
-from dataclasses import asdict
-from flask import jsonify
-from datetime import datetime, timezone
+from datetime import datetime
 
-from exception import EventNotFoundError, InvalidArgumentError
-from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftRecord, UnavailabilityTime, ShiftVolunteerStatus
 from exception.client_exception import ConflictError
-from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftPosition, Role, ShiftRecord, ShiftStatus
+from domain import session_scope, ShiftRequestVolunteer, ShiftRequest, ShiftPosition, Role, ShiftRecord, ShiftStatus, UnavailabilityTime, ShiftVolunteerStatus
 
 
 class ShiftRepository:
@@ -17,6 +13,27 @@ class ShiftRepository:
         pass
 
     def post_shift_request(self, user_id, title, start_time, end_time, vehicle_type):
+        """
+            Creates a new shift request and associated shift positions based on the vehicle type.
+
+            Parameters:
+            ----------
+            user_id : int
+                The ID of the user creating the shift request.
+            title : str
+                The title of the shift request.
+            start_time : datetime
+                The start time of the shift.
+            end_time : datetime
+                The end time of the shift.
+            vehicle_type : int
+                The type of vehicle associated with the shift (determines roles).
+
+            Returns:
+            -------
+            int or None
+                The ID of the newly created shift request if successful, otherwise None.
+            """
         now = datetime.now()  # Get the current timestamp
         with session_scope() as session:
             try:
@@ -34,7 +51,7 @@ class ShiftRepository:
                 # Add the ShiftRequest object to the session and commit
                 session.add(shift_request)
                 session.commit()
-                # Add roles to the table now
+                # Add roles to the position table
                 positions_created = self.create_positions(session, shift_request.id, vehicle_type)
                 if not positions_created:
                     session.rollback()
@@ -51,30 +68,41 @@ class ShiftRepository:
 
 
     def create_positions(self, session, shiftId, vehicleType):
-        # implement the position creation when posting/creating new shift
+        """
+            Creates shift positions based on the vehicle type for a given shift request.
+
+            Parameters:
+            ----------
+            session : Session
+                The active database session.
+            shiftId : int
+                The ID of the shift request to create positions for.
+            vehicleType : int
+                The type of vehicle, which determines the roles to be assigned.
+
+            Returns:
+            -------
+            bool
+                True if positions are successfully created, otherwise False.
+            """
         try:
-            if vehicleType == 11:  # Heavy Tanker
-                roles = ['Crew Leader', 'Driver', 'Advanced', 'Advanced', 'Basic', 'Basic']
-            elif vehicleType == 12:  # Medium Tanker
-                roles = ['Crew Leader', 'Driver', 'Advanced', 'Basic']
-            elif vehicleType == 13:  # Light Unit
-                roles = ['Driver', 'Basic']
+            if vehicleType == 1:  # Heavy Tanker
+                roleCodes = ['crewLeader', 'driver', 'advanced', 'advanced', 'basic', 'basic']
+            elif vehicleType == 2:  # Medium Tanker
+                roleCodes = ['crewLeader', 'driver', 'advanced', 'basic']
+            elif vehicleType == 3:  # Light Unit
+                roleCodes = ['driver', 'basic']
             else:
                 logging.error(f"Invalid vehicle type: {vehicleType}")
                 return False
 
-                # create record in ShiftPosition
-            for role_name in roles:
-                role = session.query(Role).filter_by(name=role_name).first()
-                if role:
-                    shift_position = ShiftPosition(
-                        shift_id=shiftId,
-                        role_code=role.code
-                    )
-                    session.add(shift_position)
-                else:
-                    logging.error(f"Role not found: {role_name}")
-                    return False
+            # create record in ShiftPosition
+            for roleCode in roleCodes:
+                shift_position = ShiftPosition(
+                    shift_id=shiftId,
+                    role_code=roleCode
+                )
+                session.add(shift_position)
             return True
         except Exception as e:
             logging.error(f"Error creating positions: {e}")
@@ -104,7 +132,6 @@ class ShiftRepository:
                 for shift in shifts:
                     shift_record = ShiftRecord(
                         shiftId=shift.request_id,
-                        roleId=shift.position_id,
                         title=shift.shift_request.title,
                         start=shift.shift_request.startTime,
                         end=shift.shift_request.endTime,
@@ -143,14 +170,14 @@ class ShiftRepository:
                 if shift_request_volunteer:
                     # check for conflict
                     is_conflict = self.check_conflict_shifts(session, user_id, shift_id)
-                    if is_conflict and new_status == ShiftVolunteerStatus.CONFIRMED:
+                    if is_conflict and new_status == ShiftVolunteerStatus.ACCEPTED:
                         # Raise the ConflictError if there's a conflict
                         raise ConflictError(f"Shift {shift_id} conflicts with other confirmed shifts.")
                     # update status
                     shift_request_volunteer.status = new_status
                     shift_request_volunteer.last_update_datetime = datetime.now()
                     # If the new status is CONFIRMED, add an unavailability time record
-                    if new_status == ShiftVolunteerStatus.CONFIRMED:
+                    if new_status == ShiftVolunteerStatus.ACCEPTED:
                         # Fetch start and end times from the ShiftRequest table
                         shift_request = session.query(ShiftRequest).filter_by(id=shift_id).first()
                         if shift_request:
@@ -189,7 +216,7 @@ class ShiftRepository:
             # Query all confirmed shifts for the user
             confirmed_shifts = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
                 ShiftRequestVolunteer.user_id == userId,
-                ShiftRequestVolunteer.status == ShiftVolunteerStatus.CONFIRMED  # Use enum for confirmed status
+                ShiftRequestVolunteer.status == ShiftVolunteerStatus.ACCEPTED
             ).all()
             # The current shift information with start time and end time
             current_shift_information = session.query(ShiftRequestVolunteer).join(ShiftRequest).filter(
@@ -207,4 +234,4 @@ class ShiftRepository:
         except Exception as e:
             # Log the error and return False in case of an exception
             logging.error(f"Error checking shift conflicts for user {userId} and request {shiftId}: {e}")
-            return False
+            return Falsegit

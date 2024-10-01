@@ -24,3 +24,5 @@ class ShiftRequest(Base):
     user = relationship("User")
     # One-to-many relationship: A shift can have multiple positions
     positions = relationship("ShiftPosition", backref="shift_request")
+    # One-to-many relationship: A shift can be assigned to many volunteers
+    volunteers = relationship("ShiftRequestVolunteer", backref="shift_request")
