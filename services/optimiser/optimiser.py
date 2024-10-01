@@ -1,9 +1,14 @@
+import logging
 import minizinc
 from sqlalchemy import orm
 from datetime import datetime
 
 from domain import ShiftRequestVolunteer
 from services.optimiser.calculator import Calculator
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Optimiser:
@@ -180,7 +185,7 @@ class Optimiser:
             session.commit()
 
         except Exception as e:
-            # In case of an error, rollback the transaction
+            # Log the error and rollback the transaction
+            logger.error(f"Error during database transaction: {e}", exc_info=True)
             session.rollback()
-            print(f"Error during database transaction: {e}")
-            raise  # Re-raise the exception after logging or handling it
+            raise  # Re-raise the exception after logging
