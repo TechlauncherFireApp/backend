@@ -233,5 +233,5 @@ class ShiftRepository:
             return False
         except Exception as e:
             # Log the error and return False in case of an exception
-         git   logging.error(f"Error checking shift conflicts for user {userId} and request {shiftId}: {e}")
+            logging.error(f"Error checking shift conflicts for user {userId} and request {shiftId}: {e}")
             return False
