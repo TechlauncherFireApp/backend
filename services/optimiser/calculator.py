@@ -3,7 +3,8 @@ from datetime import timedelta, datetime
 from typing import List
 from sqlalchemy import orm, func, alias
 
-from domain import User, AssetRequestVehicle, AssetType, Role, UserRole, AssetTypeRole
+from domain import (User, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftPosition,
+                    UnavailabilityTime)
 
 
 class Calculator:
@@ -15,33 +16,18 @@ class Calculator:
     # Master list of all volunteers, these fetched once so that the order of the records in the list is deterministic.
     # This matters as the lists passed to Minizinc are not keyed and are instead used by index.
     _users_ = []
-    _asset_request_vehicles_ = []
-    _asset_types_ = []
+    _shifts_ = []
+    _positions_ = []
     _roles_ = []
-    _asset_type_seats_ = []
+
 
     # A single database session is used for all transactions in the optimiser. This is initialised by the calling
     # function.
     _session_ = None
 
-    # This is the granularity of the optimiser, it won't consider any times more specific thann this number of minutes
-    # when scheduling employees.
-    # It should match the volunteer's shift planner granularity
-    _time_granularity_ = timedelta(minutes=30)
-
     # The request to optimise.
     request_id = None
 
-    # Used to map between datetime.datetime().weekday() to the users availability as its agnostic of the time of year.
-    _week_map_ = {
-        0: "Monday",
-        1: "Tuesday",
-        2: "Wednesday",
-        3: "Thursday",
-        4: "Friday",
-        5: "Saturday",
-        6: "Sunday"
-    }
 
     def __init__(self, session: orm.session, request_id: int):
         self._session_ = session
@@ -50,11 +36,6 @@ class Calculator:
         # Fetch all the request data that will be used in the optimisation functions once.
         self.__get_request_data()
 
-    def get_number_of_vehicles(self) -> int:
-        """
-        @return: The number of vehicles to be optimised.
-        """
-        return len(self._asset_request_vehicles_)
 
     def get_number_of_roles(self):
         """
@@ -74,12 +55,6 @@ class Calculator:
     def get_role_by_index(self, index) -> Role:
         return self._roles_[index]
 
-    def get_asset_request_by_index(self, index) -> AssetRequestVehicle:
-        return self._asset_request_vehicles_[index]
-
-    def get_asset_requests(self) -> List[AssetRequestVehicle]:
-        return self._asset_request_vehicles_
-
     def get_roles(self) -> List[Role]:
         return self._roles_
 
@@ -91,156 +66,94 @@ class Calculator:
         """
         self._users_ = self._session_.query(User) \
             .all()
-        self._asset_request_vehicles_ = self._session_.query(AssetRequestVehicle) \
-            .filter(AssetRequestVehicle.request_id == self.request_id) \
+        self._shift_ = self._session_.query(ShiftRequest) \
             .all()
-        self._asset_types_ = self._session_.query(AssetType) \
-            .filter(AssetType.deleted == False) \
+        self._positions_ = self._session_.query(ShiftPosition) \
             .all()
+        # return the roles that have not been deleted for the all shifts
         self._roles_ = self._session_.query(Role) \
             .filter(Role.deleted == False) \
             .all()
-        self._asset_type_seats_ = self._session_.query(AssetTypeRole) \
-            .join(Role, Role.id == AssetTypeRole.role_id) \
-            .filter(Role.deleted == False) \
-            .all()
-
-    def calculate_deltas(self, start: datetime, end: datetime) -> List[datetime]:
-        """
-        Given the start time and end time of a shift, generate a list of shift "blocks" which represent a
-        self._time_granularity_ period that the user would need to be available for
-        @param start: The start time of the shift.
-        @param end: The end time of the shift.
-        @return: A list of dates between the two dates.
-        """
-        deltas = []
-        curr = start
-        while curr < end:
-            deltas.append(curr)
-            curr += self._time_granularity_
-        return deltas
-
-    @staticmethod
-    def float_time_to_datetime(float_hours: float, d: datetime) -> datetime:
-        """
-        Given a users available time as a date agnostic decimal hour and a shift blocks date, combine the two into a
-        datetime that can be used for equality and range comparisons.
-        @param float_hours: The users decimal hour availability, i.e. 3.5 is 3:30am, 4.0 is 4am,
-        @param d: The shift blocks date time
-        @return: The decimal hours time on the shift blocks day as datetime
-        """
-        # Assertion to ensure the front end garbage hasn't continued
-        assert 0 <= float_hours <= 23.5
-
-        # Calculate the actual datetime
-        hours = int(float_hours)
-        minutes = int((float_hours * 60) % 60)
-        return datetime(d.year, d.month, d.day, hours, minutes, 0)
 
     def calculate_compatibility(self) -> List[List[bool]]:
         """
-        Generates a 2D array of compatibilities between volunteers availabilities and the requirements of the shift.
-        This is the fairly critical function of the optimiser as its determining in a simple manner if a user is
-        even available for assignment, regardless of role.
-
-        Example 1: The volunteer is available between 2pm to 3pm and the shift is from 2pm to 2:30pm:
-            Result: True
-        Example 2: The volunteer is available from 1pm to 2pm and the shift is from 1pm to 3pm:
-            Result: False
-        @return:
+        Generates a 2D array of compatibilities between volunteers' unavailability and the requirements of the shift.
         """
         compatibilities = []
+
         # Iterate through each shift in the request
-        for asset_request_vehicle in self._asset_request_vehicles_:
+        for shift in self._shifts_:
             # Each shift gets its own row in the result set.
             shift_compatibility = []
 
-            # Shift blocks are the _time_granularity_ sections the volunteer would need to be available for.
-            # Its calculated by finding all the 30 minute slots between the start time and end time (inclusive)
-            shift_blocks = self.calculate_deltas(asset_request_vehicle.from_date_time,
-                                                 asset_request_vehicle.to_date_time)
-            # Iterate through the users, this makes each element of the array
+            # Define the shift start and end times
+            shift_start = shift.startTime
+            shift_end = shift.endTime
+
+            # Iterate through the users
             for user in self._users_:
-                # We start by assuming the user is available, then prove this wrong.
+                # Start by assuming the user is available
                 user_available = True
 
-                # Iterate through each block to see if the user is available on this shift
-                shift_block_availability = []
-                for shift_block in shift_blocks:
-                    available_in_shift = False
-                    for day_availability in user.availabilities[self._week_map_[shift_block.weekday()]]:
-                        # Generate a new datetime object that is the start time and end time of their availability, but
-                        # using the date of the shift block. This lets us calculate availability regardless of the day
-                        # of the year
-                        start_time = self.float_time_to_datetime(day_availability[0], shift_block)
-                        end_time = self.float_time_to_datetime(day_availability[1], shift_block)
-                        if end_time >= shift_block >= start_time:
-                            available_in_shift = True
-                    shift_block_availability.append(available_in_shift)
+                # Query unavailability times for the current user
+                unavailability_records = self._session_.query(UnavailabilityTime).filter(
+                    UnavailabilityTime.userId == user.id
+                ).all()
 
-                # If every element in the shift block availability is true, then the user can do this shift.
-                if False in shift_block_availability:
-                    user_available = False
+                # Check if any unavailability overlaps with the entire shift period
+                for record in unavailability_records:
+                    if record.start < shift_end and record.end > shift_start:
+                        user_available = False
+                        break  # User is unavailable, no need to check further
 
+                # Append the user's availability for this shift
                 shift_compatibility.append(user_available)
+
             # Append the shift compatibilities to the overall result
             compatibilities.append(shift_compatibility)
-        # Return the 2D array
-        return compatibilities
 
-    def calculate_clashes(self) -> List[List[bool]]:
-        """
-        Generate a 2d array of vehicle requests that overlap. This is to ensure that a single user isn't assigned to
-        multiple vehicles simultaneously. Its expected that each shift is incompatible with itself too.
-        @return: A 2D array of clashes.
-        """
-        clashes = []
-        # Iterate through each shift in the request
-        for this_vehicle in self._asset_request_vehicles_:
-            this_vehicle_clashes = []
-            this_shift_blocks = self.calculate_deltas(this_vehicle.from_date_time,
-                                                      this_vehicle.to_date_time)
-            for other_vehicle in self._asset_request_vehicles_:
-                has_clash = False
-                for this_shift_block in this_shift_blocks:
-                    if other_vehicle.from_date_time <= this_shift_block <= other_vehicle.to_date_time \
-                            and other_vehicle.id != this_vehicle.id:
-                        has_clash = True
-                this_vehicle_clashes.append(has_clash)
-            clashes.append(this_vehicle_clashes)
-        return clashes
+        # Return the 2D array of compatibilities
+        return compatibilities
 
     def calculate_skill_requirement(self):
         """
-        Return a 2D array showing the number of people required for each skill in a asset shift. Might look something
-        like:
-                        Driver Pilot  Ninja
-                      ----------------------
-           Vehicle 1  [[1,       0,      0]
-           Vehicle 2  [F,       1,      1]]
-        @return:
+        Returns a 2D array showing the number of people required for each skill in an asset shift. Example:
+                            Driver Pilot  Ninja
+                          ----------------------
+               Shift 1  [[1,       0,      0]
+               Shift 2  [0,       1,      1]]
+               Shift 3  [0,       2,      2]]
+        @return: List of lists containing the required number of people for each role in each shift.
         """
         rtn = []
-        for vehicle in self._asset_request_vehicles_:
-            this_vehicle = []
+        # Iterate through each shift
+        for shift in self._shifts_:
+            this_position = []
+            # Iterate through each role
             for role in self._roles_:
-                this_vehicle.append(self.get_role_count(vehicle.asset_type.id, role.id))
-            rtn.append(this_vehicle)
+                # Use the get_role_count function to query the number of people required for this role in the current
+                # shift
+                role_count = self.get_role_count(shift.id, role.code)
+
+                # Append the role count to the current shift's list
+                this_position.append(role_count)
+
+            # Append the list of role counts for this shift to the return list
+            rtn.append(this_position)
+
         return rtn
 
-    def get_role_count(self, asset_type_id, role_id):
+    def get_role_count(self, shift_request_id, role_code):
         """
-        Determines the number of each role required for each asset type or 0 if not required.
-        @param asset_type_id: The asset type to search for.
-        @param role_id: The role to search for.
-        @return: The volunteers required or 0 if not required.
+        given a shift id and a role code, return the number of people required for that specific role
+        this is done by counting the entries of shift positions that match the role
         """
-        query = self._session_.query(AssetTypeRole) \
-            .join(Role, Role.id == AssetTypeRole.role_id) \
-            .join(AssetType, AssetType.id == AssetTypeRole.asset_type_id) \
+        query = self._session_.query(func.count(ShiftPosition.id)) \
+            .join(Role, Role.code == ShiftPosition.role_code) \
             .filter(Role.deleted == False) \
-            .filter(Role.id == role_id) \
-            .filter(AssetType.id == asset_type_id)
+            .filter(Role.code == role_code) \
+            .filter(ShiftPosition.shift_id == shift_request_id) \
+
         result = self._session_.query(func.count('*')).select_from(alias(query)).scalar()
         if result is None:
             result = 0
