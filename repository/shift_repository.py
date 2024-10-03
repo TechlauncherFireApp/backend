@@ -85,3 +85,17 @@ class ShiftRepository:
                 session.rollback()
                 logging.error(f"Error updating shift request for user {user_id} and shift_id {shift_id}: {e}")
                 return False
+
+    def save_shift_volunteers(self, volunteers: List[ShiftRequestVolunteer]) -> None:
+        """
+        Saves a list of ShiftRequestVolunteer objects to the database.
+        """
+        with session_scope() as session:
+            try:
+                session.bulk_save_objects(volunteers)
+                session.commit()
+                logging.info(f"Successfully saved {len(volunteers)} shift volunteers.")
+            except Exception as e:
+                session.rollback()
+                logging.error(f"Error saving shift volunteers: {e}")
+                raise
