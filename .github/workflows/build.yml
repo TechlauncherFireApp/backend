@@ -108,7 +108,8 @@ jobs:
           fi
         id: tag
         env:
-          ATAG: ${{ steps.meta.output.tags }}
+          ATAG: | 
+            ${{ steps.meta.output.tags }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
