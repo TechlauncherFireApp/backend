@@ -102,11 +102,11 @@ jobs:
       - run: |
           if [[ "${{ github.event_name != 'pull_request' }}" == "true" ]]; then
             echo "TAGS<<EOF" >> $GITHUB_ENV
-            echo -e "TAGS=$ATAG\nghcr.io/${{ env.REPOSITORY_LC }}:latest\nghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
+            echo -e "$ATAG\nghcr.io/${{ env.REPOSITORY_LC }}:latest\nghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           else
             echo "TAGS<<EOF" >> $GITHUB_ENV
-            echo "TAGS=ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
+            echo "ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           fi
         id: tag
