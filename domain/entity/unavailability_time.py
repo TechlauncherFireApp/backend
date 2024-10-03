@@ -12,4 +12,5 @@ class UnavailabilityTime(Base):
     start = Column(DateTime, nullable=False, default=datetime.now())
     end = Column(DateTime, nullable=False, default=datetime.now())
     status = Column(Boolean, nullable=False, default=1)
+    is_shift = Column(Boolean, nullable=False, default=False)
     UniqueConstraint(eventId, userId, name='event')

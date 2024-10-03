@@ -45,7 +45,7 @@ class EventRepository:
             try:
                 # only show the unavailability time that is end in the future
                 events = session.query(UnavailabilityTime).filter(
-                    UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1,
+                    UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1, UnavailabilityTime.is_shift == False,
                     UnavailabilityTime.end > now).all()
                 if events:
                     event_records = []
