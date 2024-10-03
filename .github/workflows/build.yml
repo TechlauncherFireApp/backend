@@ -100,16 +100,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          echo -e "TAGS=$ATAG\nghcr.io/${{ env.REPOSITORY_LC }}:latest\nghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}"
+          generated_tags=$(cat << 'EOF'
+            ${{ steps.meta.output.tags }}
+            EOF
+          )
+
+          echo -e "TAGS=$generated_tags\nghcr.io/${{ env.REPOSITORY_LC }}:latest\nghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}"
           if [[ "${{ github.event_name != 'pull_request' }}" == "true" ]]; then
             echo -e "TAGS=$step_tag\nghcr.io/${{ env.REPOSITORY_LC }}:latest\nghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
           else
             echo "TAGS=ghcr.io/${{ env.REPOSITORY_LC }}:${{ needs.version.outputs.version }}" >> $GITHUB_ENV
           fi
         id: tag
-        env:
-          ATAG: | 
-            ${{ steps.meta.output.tags }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
