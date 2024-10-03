@@ -7,7 +7,6 @@ from domain import ShiftStatus
 from domain.base import Base
 
 
-
 class ShiftRequest(Base):
     __tablename__ = 'shift_request'
 
@@ -19,5 +18,10 @@ class ShiftRequest(Base):
     status = Column(Enum(ShiftStatus), name='status', default=ShiftStatus.WAITING, nullable=False)
     update_date_time = Column(DateTime, name='last_update_datetime', default=datetime.now(), nullable=False)
     insert_date_time = Column(DateTime, name='created_datetime', default=datetime.now(), nullable=False)
-
+    Column()
     user = relationship("User")
+
+    # One-to-many relationship: A shift can have multiple positions
+    positions = relationship("ShiftPosition", backref="shift_request")
+
+
