@@ -47,10 +47,8 @@ class VolunteerShiftV2(Resource):
     def get(self, user_id):
         try:
             shifts = self.shift_repository.get_shift(user_id)
-            if shifts:
-                return marshal(shifts, shift), 200
-            else:
-                return {"message": "No shift record found."}, 400
+            return marshal(shifts, shift), 200
+
         except Exception as e:
             logging.error(f"Error retrieving shifts for user {user_id}: {e}")
             return {"message": "Internal server error"}, 500
