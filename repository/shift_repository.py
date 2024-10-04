@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from datetime import datetime
 
@@ -12,7 +12,7 @@ class ShiftRepository:
     def __init__(self):
         pass
 
-    def post_shift_request(self, user_id, title, start_time, end_time, vehicle_type):
+    def post_shift_request(self, user_id: int, title: str, start_time: datetime, end_time: datetime, vehicle_type: int) -> Optional[int]:
         """
             Creates a new shift request and associated shift positions based on the vehicle type.
 
@@ -64,10 +64,7 @@ class ShiftRepository:
                 session.rollback()
                 return None
 
-
-
-
-    def create_positions(self, session, shiftId, vehicleType):
+    def create_positions(self, session, shiftId: int, vehicleType: int) -> bool:
         """
             Creates shift positions based on the vehicle type for a given shift request.
 
@@ -108,8 +105,7 @@ class ShiftRepository:
             logging.error(f"Error creating positions: {e}")
             return False
 
-
-    def get_shift(self, userId) -> List[ShiftRecord]:
+    def get_shift(self, userId: int) -> List[ShiftRecord]:
         """
             Retrieves all shift events for a given user that have not ended yet.
 
@@ -142,7 +138,7 @@ class ShiftRepository:
                 logging.error(f"Error retrieving shifts for user {userId}: {e}")
                 raise
 
-    def update_shift_status(self, user_id, shift_id, new_status: ShiftVolunteerStatus):
+    def update_shift_status(self, user_id: int, shift_id: int, new_status: ShiftVolunteerStatus) -> bool:
         """
             Updates the status of a volunteer's shift request in the database.
 
@@ -152,7 +148,7 @@ class ShiftRepository:
                 The ID of the user whose shift request status is to be updated.
             shift_id : int
                 The ID of the shift request to be updated.
-            new_status : str
+            new_status : ShiftVolunteerStatus
             The new status to set for the shift request.
             Returns:
             -------
@@ -203,7 +199,6 @@ class ShiftRepository:
                 logging.error(f"Error updating shift request for user {user_id} and shift_id {shift_id}: {e}")
                 return False
 
-
     def save_shift_volunteers(self, volunteers: List[ShiftRequestVolunteer]) -> None:
         """
         Saves a list of ShiftRequestVolunteer objects to the database.
@@ -218,7 +213,7 @@ class ShiftRepository:
                 logging.error(f"Error saving shift volunteers: {e}")
                 raise
             
-    def check_conflict_shifts(self, session, userId, shiftId):
+    def check_conflict_shifts(self, session, userId: int, shiftId: int) -> bool:
         """
         Check if a given user has any conflicting confirmed shifts with the current shift request.
 
