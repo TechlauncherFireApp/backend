@@ -235,3 +235,17 @@ class ShiftRepository:
             # Log the error and return False in case of an exception
             logging.error(f"Error checking shift conflicts for user {userId} and request {shiftId}: {e}")
             return False
+
+    def save_shift_volunteers(self, volunteers: List[ShiftRequestVolunteer]) -> None:
+        """
+        Saves a list of ShiftRequestVolunteer objects to the database.
+        """
+        with session_scope() as session:
+            try:
+                session.bulk_save_objects(volunteers)
+                session.commit()
+                logging.info(f"Successfully saved {len(volunteers)} shift volunteers.")
+            except Exception as e:
+                session.rollback()
+                logging.error(f"Error saving shift volunteers: {e}")
+                raise
