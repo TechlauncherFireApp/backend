@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy import orm, func, alias
 
 from domain import (User, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftPosition,
-                    UnavailabilityTime)
+                    UnavailabilityTime, ShiftStatus)
 
 
 class Calculator:
@@ -67,6 +67,7 @@ class Calculator:
         self._users_ = self._session_.query(User) \
             .all()
         self._shift_ = self._session_.query(ShiftRequest) \
+            .filter(ShiftRequest.status == ShiftStatus.SUBMITTED) \
             .all()
         self._positions_ = self._session_.query(ShiftPosition) \
             .all()
