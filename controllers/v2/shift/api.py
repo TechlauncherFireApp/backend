@@ -4,7 +4,7 @@ from exception.client_exception import ConflictError
 from .response_models import shift
 from domain import UserType, ShiftVolunteerStatus
 from repository.shift_repository import ShiftRepository
-from services.jwk import requires_auth, is_user_or_has_role
+from services.jwk import requires_auth, is_user_or_has_role, requires_admin, has_role
 from controllers.v2.v2_blueprint import v2_api
 import logging
 
@@ -25,6 +25,8 @@ class VolunteerShiftV2(Resource):
     def __init__(self, shift_repository: ShiftRepository = ShiftRepository()):
         self.shift_repository = shift_repository
 
+    @requires_auth
+    @has_role(UserType.ROOT_ADMIN)
     def post(self, user_id):
         try:
             args = parser.parse_args()
@@ -47,15 +49,13 @@ class VolunteerShiftV2(Resource):
     def get(self, user_id):
         try:
             shifts = self.shift_repository.get_shift(user_id)
-            if shifts:
-                return marshal(shifts, shift), 200
-            else:
-                return {"message": "No shift record found."}, 400
+            return marshal(shifts, shift), 200
         except Exception as e:
             logging.error(f"Error retrieving shifts for user {user_id}: {e}")
             return {"message": "Internal server error"}, 500
 
-
+    @requires_auth
+    @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def put(self, user_id, shift_id):
         args = parser_modify_status.parse_args()
         status = args["status"]

@@ -140,7 +140,7 @@ class ShiftRepository:
                 return shift_records
             except Exception as e:
                 logging.error(f"Error retrieving shifts for user {userId}: {e}")
-                return []
+                raise
 
     def update_shift_status(self, user_id, shift_id, new_status: ShiftVolunteerStatus):
         """
