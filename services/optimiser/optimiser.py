@@ -17,13 +17,13 @@ class Optimiser:
     # The calculator generates data structures for the optimiser to solve.
     calculator = None
 
-    def __init__(self, repository: ShiftRepository, request_id: int, debug: bool):
+    def __init__(self, repository: ShiftRepository, debug: bool):
         """
         @param repository: The repository class for database operations.
         @param request_id: The ShiftRequest ID to solve.
         @param debug: If this should be executed in debug (printing) mode.
         """
-        self.calculator = Calculator(repository, request_id)
+        self.calculator = Calculator(repository)
         self.repository = repository
         self.debug = debug
 
@@ -157,10 +157,8 @@ class Optimiser:
     def save_result(self, result) -> None:
         """
         Save the possible assignments to the ShiftRequestVolunteer table with status PENDING.
-        @param session: SQLAlchemy session to use
         @param result: The model result from MiniZinc
         """
-        shift_request_id = self.calculator.request_id
         shift_volunteers = []
 
         try:
@@ -176,9 +174,8 @@ class Optimiser:
                             # Create a ShiftRequestVolunteer entry with status PENDING
                             shift_volunteer = ShiftRequestVolunteer(
                                 user_id=user.id,
-                                request_id=shift_request_id,
+                                request_id=shift.id, # request_id in ShiftRequestVolunteer is the actual shift id itself
                                 position_id=role.id,
-                                shift_id=shift.id,  # Use the shift directly from the shifts list
                                 status='PENDING',  # Marking as pending since it's just a possible assignment
                                 update_date_time=datetime.now(),
                                 insert_date_time=datetime.now(),
@@ -187,7 +184,6 @@ class Optimiser:
 
             # Commit the results to the database
             self.repository.save_shift_volunteers(shift_volunteers)
-
 
         except Exception as e:
             logging.error(f"Error processing result data: {e}")
