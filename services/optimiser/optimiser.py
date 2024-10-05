@@ -16,12 +16,13 @@ class Optimiser:
     # The calculator generates data structures for the optimiser to solve.
     calculator = None
 
-    def __init__(self, repository: ShiftRepository, debug: bool):
+    def __init__(self, session: orm.session, repository: ShiftRepository, debug: bool):
         """
+        @param session: The SQLAlchemy session to use
         @param repository: The repository class for database operations.
         @param debug: If this should be executed in debug (printing) mode.
         """
-        self.calculator = Calculator(repository)
+        self.calculator = Calculator(session)
         self.repository = repository
         self.debug = debug
 
@@ -81,7 +82,7 @@ class Optimiser:
         solve maximize sum(s in SHIFT, v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[s, v, r]));
 
         % Output the possible assignments per shift
-        output ["Possible Assignments:\n"] ++
+        output ["Possible Assignments:\\n"] ++
                [ "Shift = " ++ show(s) ++ ", Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\n"
                  | s in SHIFT, v in VOLUNTEER, r in ROLE where fix(possible_assignment[s, v, r])
                ];
@@ -109,32 +110,46 @@ class Optimiser:
         return [item for sublist in skill_requirements_2d for item in sublist]
 
     def solve(self):
+        logger.info("Starting the solve process.")
+
         # Create the MiniZinc model and solver
         gecode = minizinc.Solver.lookup("gecode")
         model = minizinc.Model()
         model.add_string(self.generate_model_string())
 
-        # Create an instance
-        instance = minizinc.Instance(gecode, model)
+
 
         # Calculate the number of roles, volunteers, and shifts dynamically
         num_roles = self.calculator.get_number_of_roles()
+        num_positions = self.calculator.get_shift_position_count()
         num_volunteers = self.calculator.get_number_of_volunteers()
-        num_shifts = len(self.calculator._shifts_)
+        num_shifts = self.calculator.get_shift_count()
+
+        logger.info(f"Number of roles: {num_roles}, Number of volunteers: {num_volunteers}, Number of shifts: {num_shifts}")
 
         # Fetch compatibility matrix from the calculator
         compatibility_2d = self.calculator.calculate_compatibility()
+        logger.info(f"Compatibility matrix (2D): {compatibility_2d}")
 
         # Fetch mastery matrix from the calculator
         mastery_2d = self.calculator.calculate_mastery()
+        logger.info(f"Mastery matrix (2D): {mastery_2d}")
 
         # Fetch skill requirements matrix from the calculator
         skill_requirements_2d = self.calculator.calculate_skill_requirement()
+        logger.info(f"Skill requirements matrix (2D): {skill_requirements_2d}")
 
         # Flatten the 2D compatibility, mastery, and skill requirements matrices
         flattened_compatibility = self.flatten_compatibility(compatibility_2d)
         flattened_mastery = self.flatten_compatibility(mastery_2d)
         flattened_skill_requirements = self.flatten_skill_requirements(skill_requirements_2d)
+
+        logger.info(f"Flattened compatibility: {flattened_compatibility}")
+        logger.info(f"Flattened mastery: {flattened_mastery}")
+        logger.info(f"Flattened skill requirements: {flattened_skill_requirements}")
+
+        # Create an instance
+        instance = minizinc.Instance(gecode, model)
 
         # Assign the dynamic values to the MiniZinc instance
         instance["R"] = num_roles
@@ -144,12 +159,14 @@ class Optimiser:
         instance["mastery"] = flattened_mastery
         instance["skill_requirements"] = flattened_skill_requirements
 
+        logger.info("Starting to solve the MiniZinc instance.")
         # Solve the instance
         result = instance.solve()
 
         if self.debug:
             print(result)
 
+        logger.info("Solve process completed.")
         return result
 
     def save_result(self, result) -> None:

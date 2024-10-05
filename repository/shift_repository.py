@@ -43,7 +43,6 @@ class ShiftRepository:
                     title=title,
                     startTime=start_time,
                     endTime=end_time,
-                    status=ShiftStatus.PENDING,  # need to be changed to submitted after linda pr approved
                     update_date_time=now,  # Update timestamp
                     insert_date_time=now  # Insert timestamp
                 )
