@@ -68,9 +68,9 @@ class Calculator:
         """
         self._users_ = self._session_.query(User) \
             .all()
-        self._shift_ = self._session_.query(ShiftRequest) \
+        self._shifts_ = self._session_.query(ShiftRequest) \
+            .filter(ShiftRequest.status == ShiftStatus.SUBMITTED) \
             .all()
-            # .filter(ShiftRequest.status == ShiftStatus.SUBMITTED) \
 
         self._positions_ = self._session_.query(ShiftPosition) \
             .all()
@@ -129,7 +129,7 @@ class Calculator:
                Shift 3  [0,       2,      2]]
         @return: List of lists containing the required number of people for each role in each shift.
         """
-        result = []
+        rtn = []
         # Iterate through each shift
         for shift in self._shifts_:
             this_position = []
