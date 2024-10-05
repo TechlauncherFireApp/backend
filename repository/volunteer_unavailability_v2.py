@@ -45,7 +45,7 @@ class EventRepository:
             try:
                 # only show the unavailability time that is end in the future
                 events = session.query(UnavailabilityTime).filter(
-                    UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1,
+                    UnavailabilityTime.userId == userId, UnavailabilityTime.status == 1, UnavailabilityTime.is_shift == False,
                     UnavailabilityTime.end > now).all()
                 if events:
                     event_records = []
@@ -64,8 +64,8 @@ class EventRepository:
                 else:
                     return []
             except Exception as e:
-                logging.error(e)
-                return None
+                logging.error(f"Database error occurred: {e}")
+                raise
 
     # copy from repository.unavailability_repository.py
     def create_event(self, userId, title, startTime, endTime, periodicity):

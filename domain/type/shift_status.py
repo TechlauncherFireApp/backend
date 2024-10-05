@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class ShiftStatus(Enum):
-    WAITING = "waiting"
-    UNSUBMITTED = "un-submitted"
-    INPROGRESS = "in-progress"
+    PENDING = "pending"
+    SUBMITTED = "submitted"
+    CONFIRMED = "confirmed"
     COMPLETED = "completed"

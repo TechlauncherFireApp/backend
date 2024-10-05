@@ -67,12 +67,11 @@ class VolunteerUnavailabilityV2(Resource):
     @requires_auth
     @is_user_or_has_role(None, UserType.ROOT_ADMIN)
     def get(self, user_id):
-        volunteer_unavailability_record = self.event_repository.get_event(user_id)
-        if volunteer_unavailability_record is not None and volunteer_unavailability_record != []:
-            return volunteer_unavailability_record
-        elif volunteer_unavailability_record == []:
-            return {"message": "No unavailability record found."}, 400
-        else:
+        try:
+            volunteer_unavailability_record = self.event_repository.get_event(user_id)
+            return volunteer_unavailability_record, 200
+        except Exception as e:
+            logging.error(f"Error retrieving shifts for user {user_id}: {e}")
             return {"message": "Internal server error"}, 500
 
     @requires_auth
