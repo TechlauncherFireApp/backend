@@ -2,10 +2,10 @@ import logging
 import os
 import firebase_admin
 from firebase_admin import credentials, messaging, exceptions
+from typing import List, Optional
 
 
 class NotificationService:
-
 
     def __init__(self):
 
@@ -14,46 +14,30 @@ class NotificationService:
             cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
 
-    def send_notification(self, fcm_token, title, body, data=None):
-        message = messaging.Message(
-            notification=messaging.Notification(title=title, body=body),
-            data=data or {},
-            token=fcm_token
-        )
+    def send_notification(self, fcm_token_list: List[str], title: str, body: str, data: Optional[dict] = None) -> None:
+        """
+        Send message to the user device given a list of FCM tokens.
 
-        try:
-            response = messaging.send(message)
-            logging.info("Successfully sent message: {}".format(response))
-            return response
-        except exceptions.FirebaseError as e:
-            logging.error("Firebase error: {}".format(e))
-            raise e
-        except Exception as e:
-            logging.error("Error sending message: {}".format(e))
-            raise e
+        :param fcm_token_list: List of FCM tokens to send the notification to.
+        :param title: The title of the notification.
+        :param body: The body content of the notification.
+        :param data: Optional additional data for the notification.
+        """
+        if not fcm_token_list:
+            logging.warning("No FCM tokens provided. Cannot send notification.")
 
+        for token in fcm_token_list:
 
+            message = messaging.Message(
+                notification=messaging.Notification(title=title, body=body),
+                data=data or {},
+                token=token
+            )
 
-"""
-This file is temporarily used for testing purpose.
-"""
-if __name__ == '__main__':
-
-
-    import logging
-    from services.notification_service import NotificationService
-
-
-    logging.basicConfig(level=logging.INFO)
-    notification_service = NotificationService()
-    fcm_token = 'cE2oUPG1Q-6guB8o52K7Ag:APA91bGJXqQScQbUk7vVpItG64vZ4nnzY3ClpjJA-SC5e02i23Cx__9h08lOOdKS9r6Nq6ZMC0YPOJ7sKI_D3wHELUjJdQL1XYGmj3bTQgFR-NIXKDN9PQEbdUi60HGURFrru-BORUgR'
-    title = 'Test'
-    body = 'This is a test notification.'
-    data_payload = {'Test': 'value1', 'key2': 'value2'}
-
-    notification_service.send_notification(
-        fcm_token=fcm_token,
-        title=title,
-        body=body,
-        data=data_payload
-    )
+            try:
+                response = messaging.send(message)
+                logging.info(f"Successfully sent message to token: {token}")
+            except exceptions.FirebaseError as e:
+                logging.error(f"Firebase error for token {token}: {e}")
+            except Exception as e:
+                logging.error(f"Error sending message to token {token}: {e}")
