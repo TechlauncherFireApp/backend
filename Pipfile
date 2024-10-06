@@ -49,6 +49,7 @@ werkzeug = ">=1.0.1"
 numpy = "==1.24.4"
 pytest = "*"
 dataclasses = "*"
+firebase-admin = "*"
 
 [dev-packages]
 
