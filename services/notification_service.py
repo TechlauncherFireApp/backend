@@ -10,7 +10,7 @@ class NotificationService:
     def __init__(self):
 
         if not firebase_admin._apps:
-            cred_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', r"C:\Users\User\backend\google-credentials.json")
+            cred_path = f"{os.getcwd()}/google-credentials.json"
             cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
 

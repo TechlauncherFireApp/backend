@@ -79,14 +79,15 @@ class FCMTokenRepository:
 
             except SQLAlchemyError as e:
                 logging.error(f"Database error while retrieving FCM token for user {user_id}: {e}")
+
                 raise e
 
     def notify_user(
             self,
             user_id: Optional[int] = None,
             fcm_token_list: Optional[List[str]] = None,
-            title: str = '',
-            body: str = '',
+            title: Optional[str] = None,
+            body: Optional[str] = None,
             data: Optional[dict] = None
     ) -> None:
         """
@@ -94,16 +95,19 @@ class FCMTokenRepository:
 
         This function either accepts a user id to look up tokens or take a list of FCM tokens.
 
-        :param user_id: The user id
-        :param fcm_token_list: A list of FCM tokens
-        :param title: The title of the notification
-        :param body: The body of the notification
-        :param data: The data of the notification
+        :param user_id: The user id (optional if fcm token list is provided)
+        :param fcm_token_list: A list of FCM tokens (optional if user id is provided)
+        :param title: The title of the notification (required)
+        :param body: The body of the notification (required)
+        :param data: The data of the notification (optional)
         """
 
         # Ensure either user_id or fcm_token_list is provided
         if user_id is None and fcm_token_list is None:
             raise ValueError("Either user_id or fcm_token_list must be provided")
+
+        if title is None or body is None:
+            raise ValueError("Title and body must be provided")
 
         # Get the token list if user_id is provided, otherwise use fcm_token_list
         if user_id is not None:
