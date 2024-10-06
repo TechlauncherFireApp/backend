@@ -12,6 +12,7 @@ class ShiftRepository:
     def __init__(self):
         pass
 
+
     def post_shift_request(self, user_id: int, title: str, start_time: datetime, end_time: datetime, vehicle_type: int) -> Optional[int]:
         """
             Creates a new shift request and associated shift positions based on the vehicle type.
@@ -63,6 +64,7 @@ class ShiftRepository:
                 session.rollback()
                 return None
 
+
     def create_positions(self, session, shiftId: int, vehicleType: int) -> bool:
         """
             Creates shift positions based on the vehicle type for a given shift request.
@@ -104,7 +106,9 @@ class ShiftRepository:
             logging.error(f"Error creating positions: {e}")
             return False
 
-    def get_shift(self, userId: int) -> List[ShiftRecord]:
+          
+    def get_shift(self, userId) -> List[ShiftRecord]:
+
         """
             Retrieves all shift events for a given user that have not ended yet.
 
@@ -136,6 +140,7 @@ class ShiftRepository:
             except Exception as e:
                 logging.error(f"Error retrieving shifts for user {userId}: {e}")
                 raise
+                
 
     def update_shift_pending(self, shift_id: int) -> None:
         """
@@ -336,4 +341,5 @@ class ShiftRepository:
             # Log the error and return False in case of an exception
             logging.error(f"Error checking shift conflicts for user {user_id} and request {shift_id}: {e}")
             return False
+
 
