@@ -31,6 +31,7 @@ class OptimiserResource(Resource):
                 # Initialise and run the optimiser
                 optimiser = Optimiser(session=session, repository=self.optimiser_repository, debug=debug)
                 result = optimiser.solve()
+                optimiser.save_result(result)
 
                 # Return raw data, the marshaller will format it
                 return {

@@ -32,57 +32,61 @@ class Optimiser:
         Generate the MiniZinc model string for the optimiser.
         @return: The MiniZinc model as a string.
         """
-        model_str = """
+        model_str = r"""
         int: R;  % Number of roles
         set of int: ROLE = 1..R;
-
+        
         int: V;  % Number of volunteers
         set of int: VOLUNTEER = 1..V;
-
+        
         int: S;  % Number of shifts
         set of int: SHIFT = 1..S;
-
-        % Compatibility matrix (flattened 1D array [V * R] from a 2D matrix)
-        array[1..V * R] of bool: compatibility;
-
+        
+        % Compatibility matrix (flattened 1D array [S * V] from a 2D matrix)
+        array[1..S * V] of bool: compatibility;
+        
         % Mastery matrix (flattened 1D array [V * R] from a 2D matrix)
         array[1..V * R] of bool: mastery;
-
+        
         % Skill requirement matrix (flattened 1D array [S * R] from a 2D matrix)
         array[1..S * R] of int: skill_requirements;
-
+        
         % Helper function to map 2D indices to the flattened array
-        function int: flat_index(int: s, int: r) = (s - 1) * R + r;
-
+        function int: flat_index_sv(int: s, int: v) = (s - 1) * V + v;
+        function int: flat_index_sr(int: s, int: r) = (s - 1) * R + r;
+        function int: flat_index_vr(int: v, int: r) = (v - 1) * R + r;
+        
         % Decision variable: assignment of volunteers to roles for each shift
         array[SHIFT, VOLUNTEER, ROLE] of var bool: possible_assignment;
-
+        
         % Constraints
         % A volunteer should be assigned to at most one role per shift
         constraint forall(s in SHIFT, v in VOLUNTEER)(
             sum(r in ROLE)(bool2int(possible_assignment[s, v, r])) <= 1
         );
-
+        
         % A role should only be assigned to at most one volunteer per shift
         constraint forall(s in SHIFT, r in ROLE)(
             sum(v in VOLUNTEER)(bool2int(possible_assignment[s, v, r])) <= 1
         );
-
-        % A volunteer can only be assigned to a role if they are compatible with it and have mastery of the role
+        
+        % A volunteer can only be assigned to a role if they are compatible with the shift
+        % AND they have mastery of the role (strict mastery constraint)
         constraint forall(s in SHIFT, v in VOLUNTEER, r in ROLE)(
-            possible_assignment[s, v, r] -> (compatibility[flat_index(v, r)] /\ mastery[flat_index(v, r)])
+            possible_assignment[s, v, r] -> (compatibility[flat_index_sv(s, v)] /\ mastery[flat_index_vr(v, r)])
         );
-
-        % Ensure that each role meets the required skill for the shift
-        constraint forall(s in SHIFT, r in ROLE)(
-            sum(v in VOLUNTEER)(bool2int(possible_assignment[s, v, r])) >= skill_requirements[flat_index(s, r)]
+        
+        % Soft skill requirement: Encourage, but do not require, filling each role
+        var int: unfilled_roles;
+        constraint unfilled_roles = sum(s in SHIFT, r in ROLE)(
+            bool2int(sum(v in VOLUNTEER)(possible_assignment[s, v, r]) == 0)
         );
-
-        % Objective: Maximize the number of valid role assignments
-        solve maximize sum(s in SHIFT, v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[s, v, r]));
-
+        
+        % Objective: Maximize assignments and minimize unfilled roles
+        solve minimize unfilled_roles + sum(s in SHIFT, v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[s, v, r]));
+        
         % Output the possible assignments per shift
-        output ["Possible Assignments:\\n"] ++
+        output ["Possible Assignments:\n"] ++
                [ "Shift = " ++ show(s) ++ ", Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\n"
                  | s in SHIFT, v in VOLUNTEER, r in ROLE where fix(possible_assignment[s, v, r])
                ];

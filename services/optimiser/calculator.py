@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from typing import List
 from sqlalchemy import orm, func, alias
 
-from domain import (User, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftPosition,
+from domain import (User, Role, UserRole, UserType, AssetTypeRole, ShiftRequest, ShiftPosition,
                     UnavailabilityTime, ShiftStatus)
 
 
@@ -66,8 +66,10 @@ class Calculator:
         functions as they don't need to be concerned about data fetching.
         @return:
         """
-        self._users_ = self._session_.query(User) \
-            .all()
+        self._users_ = (self._session_.query(User) \
+            .filter(User.role != UserType.ADMIN and User.role != UserType.ROOT_ADMIN) \
+            .all())
+
         self._shifts_ = self._session_.query(ShiftRequest) \
             .filter(ShiftRequest.status == ShiftStatus.SUBMITTED) \
             .all()
@@ -108,7 +110,6 @@ class Calculator:
                 for record in unavailability_records:
                     if record.start < shift_end and record.end > shift_start:
                         user_available = False
-                        break  # User is unavailable, no need to check further
 
                 # Append the user's availability for this shift
                 shift_compatibility.append(user_available)
