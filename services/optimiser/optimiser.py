@@ -3,7 +3,7 @@ import minizinc
 from sqlalchemy import orm
 from datetime import datetime
 
-from domain import ShiftRequestVolunteer
+from domain import ShiftRequestVolunteer, UnavailabilityTime
 from services.optimiser.calculator import Calculator
 from repository.shift_repository import ShiftRepository
 
@@ -175,37 +175,41 @@ class Optimiser:
 
     def save_result(self, result) -> None:
         """
-        Save the possible assignments to the ShiftRequestVolunteer table with status PENDING.
+        Save the possible assignments to the database using the repository, checking for conflicts.
         @param result: The model result from MiniZinc
         """
-        shift_volunteers = []
-
         try:
-            # Process the MiniZinc result by iterating over shifts, roles, and volunteers
+            assignments = []
+            shifts_to_update = set()  # Keep track of shifts to update to PENDING status
+
+            # Process the MiniZinc result by iterating over shifts, volunteers, and roles
             for shift_index, shift_assignments in enumerate(result["possible_assignment"]):  # Iterate over shifts
                 shift = self.calculator._shifts_[shift_index]  # Directly access the shift by index
-                for role_index, role_assignments in enumerate(shift_assignments):  # Iterate over roles in the shift
-                    for volunteer_index, is_assigned in enumerate(role_assignments):  # Iterate over volunteers
+
+                shifts_to_update.add(shift.id)  # Collect shift IDs to update their status later
+
+                for volunteer_index, volunteer_assignments in enumerate(shift_assignments):  # Iterate over volunteers
+                    user = self.calculator.get_volunteer_by_index(volunteer_index)
+
+                    for role_index, is_assigned in enumerate(volunteer_assignments):  # Iterate over roles
                         if is_assigned:  # If a volunteer is assigned to a role for this shift
-                            user = self.calculator.get_volunteer_by_index(volunteer_index)
                             role = self.calculator.get_role_by_index(role_index)
 
-                            # Create a ShiftRequestVolunteer entry with status PENDING
-                            shift_volunteer = ShiftRequestVolunteer(
-                                user_id=user.id,
-                                # request_id in ShiftRequestVolunteer is the actual shift id itself
-                                request_id=shift.id,
-                                position_id=role.id,
-                                # Marking as ACCEPTED because frontend does not have a function to
-                                # change PENDING to ACCEPTED (not in SOW)
-                                status='ACCEPTED',
-                                update_date_time=datetime.now(),
-                                insert_date_time=datetime.now(),
-                            )
-                            shift_volunteers.append(shift_volunteer)
+                            # Collect assignment data
+                            assignments.append({
+                                'user_id': user.id,
+                                'shift_id': shift.id,
+                                'role_code': role.code,
+                                'shift_start': shift.startTime,
+                                'shift_end': shift.endTime
+                            })
 
-            # Commit the results to the database
-            self.repository.save_shift_volunteers(shift_volunteers)
+            # Update shifts to PENDING status
+            for shift_id in shifts_to_update:
+                self.repository.update_shift_pending(shift_id)
+
+            # Use repository method to save all assignments in bulk, conflict checking is done there
+            self.repository.save_shift_assignments(assignments)
 
         except Exception as e:
             logging.error(f"Error processing result data: {e}")

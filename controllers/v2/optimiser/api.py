@@ -23,7 +23,11 @@ class OptimiserResource(Resource):
     @marshal_with(optimiser_response_model)  # Use the marshalling model
     def post(self):
         # Parse debug argument
-        args = parser.parse_args()
+        try:
+            args = parser.parse_args()
+        except Exception:
+            args = {}
+        # Default debug to False if it's not provided or the body is empty
         debug = args.get('debug', False)
 
         try:
