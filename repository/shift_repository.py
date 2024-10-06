@@ -269,17 +269,21 @@ class ShiftRepository:
                         logging.info(f"Conflict detected for user {user_id} on shift {shift_id}. Assignment skipped.")
                         continue  # Skip this assignment
 
-                    # Fetch the role ID based on role code
-                    role = session.query(Role).filter_by(code=role_code).first()
-                    if not role:
-                        logging.error(f"Role with code {role_code} not found.")
-                        raise ValueError(f"Role with code {role_code} not found.")
+                    # Fetch the ShiftPosition based on shift_id and role_code
+                    shift_position = session.query(ShiftPosition).filter_by(
+                        shift_id=shift_id,
+                        role_code=role_code
+                    ).first()
+
+                    if not shift_position:
+                        logging.error(f"ShiftPosition not found for shift_id {shift_id} and role_code {role_code}.")
+                        continue  # Skip this assignment
 
                     # Create ShiftRequestVolunteer object
                     shift_volunteer = ShiftRequestVolunteer(
                         user_id=user_id,
                         request_id=shift_id,
-                        position_id=role.id,
+                        position_id=shift_position.id,
                         status=ShiftVolunteerStatus.ACCEPTED,
                         update_date_time=datetime.now(),
                         insert_date_time=datetime.now(),
