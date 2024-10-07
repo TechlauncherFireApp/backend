@@ -3,8 +3,8 @@ from datetime import timedelta, datetime
 from typing import List
 from sqlalchemy import orm, func, alias
 
-from domain import (User, AssetType, Role, UserRole, AssetTypeRole, ShiftRequest, ShiftPosition,
-                    UnavailabilityTime)
+from domain import (User, Role, UserRole, UserType, AssetTypeRole, ShiftRequest, ShiftPosition,
+                    UnavailabilityTime, ShiftStatus)
 
 
 class Calculator:
@@ -25,13 +25,9 @@ class Calculator:
     # function.
     _session_ = None
 
-    # The request to optimise.
-    request_id = None
 
-
-    def __init__(self, session: orm.session, request_id: int):
+    def __init__(self, session: orm.session):
         self._session_ = session
-        self.request_id = request_id
 
         # Fetch all the request data that will be used in the optimisation functions once.
         self.__get_request_data()
@@ -58,16 +54,26 @@ class Calculator:
     def get_roles(self) -> List[Role]:
         return self._roles_
 
+    def get_shift_count(self) -> int:
+        return len(self._shifts_)
+
+    def get_shift_position_count(self) -> int:
+        return len(self._positions_)
+
     def __get_request_data(self):
         """
         Initialising function that fetches a list of reference data from the database. This is done to simplify future
         functions as they don't need to be concerned about data fetching.
         @return:
         """
-        self._users_ = self._session_.query(User) \
+        self._users_ = (self._session_.query(User) \
+            .filter(User.role != UserType.ADMIN and User.role != UserType.ROOT_ADMIN) \
+            .all())
+
+        self._shifts_ = self._session_.query(ShiftRequest) \
+            .filter(ShiftRequest.status == ShiftStatus.SUBMITTED) \
             .all()
-        self._shift_ = self._session_.query(ShiftRequest) \
-            .all()
+
         self._positions_ = self._session_.query(ShiftPosition) \
             .all()
         # return the roles that have not been deleted for the all shifts
@@ -104,7 +110,6 @@ class Calculator:
                 for record in unavailability_records:
                     if record.start < shift_end and record.end > shift_start:
                         user_available = False
-                        break  # User is unavailable, no need to check further
 
                 # Append the user's availability for this shift
                 shift_compatibility.append(user_available)
@@ -115,7 +120,7 @@ class Calculator:
         # Return the 2D array of compatibilities
         return compatibilities
 
-    def calculate_skill_requirement(self):
+    def calculate_skill_requirement(self) -> List[List[int]]:
         """
         Returns a 2D array showing the number of people required for each skill in an asset shift. Example:
                             Driver Pilot  Ninja
@@ -129,7 +134,7 @@ class Calculator:
         # Iterate through each shift
         for shift in self._shifts_:
             this_position = []
-            # Iterate through each role
+            # Iterate through each shift_position
             for role in self._roles_:
                 # Use the get_role_count function to query the number of people required for this role in the current
                 # shift

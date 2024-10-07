@@ -3,10 +3,9 @@ import minizinc
 from sqlalchemy import orm
 from datetime import datetime
 
-from domain import ShiftRequestVolunteer
+from domain import ShiftRequestVolunteer, UnavailabilityTime
 from services.optimiser.calculator import Calculator
 from repository.shift_repository import ShiftRepository
-
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -17,13 +16,13 @@ class Optimiser:
     # The calculator generates data structures for the optimiser to solve.
     calculator = None
 
-    def __init__(self, repository: ShiftRepository, request_id: int, debug: bool):
+    def __init__(self, session: orm.session, repository: ShiftRepository, debug: bool):
         """
+        @param session: The SQLAlchemy session to use
         @param repository: The repository class for database operations.
-        @param request_id: The ShiftRequest ID to solve.
         @param debug: If this should be executed in debug (printing) mode.
         """
-        self.calculator = Calculator(repository, request_id)
+        self.calculator = Calculator(session)
         self.repository = repository
         self.debug = debug
 
@@ -33,55 +32,59 @@ class Optimiser:
         Generate the MiniZinc model string for the optimiser.
         @return: The MiniZinc model as a string.
         """
-        model_str = """
+        model_str = r"""
         int: R;  % Number of roles
         set of int: ROLE = 1..R;
-
+        
         int: V;  % Number of volunteers
         set of int: VOLUNTEER = 1..V;
-
+        
         int: S;  % Number of shifts
         set of int: SHIFT = 1..S;
-
-        % Compatibility matrix (flattened 1D array [V * R] from a 2D matrix)
-        array[1..V * R] of bool: compatibility;
-
+        
+        % Compatibility matrix (flattened 1D array [S * V] from a 2D matrix)
+        array[1..S * V] of bool: compatibility;
+        
         % Mastery matrix (flattened 1D array [V * R] from a 2D matrix)
         array[1..V * R] of bool: mastery;
-
+        
         % Skill requirement matrix (flattened 1D array [S * R] from a 2D matrix)
         array[1..S * R] of int: skill_requirements;
-
+        
         % Helper function to map 2D indices to the flattened array
-        function int: flat_index(int: s, int: r) = (s - 1) * R + r;
-
+        function int: flat_index_sv(int: s, int: v) = (s - 1) * V + v;
+        function int: flat_index_sr(int: s, int: r) = (s - 1) * R + r;
+        function int: flat_index_vr(int: v, int: r) = (v - 1) * R + r;
+        
         % Decision variable: assignment of volunteers to roles for each shift
         array[SHIFT, VOLUNTEER, ROLE] of var bool: possible_assignment;
-
+        
         % Constraints
         % A volunteer should be assigned to at most one role per shift
         constraint forall(s in SHIFT, v in VOLUNTEER)(
             sum(r in ROLE)(bool2int(possible_assignment[s, v, r])) <= 1
         );
-
+        
         % A role should only be assigned to at most one volunteer per shift
         constraint forall(s in SHIFT, r in ROLE)(
             sum(v in VOLUNTEER)(bool2int(possible_assignment[s, v, r])) <= 1
         );
-
-        % A volunteer can only be assigned to a role if they are compatible with it and have mastery of the role
+        
+        % A volunteer can only be assigned to a role if they are compatible with the shift
+        % AND they have mastery of the role (strict mastery constraint)
         constraint forall(s in SHIFT, v in VOLUNTEER, r in ROLE)(
-            possible_assignment[s, v, r] -> (compatibility[flat_index(v, r)] /\ mastery[flat_index(v, r)])
+            possible_assignment[s, v, r] -> (compatibility[flat_index_sv(s, v)] /\ mastery[flat_index_vr(v, r)])
         );
-
-        % Ensure that each role meets the required skill for the shift
-        constraint forall(s in SHIFT, r in ROLE)(
-            sum(v in VOLUNTEER)(bool2int(possible_assignment[s, v, r])) >= skill_requirements[flat_index(s, r)]
+        
+        % Soft skill requirement: Encourage, but do not require, filling each role
+        var int: unfilled_roles;
+        constraint unfilled_roles = sum(s in SHIFT, r in ROLE)(
+            bool2int(sum(v in VOLUNTEER)(possible_assignment[s, v, r]) == 0)
         );
-
-        % Objective: Maximize the number of valid role assignments
-        solve maximize sum(s in SHIFT, v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[s, v, r]));
-
+        
+        % Objective: Maximize assignments and minimize unfilled roles
+        solve minimize unfilled_roles + sum(s in SHIFT, v in VOLUNTEER, r in ROLE)(bool2int(possible_assignment[s, v, r]));
+        
         % Output the possible assignments per shift
         output ["Possible Assignments:\n"] ++
                [ "Shift = " ++ show(s) ++ ", Volunteer = " ++ show(v) ++ ", Role = " ++ show(r) ++ "\n"
@@ -111,32 +114,46 @@ class Optimiser:
         return [item for sublist in skill_requirements_2d for item in sublist]
 
     def solve(self):
+        logger.info("Starting the solve process.")
+
         # Create the MiniZinc model and solver
         gecode = minizinc.Solver.lookup("gecode")
         model = minizinc.Model()
         model.add_string(self.generate_model_string())
 
-        # Create an instance
-        instance = minizinc.Instance(gecode, model)
+
 
         # Calculate the number of roles, volunteers, and shifts dynamically
         num_roles = self.calculator.get_number_of_roles()
+        num_positions = self.calculator.get_shift_position_count()
         num_volunteers = self.calculator.get_number_of_volunteers()
-        num_shifts = len(self.calculator._shifts_)
+        num_shifts = self.calculator.get_shift_count()
+
+        logger.info(f"Number of roles: {num_roles}, Number of volunteers: {num_volunteers}, Number of shifts: {num_shifts}")
 
         # Fetch compatibility matrix from the calculator
         compatibility_2d = self.calculator.calculate_compatibility()
+        logger.info(f"Compatibility matrix (2D): {compatibility_2d}")
 
         # Fetch mastery matrix from the calculator
         mastery_2d = self.calculator.calculate_mastery()
+        logger.info(f"Mastery matrix (2D): {mastery_2d}")
 
         # Fetch skill requirements matrix from the calculator
         skill_requirements_2d = self.calculator.calculate_skill_requirement()
+        logger.info(f"Skill requirements matrix (2D): {skill_requirements_2d}")
 
         # Flatten the 2D compatibility, mastery, and skill requirements matrices
         flattened_compatibility = self.flatten_compatibility(compatibility_2d)
         flattened_mastery = self.flatten_compatibility(mastery_2d)
         flattened_skill_requirements = self.flatten_skill_requirements(skill_requirements_2d)
+
+        logger.info(f"Flattened compatibility: {flattened_compatibility}")
+        logger.info(f"Flattened mastery: {flattened_mastery}")
+        logger.info(f"Flattened skill requirements: {flattened_skill_requirements}")
+
+        # Create an instance
+        instance = minizinc.Instance(gecode, model)
 
         # Assign the dynamic values to the MiniZinc instance
         instance["R"] = num_roles
@@ -146,48 +163,53 @@ class Optimiser:
         instance["mastery"] = flattened_mastery
         instance["skill_requirements"] = flattened_skill_requirements
 
+        logger.info("Starting to solve the MiniZinc instance.")
         # Solve the instance
         result = instance.solve()
 
         if self.debug:
             print(result)
 
+        logger.info("Solve process completed.")
         return result
 
     def save_result(self, result) -> None:
         """
-        Save the possible assignments to the ShiftRequestVolunteer table with status PENDING.
-        @param session: SQLAlchemy session to use
+        Save the possible assignments to the database using the repository, checking for conflicts.
         @param result: The model result from MiniZinc
         """
-        shift_request_id = self.calculator.request_id
-        shift_volunteers = []
-
         try:
-            # Process the MiniZinc result by iterating over shifts, roles, and volunteers
+            assignments = []
+            shifts_to_update = set()  # Keep track of shifts to update to PENDING status
+
+            # Process the MiniZinc result by iterating over shifts, volunteers, and roles
             for shift_index, shift_assignments in enumerate(result["possible_assignment"]):  # Iterate over shifts
                 shift = self.calculator._shifts_[shift_index]  # Directly access the shift by index
-                for role_index, role_assignments in enumerate(shift_assignments):  # Iterate over roles in the shift
-                    for volunteer_index, is_assigned in enumerate(role_assignments):  # Iterate over volunteers
+
+                shifts_to_update.add(shift.id)  # Collect shift IDs to update their status later
+
+                for volunteer_index, volunteer_assignments in enumerate(shift_assignments):  # Iterate over volunteers
+                    user = self.calculator.get_volunteer_by_index(volunteer_index)
+
+                    for role_index, is_assigned in enumerate(volunteer_assignments):  # Iterate over roles
                         if is_assigned:  # If a volunteer is assigned to a role for this shift
-                            user = self.calculator.get_volunteer_by_index(volunteer_index)
                             role = self.calculator.get_role_by_index(role_index)
 
-                            # Create a ShiftRequestVolunteer entry with status PENDING
-                            shift_volunteer = ShiftRequestVolunteer(
-                                user_id=user.id,
-                                request_id=shift_request_id,
-                                position_id=role.id,
-                                shift_id=shift.id,  # Use the shift directly from the shifts list
-                                status='PENDING',  # Marking as pending since it's just a possible assignment
-                                update_date_time=datetime.now(),
-                                insert_date_time=datetime.now(),
-                            )
-                            shift_volunteers.append(shift_volunteer)
+                            # Collect assignment data
+                            assignments.append({
+                                'user_id': user.id,
+                                'shift_id': shift.id,
+                                'role_code': role.code,
+                                'shift_start': shift.startTime,
+                                'shift_end': shift.endTime
+                            })
 
-            # Commit the results to the database
-            self.repository.save_shift_volunteers(shift_volunteers)
+            # Update shifts to PENDING status
+            for shift_id in shifts_to_update:
+                self.repository.update_shift_pending(shift_id)
 
+            # Use repository method to save all assignments in bulk, conflict checking is done there
+            self.repository.save_shift_assignments(assignments)
 
         except Exception as e:
             logging.error(f"Error processing result data: {e}")
