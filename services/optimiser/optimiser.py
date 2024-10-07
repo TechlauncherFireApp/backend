@@ -1,4 +1,6 @@
 import logging
+from typing import List
+
 import minizinc
 from sqlalchemy import orm
 from datetime import datetime
@@ -214,3 +216,29 @@ class Optimiser:
         except Exception as e:
             logging.error(f"Error processing result data: {e}")
             raise  # Rethrow the exception after logging
+
+    def extract_user_ids_from_result(self, result) -> List[int]:
+        """
+        Extract the user IDs of volunteers assigned to shift based on the result of optimiser
+
+        :param result: The result of optimiser
+        :return: A list of user ids
+        """
+        user_id_list = []
+
+        try:
+            # Loop through over shifts, volunteers and roles in result
+            for shift_index, shift_assignment in enumerate(result["possible_assignment"]):
+                for volunteer_index, volunteer_assignments in enumerate(shift_assignment):
+                    for role_index, is_assigned in enumerate(volunteer_assignments):
+                        if is_assigned:
+                            user = self.calculator.get_volunteer_by_index(volunteer_index)
+
+                            # avoid duplicate
+                            if user.id not in user_id_list:
+                                user_id_list.append(user.id)
+
+        except Exception as e:
+            logging.error(f"Error extracting user IDs from result: {e}")
+
+        return user_id_list
