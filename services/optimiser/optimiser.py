@@ -169,9 +169,18 @@ class Optimiser:
 
         if self.debug:
             print(result)
+        try:
+            # Check if the result contains any assignments
+            if result.solution is None or "possible_assignment" not in result:
+                logger.info("No assignments to save.")
+                return  # No assignments to save, exit the function gracefully
 
-        logger.info("Solve process completed.")
-        return result
+            logger.info("Solve process completed.")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error processing result data: {e}")
+            raise  # Rethrow the exception after logging
 
     def save_result(self, result) -> None:
         """
