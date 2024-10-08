@@ -1,7 +1,6 @@
 from flask_restful import Resource, marshal_with, reqparse
 from .response_models import optimiser_response_model
 from repository.shift_repository import ShiftRepository
-from repository.fcm_token_repository import FCMTokenRepository
 from services.jwk import requires_auth, is_user_or_has_role
 from domain import UserType, session_scope
 from controllers.v2.v2_blueprint import v2_api
@@ -37,25 +36,6 @@ class OptimiserResource(Resource):
                 optimiser = Optimiser(session=session, repository=self.optimiser_repository, debug=debug)
                 result = optimiser.solve()
                 optimiser.save_result(result)
-
-                # Extract user id from result
-                user_id_list = optimiser.extract_user_ids_from_result(result)
-
-                # check if there is no user
-                if not user_id_list:
-                    logging.info("No users found to notify.")
-                else:
-                    # Initialize FCM token repository for retrieving token and notifying user
-                    fcm_token_repo = FCMTokenRepository()
-
-                    # Loop through user id, retrieve token and send message
-                    for user_id in user_id_list:
-                        title = "New Shift Assignment"
-                        body = "You have been assigned to a new shift."
-                        try:
-                            fcm_token_repo.notify_user(user_id=user_id, title=title, body=body)
-                        except Exception as e:
-                            logging.error(f"Error sending notification to user {user_id}: {e}")
 
                 # Return raw data, the marshaller will format it
                 return {
