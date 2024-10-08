@@ -1,3 +1,4 @@
+import logging
 from flask_restful import Resource, marshal_with, reqparse
 from repository.fcm_token_repository import FCMTokenRepository
 from .response_models import optimiser_response_model
@@ -6,7 +7,6 @@ from services.jwk import requires_auth, is_user_or_has_role
 from domain import UserType, session_scope
 from controllers.v2.v2_blueprint import v2_api
 from services.optimiser.optimiser import Optimiser
-import logging
 
 
 # Initialise parser for potential arguments in future extensions (if needed)
