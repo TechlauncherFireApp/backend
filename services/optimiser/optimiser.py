@@ -5,6 +5,8 @@ from sqlalchemy import orm
 from datetime import datetime
 
 from domain import ShiftRequestVolunteer, UnavailabilityTime
+from repository.fcm_token_repository import FCMTokenRepository
+from services.notification_service import NotificationService
 from services.optimiser.calculator import Calculator
 from repository.shift_repository import ShiftRepository
 
@@ -183,6 +185,10 @@ class Optimiser:
             assignments = []
             shifts_to_update = set()  # Keep track of shifts to update to PENDING status
 
+            # Initialize FCMTokenRepository and NotificationService
+            fcm_token_repo = FCMTokenRepository()
+            notification_service = NotificationService()
+
             # Process the MiniZinc result by iterating over shifts, volunteers, and roles
             for shift_index, shift_assignments in enumerate(result["possible_assignment"]):  # Iterate over shifts
                 shift = self.calculator._shifts_[shift_index]  # Directly access the shift by index
@@ -204,6 +210,18 @@ class Optimiser:
                                 'shift_start': shift.startTime,
                                 'shift_end': shift.endTime
                             })
+
+                            # Fetch FCM tokens for the user and send notification
+                            try:
+                                fcm_token_list = fcm_token_repo.get_fcm_token(user_id=user.id)
+                                if fcm_token_list:
+                                    title = "New shift assignment"
+                                    body = "You have been assigned to a new shift"
+
+                                    # Send notification
+                                    notification_service.send_notification(fcm_token_list=fcm_token_list, title=title, body=body)
+                            except Exception as e:
+                                logger.error(f"Error sending notification to user {user.id}: {e}")
 
             # Update shifts to PENDING status
             for shift_id in shifts_to_update:
